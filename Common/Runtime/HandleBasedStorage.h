@@ -9,6 +9,7 @@
 
 #include "Handle.h"
 #include <cassert>
+#include <cstddef>
 #include <vector>
 #include <cstdlib>
 
