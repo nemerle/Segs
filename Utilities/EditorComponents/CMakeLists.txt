@@ -26,7 +26,7 @@ set(sources
 add_executable(SegsEd ${sources})
 target_include_directories(SegsEd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(SegsEd PUBLIC Qt5::Widgets)
+target_link_libraries(SegsEd PUBLIC Qt5::Widgets gameData cereal_IMP)
 set_target_properties(SegsEd PROPERTIES AUTOMOC TRUE)
 set_target_properties(SegsEd PROPERTIES AUTOUIC TRUE)
 set_target_properties(SegsEd PROPERTIES AUTORCC TRUE)

@@ -45,7 +45,7 @@ using vClueList = std::vector<Clue>;
 class Souvenir
 {
 public:
-     enum : uint32_t {class_version       = 1};
+    enum : uint32_t {class_version = 1};
 
     int32_t m_idx;
     QString m_name;

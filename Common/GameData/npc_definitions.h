@@ -35,8 +35,8 @@ enum class BodyType : int
 
 struct Parse_Costume
 {
-    QByteArray  m_EntTypeFile;
-    QByteArray  m_CostumeFilePrefix;
+    QByteArray m_EntTypeFile;
+    QByteArray m_CostumeFilePrefix;
     BodyType m_BodyType  = BodyType::Male;
     float    m_Scale     = 0;
     float    m_BoneScale = 0;

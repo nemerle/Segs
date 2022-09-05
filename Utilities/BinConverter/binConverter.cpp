@@ -9,7 +9,6 @@
  * @addtogroup BinConverter Projects/CoX/Utilities/BinConverter
  * @{
  */
-
 #include "GameData/DataStorage.h"
 #include "GameData/CharacterAttributes.h"
 #include "GameData/attrib_serializers.h"
@@ -40,6 +39,7 @@
 #include "GameData/origin_definitions.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
+
 
 #include "GameData/particlesys_serializers.h"
 #include "GameData/particle_definitions.h"
@@ -486,6 +486,11 @@ void convertAllEntitySeqDescriptors(const QString &data_directory)
     saveTo(seq_data_store,"data/converted/ent_types",true);
 }
 } // end of anonymous namespace
+
+struct Position {
+    float x;
+    float y;
+};
 
 int main(int argc,char **argv)
 {

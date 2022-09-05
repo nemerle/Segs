@@ -215,7 +215,7 @@ int main(int argc, char **argv)
             {
                 if(db->isConnected())
                 {
-                    dbs_exist &= true; // dbs_exists must be true all times
+                    dbs_exist |= true; // at least one database exists
                     qWarning() << "Database" << db->m_config.m_db_name << "already exists.";
                 }
             }

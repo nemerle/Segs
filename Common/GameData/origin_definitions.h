@@ -8,9 +8,28 @@
 #pragma once
 #include <vector>
 #include <QtCore/QString>
+#define ENABLE_Q_REFLECTION
+#ifdef ENABLE_Q_REFLECTION
+#include <QObject>
+#endif
 
 struct Parse_Origin
 {
+#ifdef ENABLE_Q_REFLECTION
+    Q_GADGET
+    Q_PROPERTY(QByteArray Name MEMBER Name)
+    Q_PROPERTY(QByteArray DisplayName MEMBER DisplayName)
+    Q_PROPERTY(QByteArray DisplayHelp MEMBER DisplayHelp)
+    Q_PROPERTY(QByteArray DisplayShortHelp MEMBER DisplayShortHelp)
+    Q_PROPERTY(QByteArray Icon MEMBER Icon)
+    Q_PROPERTY(int NumBonusPowerSets MEMBER NumBonusPowerSets)
+    Q_PROPERTY(int NumBonusPowers MEMBER NumBonusPowers)
+    Q_PROPERTY(int NumBonusBoostSlots MEMBER NumBonusBoostSlots)
+    Q_PROPERTY(int NumContacts MEMBER NumContacts)
+    Q_PROPERTY(float ContactBonusLength MEMBER ContactBonusLength)
+#endif
+
+public:
     QByteArray Name;
     QByteArray DisplayName;
     QByteArray DisplayHelp;

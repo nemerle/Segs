@@ -9,6 +9,7 @@ class EditorWidget : public QWidget
 public:
     explicit EditorWidget(QWidget *parent = nullptr);
 
+    void setupUIFor(const QMetaObject &obj);
 signals:
 
 };

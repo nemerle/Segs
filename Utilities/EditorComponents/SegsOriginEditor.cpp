@@ -1,6 +1,8 @@
 #include "SegsOriginEditor.h"
 #include "ui_SegsOriginEditor.h"
 
+#include "GameData/origin_definitions.h"
+
 #include <QStringListModel>
 #include <QDebug>
 
@@ -15,6 +17,7 @@ SegsOriginEditor::SegsOriginEditor(QWidget *parent) :
     origin_list->setStringList({"Test","Test2"});
 
     ui->OriginPowerslistView->setModel(m_origins);
+    setupUIFor(Parse_Origin::staticMetaObject);
 }
 
 SegsOriginEditor::~SegsOriginEditor()
