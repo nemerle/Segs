@@ -170,7 +170,7 @@ namespace glm
 	/// @param bottom
 	/// @param top
 	/// @param near
-	/// @param far
+	/// @param far_v
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -180,7 +180,7 @@ namespace glm
 		T bottom,
 		T top,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a left handed frustum matrix.
 	///
@@ -189,7 +189,7 @@ namespace glm
 	/// @param bottom
 	/// @param top
 	/// @param near
-	/// @param far
+	/// @param far_v
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -199,7 +199,7 @@ namespace glm
 		T bottom,
 		T top,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a right handed frustum matrix.
 	///
@@ -208,7 +208,7 @@ namespace glm
 	/// @param bottom
 	/// @param top
 	/// @param near
-	/// @param far
+	/// @param far_v
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -218,14 +218,14 @@ namespace glm
 		T bottom,
 		T top,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a matrix for a symetric perspective-view frustum based on the default handedness.
 	/// 
 	/// @param fovy Specifies the field of view angle in the y direction. Expressed in radians.
 	/// @param aspect Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -233,14 +233,14 @@ namespace glm
 		T fovy,
 		T aspect,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a matrix for a right handed, symetric perspective-view frustum.
 	/// 
 	/// @param fovy Specifies the field of view angle, in degrees, in the y direction. Expressed in radians.
 	/// @param aspect Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -248,14 +248,14 @@ namespace glm
 		T fovy,
 		T aspect,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a matrix for a left handed, symetric perspective-view frustum.
 	/// 
 	/// @param fovy Specifies the field of view angle, in degrees, in the y direction. Expressed in radians.
 	/// @param aspect Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -263,7 +263,7 @@ namespace glm
 		T fovy,
 		T aspect,
 		T near,
-		T far);
+		T far_v);
 
 	/// Builds a perspective projection matrix based on a field of view and the default handedness.
 	/// 
@@ -271,7 +271,7 @@ namespace glm
 	/// @param width 
 	/// @param height 
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -280,7 +280,7 @@ namespace glm
 		T width,
 		T height,
 		T near,
-		T far);
+		T far_v);
 
 	/// Builds a right handed perspective projection matrix based on a field of view.
 	/// 
@@ -288,7 +288,7 @@ namespace glm
 	/// @param width 
 	/// @param height 
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -297,7 +297,7 @@ namespace glm
 		T width,
 		T height,
 		T near,
-		T far);
+		T far_v);
 
 	/// Builds a left handed perspective projection matrix based on a field of view.
 	/// 
@@ -305,7 +305,7 @@ namespace glm
 	/// @param width 
 	/// @param height 
 	/// @param near Specifies the distance from the viewer to the near clipping plane (always positive).
-	/// @param far Specifies the distance from the viewer to the far clipping plane (always positive).
+	/// @param far_v Specifies the distance from the viewer to the far clipping plane (always positive).
 	/// @tparam T Value type used to build the matrix. Currently supported: half (not recommanded), float or double.
 	/// @see gtc_matrix_transform
 	template <typename T>
@@ -314,7 +314,7 @@ namespace glm
 		T width,
 		T height,
 		T near,
-		T far);
+		T far_v);
 
 	/// Creates a matrix for a symmetric perspective-view frustum with far plane at infinite with default handedness.
 	///

@@ -31,13 +31,6 @@ struct hash<QByteArray>
 } // namespace std
 #endif
 
-// WHY, WINDOWS, WHY ?
-#ifdef FAR
-#undef FAR
-#endif
-#ifdef NEAR
-#undef NEAR
-#endif
 namespace SEGS
 {
 struct SequencerInstanceStorage;
@@ -108,7 +101,7 @@ enum class SeqBitNames : uint32_t
     VARIATIONA            = 54,
     VARIATIONB            = 55,
     VARIATIONC            = 56,
-    FAR                   = 57,
+    FAR_BIT               = 57,
     CLOSE                 = 58,
     VERYCLOSE             = 59,
     WALK                  = 60,

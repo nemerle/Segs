@@ -6,6 +6,7 @@
  */
 
 #pragma once
+#include <cstdint>
 
 enum class ClientStates : uint8_t
 {
