@@ -17,9 +17,8 @@ endif()
 ########################################################################################
 # Optional components
 ########################################################################################
+include(ExternalProject_EASTL.cmake)
 include(ExternalProject_LUA.cmake)
 include(ExternalProject_SOL2.cmake)
 include(ExternalProject_JCON.cmake)
-if(BUILD_EDITOR)
-include(ExternalProject_SegsEngine.cmake)
-endif()
+
