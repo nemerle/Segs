@@ -14,6 +14,12 @@ if(MINGW OR MSVC) # ERICEDIT: If the OS is Windows:
         )
 endif()
 
+add_library(glm INTERFACE)
+target_include_directories(glm INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
 ########################################################################################
 # Optional components
 ########################################################################################
