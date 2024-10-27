@@ -35,4 +35,3 @@ signals:
 private:
     Ui::UpdaterDlg *ui;
 };
-

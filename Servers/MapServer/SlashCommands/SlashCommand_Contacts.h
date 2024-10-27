@@ -9,8 +9,6 @@
 #include "Containers/String.h"
 #include "Containers/Vector.h"
 
-#include <QtCore/QtContainerFwd>
-
 struct MapClientSession;
 
 // Slash Commands related to Contacts, Tasks, Stores
