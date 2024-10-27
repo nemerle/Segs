@@ -11,9 +11,10 @@
 #include "Common/GameData/power_definitions.h"
 #include "Common/GameData/GameDataStore.h"
 
-#include <QtCore/QString>
-#include <QtCore/QDebug>
-#include <array>
+#include "Common/Containers/String.h"
+#include "Components/Logging.h"
+
+#include "EASTL/array.h"
 
 class Entity;
 struct CharacterData;
@@ -105,16 +106,16 @@ enum : uint32_t { class_version = 1 };
 struct buffset
 {
     float           m_value                 = 0.0;
-    QString         m_value_name            = "";
+    String          m_value_name            = "";
     float           m_duration              = 0.0f;
     uint32_t        m_attrib                = 0;       // for damage resistances or defenses or others
 };
 
 struct Buffs
 {
-    QString         m_name                  = "unknown";
+    String          m_name                  = "unknown";
     PowerPool_Info  m_buff_info;                        //There is one buff for each power, so that only one icon is shown
-    std::vector<buffset>    m_buffs;                    //powers with multiple effects have a buffset per effect
+    Vector<buffset>    m_buffs;                    //powers with multiple effects have a buffset per effect
     uint32_t         source_ent_idx          = 0;
 };
 
@@ -123,11 +124,11 @@ struct CharacterInspiration
         enum : uint32_t {class_version = 2};
         PowerPool_Info  m_insp_info;
         Power_Data      m_insp_tpl;
-        QString         m_name;
+        String          m_name;
         uint32_t        m_col               = 0;
         uint32_t        m_row               = 0;
         bool            m_has_insp          = false;
-        
+
         template<class Archive>
         void serialize(Archive &archive, uint32_t const version);
 };
@@ -135,8 +136,8 @@ struct CharacterInspiration
 struct vInspirations
 {
     enum : uint32_t {class_version = 1};
-    
-    std::vector<std::vector<CharacterInspiration>> m_inspirations;
+
+    Vector<Vector<CharacterInspiration>> m_inspirations;
 
     // although in some cases people prefer [row][col], i'll be using x -> col and y -> row
     size_t m_rows, m_cols;
@@ -144,9 +145,9 @@ struct vInspirations
     vInspirations(size_t cols = 5, size_t rows = 4)
     {
         if(cols > 5)
-            qCritical() << "vInspirations has more than 5 columns!";
+            sCritical() << "vInspirations has more than 5 columns!";
         if(rows > 4)
-            qCritical() << "vInspirations has more than 4 rows!";
+            sCritical() << "vInspirations has more than 4 rows!";
 
         m_cols = cols;
         m_rows = rows;
@@ -168,7 +169,7 @@ struct vInspirations
     CharacterInspiration& at (const size_t col, const size_t row)
     {
         if(col >= m_cols || row >= m_rows)
-            qCritical() << QString("Trying to access vInspirations of %1 rows %2 cols using params %3 rows %4 cols");
+            sCritical() << String ("Trying to access vInspirations of %1 rows %2 cols using params %3 rows %4 cols");
 
         return m_inspirations[col][row];
     }
@@ -176,7 +177,7 @@ struct vInspirations
     const CharacterInspiration& at (const size_t col, const size_t row) const
     {
         if(col >= m_cols || row >= m_rows)
-            qCritical() << QString("Trying to access vInspirations of %1 rows %2 cols using params %3 rows %4 cols");
+            sCritical() << String ("Trying to access vInspirations of %1 rows %2 cols using params %3 rows %4 cols");
 
         return m_inspirations[col][row];
     }
@@ -224,16 +225,16 @@ struct CharacterEnhancement
         PowerPool_Info  m_enhance_info;
         Power_Data      m_enhance_tpl;
         uint32_t        m_slot_idx          = 0;
-        QString         m_name;
+        String          m_name;
         uint32_t        m_level             = 0;
         uint32_t        m_num_combines      = 0;
         bool            m_slot_used         = false;
-        
+
         template<class Archive>
         void serialize(Archive &archive, uint32_t const version);
 };
 
-using vEnhancements = std::array<CharacterEnhancement, 10>;
+using vEnhancements = eastl::array<CharacterEnhancement, 10>;
 
 struct CharacterPower
 {
@@ -254,7 +255,7 @@ struct CharacterPower
         bool            m_timer_updated         = false;
         bool            m_erase_power           = false;
 
-        std::vector<CharacterEnhancement> m_enhancements; // max of 5 enhancement slots for this client version
+        Vector<CharacterEnhancement> m_enhancements; // max of 5 enhancement slots for this client version
 
         Power_Data getPowerTemplate() const;
         template<class Archive>
@@ -267,13 +268,13 @@ struct CharacterPowerSet
         uint32_t                    m_index         = 0;
         uint32_t                    m_category      = 0;
         uint32_t                    m_level_bought  = 0;
-        std::vector<CharacterPower> m_powers;
-        
+        Vector<CharacterPower> m_powers;
+
         template<class Archive>
         void serialize(Archive &archive, uint32_t const version);
 };
 
-using vPowerSets = std::vector<CharacterPowerSet>;
+using vPowerSets = Vector<CharacterPowerSet>;
 
 class PowerTrayItem
 {
@@ -282,9 +283,9 @@ enum : uint32_t { class_version=1 };
     TrayItemType    m_entry_type    = TrayItemType(0);
     uint32_t        m_pset_idx      = 0;
     uint32_t        m_pow_idx       = 0;
-    QString         m_command;
-    QString         m_short_name;
-    QString         m_icon_name;
+    String          m_command;
+    String          m_short_name;
+    String          m_icon_name;
 
     void serializeto(BitStream &tgt) const;
     void serializefrom(BitStream &src);
@@ -298,7 +299,7 @@ class PowerTray
 {
 public:
 enum : uint32_t { class_version=1 };
-    std::array<PowerTrayItem, 10>     m_tray_items;
+    eastl::array<PowerTrayItem, 10>     m_tray_items;
     PowerTrayItem *getPowerTrayItem(size_t idx);
     int setPowers();
 
@@ -316,7 +317,7 @@ class PowerTrayGroup
 public:
 enum : uint32_t { class_version=1 };
 static const int m_num_trays = 2; // was 3, displayed trays
-    std::array<PowerTray, 9>     m_trays;
+    eastl::array<PowerTray, 9>     m_trays;
     uint32_t m_default_pset_idx = 0;
     uint32_t m_default_pow_idx  = 0;
     bool m_has_default_power    = false;
@@ -348,9 +349,9 @@ struct DelayedEffect
 /*
  * Powers Methods
  */
-int     getPowerCatByName(const QString &name);
-int     getPowerSetByName(const QString &name, uint32_t pcat_idx);
-int     getPowerByName(const QString &name, uint32_t pcat_idx, uint32_t pset_idx);
+int     getPowerCatByName(const String  &name);
+int     getPowerSetByName(const String  &name, uint32_t pcat_idx);
+int     getPowerByName(const String  &name, uint32_t pcat_idx, uint32_t pset_idx);
 CharacterPower getPowerData(PowerPool_Info &ppool);
 CharacterPowerSet getPowerSetData(PowerPool_Info &ppool);
 CharacterPower *getOwnedPowerByVecIdx(Entity &e, uint32_t pset_idx, uint32_t pow_idx);
@@ -369,7 +370,7 @@ void dumpOwnedPowers(CharacterData &cd);
  * Inspirations Methods
  */
 const CharacterInspiration* getInspiration(const Entity &ent, uint32_t col, uint32_t row);
-void addInspirationByName(CharacterData &cd, QString &name);
+void addInspirationByName(CharacterData &cd, const String &name);
 void addInspirationToChar(CharacterData &cd, const CharacterInspiration& insp);
 int getNumberInspirations(const CharacterData &cd);
 int getMaxNumberInspirations(const CharacterData &cd);
@@ -381,7 +382,7 @@ void dumpInspirations(CharacterData &cd);
 /*
  * Enhancements Methods
  */
-void addEnhancementByName(CharacterData &cd, QString &name, uint32_t &level);
+void addEnhancementByName(CharacterData &cd, const String &name, uint32_t &level);
 void addEnhancementToChar(CharacterData &cd, const CharacterEnhancement& enh);
 CharacterEnhancement *getSetEnhancementBySlot(Entity &e, uint32_t pset_idx_in_array, uint32_t pow_idx_in_array, uint32_t eh_slot);
 const CharacterEnhancement* getEnhancement(const Entity &ent, uint32_t idx);
@@ -393,7 +394,7 @@ void trashEnhancement(CharacterData &cd, uint32_t eh_idx);
 void trashEnhancementInPower(CharacterData &cd, uint32_t pset_idx, uint32_t pow_idx, uint32_t eh_idx);
 void trashComboEnhancement(CharacterEnhancement &eh, uint32_t eh_idx);
 void reserveEnhancementSlot(CharacterPower *pow, uint32_t level_purchased);
-void buyEnhancementSlots(Entity &ent, uint32_t available_slots, std::vector<int> pset_idx, std::vector<int> pow_idx);
+void buyEnhancementSlots(Entity &ent, uint32_t available_slots, Vector<int> pset_idx, Vector<int> pow_idx);
 
 
 struct CombineResult

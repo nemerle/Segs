@@ -6,17 +6,18 @@
  */
 
 #pragma once
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 
 struct MapClientSession;
-class QStringList;
 
 // Slash Commands related to Powers
 
 // Access Level 9 Commands (GMs)
-void cmdHandler_AddEntirePowerSet(const QStringList &params, MapClientSession &sess);
-void cmdHandler_AddPower(const QStringList &params, MapClientSession &sess);
-void cmdHandler_AddInspiration(const QStringList &params, MapClientSession &sess);
-void cmdHandler_AddEnhancement(const QStringList &params, MapClientSession &sess);
+void cmdHandler_AddEntirePowerSet(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_AddPower(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_AddInspiration(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_AddEnhancement(const Vector<String> &params, MapClientSession &sess);
 
 // Access Level 1 Commands
-void cmdHandler_ReSpec(const QStringList &params, MapClientSession &sess);
+void cmdHandler_ReSpec(const Vector<String> &params, MapClientSession &sess);

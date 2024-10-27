@@ -127,7 +127,7 @@ public:
         - doesn't contain partial ticks
         - may contain ticks which have been received before by server (client resends until acked)
     */
-    std::vector<ControlStateChange> m_control_state_changes;
+    Vector<ControlStateChange> m_control_state_changes;
 
     // id of first control state change in the vector, each change bumps the id
     // by 1, NOT the tick, wraps around to 0 on overflow. Use these to figure
@@ -152,7 +152,7 @@ public:
     uint32_t    m_target_idx = 0;
 
     // not sure what these do
-    std::vector<TimeState> m_time_state;
+    Vector<TimeState> m_time_state;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -176,7 +176,7 @@ class InputState
 {
 public:
     // input changes which have been received from the client but not processed yet
-    std::vector<InputStateChange>   m_queued_changes;
+    Vector<InputStateChange>        m_queued_changes;
 
     // next control state change id that the server wants, used to avoid processing
     // the same control state changes multiple times

@@ -28,11 +28,13 @@
 #include "Common/GameData/shop_definitions.h"
 #include "Common/GameData/bodypart_serializers.h"
 #include "Common/GameData/CommonNetStructures.h"
+#include "Common/Utils/ElapsedTimer.h"
 #include "Components/Logging.h"
 #include "Components/Settings.h"
 
-#include <QtCore/QDebug>
-#include <QtCore/QString>
+#include "Containers/DateTime.h"
+#include "Containers/String.h"
+#include <EASTL/sort.h>
 
 
 namespace
@@ -48,36 +50,36 @@ uint32_t color_to_4ub(const glm::vec3 &rgb)
 }
 class IndexedPacker final : public IndexedStringPacker
 {
-    std::vector<QString> m_known_strings;
-    QHash<QString,int> m_string_to_index;
+    Vector<String> m_known_strings;
+    HashMap<String,int> m_string_to_index;
 
 public:
     void sortEntries() {
-        std::sort(m_known_strings.begin(),m_known_strings.end(),[](const QString &a,const QString &b)->bool {
+        eastl::sort(m_known_strings.begin(),m_known_strings.end(),[](const String &a,const String &b)->bool {
             // all added strings have been lower-cased, so no need to case-insensitive compare here.
             return a.compare(b)<0;
         });
         // record the new order in map.
         int i=1;
-        for(const QString &str : m_known_strings)
+        for(const String &str : m_known_strings)
             m_string_to_index[str] = i++;
     }
 
     // IndexedStringPacker interface
-    void addString(const QString &str)
+    void addString(const String &str)
     {
-        int idx = m_string_to_index.value(str.toLower(),0);
+        int idx = m_string_to_index.at(str.to_lower(),0);
         if(idx)
         {
-            assert(0==m_known_strings[idx-1].compare(str,Qt::CaseInsensitive));
+            assert(0==m_known_strings[idx-1].comparei(str));
             return;
         }
-        m_known_strings.push_back(str.toLower());
-        m_string_to_index[str.toLower()] = m_known_strings.size();
+        m_known_strings.push_back(str.to_lower());
+        m_string_to_index[str.to_lower()] = m_known_strings.size();
     }
-    int getIndex(const QString &str) const
+    int getIndex(const String &str) const
     {
-        return m_string_to_index.value(str.toLower(),0);
+        return m_string_to_index.at(str.to_lower(),0);
     }
 };
 
@@ -85,7 +87,7 @@ class HashBasedPacker final : public ColorAndPartPacker
 {
     StringHash  m_strings;
     ColorHash   m_colors;
-    void add_colors(const std::vector<ColorEntry_Data> &clr)
+    void add_colors(const Vector<ColorEntry_Data> &clr)
     {
         for(auto idx : clr)
         {
@@ -190,7 +192,7 @@ public:
         tgt = bs.GetBits(32);
     }
 
-    void packPartname(const QString &str, BitStream &bs) const override
+    void packPartname(const String &str, BitStream &bs) const override
     {
         uint32_t cache_idx=0;
         uint32_t prev_val=0;
@@ -205,14 +207,14 @@ public:
             bs.StoreString(str);
     }
 
-    void unpackPartname(BitStream &bs, QString &tgt)const override
+    void unpackPartname(BitStream &bs, String &tgt)const override
     {
         tgt.clear();
         bool in_cache= bs.GetBits(1);
         if(in_cache)
         {
             int in_cache_idx = bs.GetPackedBits(stringcachecount_bitlength);
-            const QString *kv = m_strings.key_for_idx(in_cache_idx);
+            const String *kv = m_strings.key_for_idx(in_cache_idx);
             if(kv)
                 tgt=*kv;
             return;
@@ -222,29 +224,28 @@ public:
 };
 
 template<class TARGET,unsigned int CRC>
-bool read_data_to(const QString &directory_path,const QString &storage,TARGET &target)
+bool read_data_to(const String &directory_path,const String &storage,TARGET &target)
 {
-    QElapsedTimer timer;
-    QFSWrapper wrap;
-    QDebug deb=qDebug().noquote().nospace();
+    SEGS::ElapsedTimer timer;
+    DebugOutput deb(sDebug());
     deb << "Reading "<<directory_path<<storage<<" ... ";
     timer.start();
     BinStore bin_store;
-    if(!bin_store.open(wrap,directory_path+storage,CRC))
+    if(!bin_store.open(directory_path+storage,CRC))
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load "<<storage<<" from" << directory_path;
-        qWarning().noquote() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/";
+        sWarning() << "Couldn't load "<<storage<<" from" << directory_path;
+        sWarning() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/";
         return false;
     }
 
     bool res=loadFrom(&bin_store,target);
     if(res)
-        deb << " OK in "<<QString::number(float(timer.elapsed())/1000.0f,'g',4)<<"s";
+        deb << " OK in "<<StringUtils::num_scientific(float(timer.elapsed())/1000.0f,4)<<"s";
     else
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << directory_path<<storage<<": wrong file format?";
+        sWarning() << "Couldn't load" << directory_path<<storage<<": wrong file format?";
     }
     return res;
 }
@@ -258,7 +259,7 @@ GameDataStore::GameDataStore()
         was_created = true;
     else
     {
-        qCritical() << "Multiple instances of GameDataStore created in a single process, expect trouble";
+        sCritical() << "Multiple instances of GameDataStore created in a single process, expect trouble";
     }
     packer_instance = new HashBasedPacker;
     m_index_based_packer = new IndexedPacker;
@@ -271,10 +272,10 @@ GameDataStore::~GameDataStore()
     packer_instance = nullptr;
 }
 
-bool GameDataStore::read_game_data(const QString &directory_path)
+bool GameDataStore::read_game_data(const String &directory_path)
 {
-    qInfo().noquote() << "Reading game data from" << directory_path << "folder";
-    QElapsedTimer load_timer;
+    sInfo() << "Reading game data from" << directory_path << "folder";
+    SEGS::ElapsedTimer load_timer;
     load_timer.start();
 
     if(!read_costumes(directory_path))
@@ -317,7 +318,7 @@ bool GameDataStore::read_game_data(const QString &directory_path)
         return false;
     if(!read_body_parts(directory_path))
         return false;
-    qInfo().noquote() << "Finished reading game data:  done in"<<float(load_timer.elapsed())/1000.0f<<"s";
+    sInfo() << "Finished reading game data:  done in"<<float(load_timer.elapsed())/1000.0f<<"s";
     {
         TIMED_LOG({
                       static_cast<HashBasedPacker *>(packer_instance)->fill_hashes(*this);
@@ -327,7 +328,7 @@ bool GameDataStore::read_game_data(const QString &directory_path)
                       for(const FxInfo &fx : m_fx_infos)
                       {
                           packer->addString(fx.fxname);
-                          m_name_to_fx_index[fx.fxname.toLower()] = idx++;
+                          m_name_to_fx_index[fx.fxname.to_lower()] = idx++;
                       }
                       packer->sortEntries();
                   },"Postprocessing runtime data .. ");
@@ -354,7 +355,7 @@ uint32_t GameDataStore::expMaxLevel() const
     return uint32_t(m_experience_and_debt_per_level.m_ExperienceRequired.size()-1);
 }
 
-uint32_t GameDataStore::countForLevel(uint32_t lvl, const std::vector<uint32_t> &schedule) const
+uint32_t GameDataStore::countForLevel(uint32_t lvl, const Vector<uint32_t> &schedule) const
 {
     uint32_t i = 0;
 
@@ -367,25 +368,24 @@ uint32_t GameDataStore::countForLevel(uint32_t lvl, const std::vector<uint32_t> 
     return i;
 }
 
-FxInfo *GameDataStore::getFxInfoByName(const QByteArray &name)
+FxInfo *GameDataStore::getFxInfoByName(const String &name)
 {
-    int idx = m_name_to_fx_index.value(name.toLower(),-1);
+    int idx = m_name_to_fx_index.at(name.to_lower(),-1);
     if(idx==-1)
         return nullptr;
     return m_fx_infos.data()+idx;
 }
 
-bool GameDataStore::read_costumes(const QString &directory_path)
+bool GameDataStore::read_costumes(const String &directory_path)
 {
-    QFSWrapper wrap;
-    QDebug deb=qDebug().noquote().nospace();
+    auto deb(sDebug());
     deb << "Reading " << directory_path << "bin/costume.bin ... ";
     BinStore costumes_store;
-    if(!costumes_store.open(wrap,directory_path + "bin/costume.bin", costumesets_i0_requiredCrc))
+    if(!costumes_store.open(directory_path + "bin/costume.bin", costumesets_i0_requiredCrc))
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load bin/costume.bin from" << directory_path;
-        qWarning().noquote() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/bin/";
+        sWarning()<< "Couldn't load bin/costume.bin from" << directory_path;
+        sWarning()<< "Using piggtool, ensure that bin.pigg has been extracted to ./data/bin/";
         return false;
     }
 
@@ -395,23 +395,22 @@ bool GameDataStore::read_costumes(const QString &directory_path)
     else
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << directory_path << "bin/costume.bin: wrong file format?";
+        sWarning()<< "Couldn't load" << directory_path << "bin/costume.bin: wrong file format?";
     }
     return res;
 }
 
-bool GameDataStore::read_colors( const QString &directory_path )
+bool GameDataStore::read_colors( const String &directory_path )
 {
-    QFSWrapper wrap;
-    QDebug deb=qDebug().noquote().nospace();
+    auto deb(sDebug());
     deb << "Reading " << directory_path << "bin/supergroupColors.bin ... ";
     BinStore sg_color_store;
 
-    if(!sg_color_store.open(wrap,directory_path + "bin/supergroupColors.bin", palette_i0_requiredCrc))
+    if(!sg_color_store.open(directory_path + "bin/supergroupColors.bin", palette_i0_requiredCrc))
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load bin/supergroupColors.bin from" << directory_path;
-        qWarning().noquote() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/bin/";
+        sWarning()<< "Couldn't load bin/supergroupColors.bin from" << directory_path;
+        sWarning()<< "Using piggtool, ensure that bin.pigg has been extracted to ./data/bin/";
         return false;
     }
 
@@ -421,14 +420,14 @@ bool GameDataStore::read_colors( const QString &directory_path )
     else
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << directory_path << "bin/supergroupColors.bin: wrong file format?";
+        sWarning()<< "Couldn't load" << directory_path << "bin/supergroupColors.bin: wrong file format?";
     }
     return res;
 }
 
-bool GameDataStore::read_origins(const QString &directory_path)
+bool GameDataStore::read_origins(const String &directory_path)
 {
-    qDebug() << "Loading origins:";
+    sDebug() << "Loading origins:";
     if(!read_data_to<Parse_AllOrigins,origins_i0_requiredCrc>(directory_path, "bin/origins.bin", m_player_origins))
         return false;
     if(!read_data_to<Parse_AllOrigins,origins_i0_requiredCrc>(directory_path, "bin/villain_origins.bin", m_other_origins))
@@ -436,9 +435,9 @@ bool GameDataStore::read_origins(const QString &directory_path)
     return true;
 }
 
-bool GameDataStore::read_classes(const QString &directory_path)
+bool GameDataStore::read_classes(const String &directory_path)
 {
-    qDebug() << "Loading classes:";
+    sDebug() << "Loading classes:";
     if(!read_data_to<Parse_AllCharClasses, charclass_i0_requiredCrc>(directory_path, "bin/classes.bin", m_player_classes))
         return false;
     if(!read_data_to<Parse_AllCharClasses, charclass_i0_requiredCrc>(directory_path, "bin/villain_classes.bin",
@@ -447,66 +446,64 @@ bool GameDataStore::read_classes(const QString &directory_path)
     return true;
 }
 
-bool GameDataStore::read_exp_and_debt(const QString &directory_path)
+bool GameDataStore::read_exp_and_debt(const String &directory_path)
 {
-    qDebug() << "Loading exp and debt tables:";
+    sDebug() << "Loading exp and debt tables:";
     if(!read_data_to<LevelExpAndDebt, levelsdebts_i0_requiredCrc>(directory_path, "bin/experience.bin",
                                                                    m_experience_and_debt_per_level))
         return false;
     return true;
 }
 
-bool GameDataStore::read_keybinds(const QString &directory_path)
+bool GameDataStore::read_keybinds(const String &directory_path)
 {
-    qDebug() << "Loading keybinds:";
+    sDebug() << "Loading keybinds:";
     if(!read_data_to<Parse_AllKeyProfiles,keyprofile_i0_requiredCrc>(directory_path, "bin/kb.bin", m_keybind_profiles))
         return false;
     return true;
 }
 
-bool GameDataStore::read_commands(const QString &directory_path)
+bool GameDataStore::read_commands(const String &directory_path)
 {
-    qDebug() << "Loading commands:";
+    sDebug() << "Loading commands:";
     if(!read_data_to<Parse_AllCommandCategories, keycommands_i0_requiredCrc>(directory_path, "bin/command.bin",
                                                                               m_command_categories))
         return false;
     return true;
 }
 
-bool GameDataStore::read_npcs(const QString &directory_path)
+bool GameDataStore::read_npcs(const String &directory_path)
 {
-    qDebug() << "Loading npcs:";
+    sDebug() << "Loading npcs:";
     return read_data_to<AllNpcs_Data, npccostumesets_i0_requiredCrc>(directory_path, "bin/VillainCostume.bin",
                                                                    m_npc_store.m_all_npcs);
 }
 
-bool GameDataStore::read_settings(const QString &/*directory_path*/)
+bool GameDataStore::read_settings(const String &/*directory_path*/)
 {
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    Settings config(Settings::getSettingsPath());
 
-    qInfo() << "Loading AFK settings...";
-    config.beginGroup(QStringLiteral("AFK Settings"));
-        m_time_to_afk = config.value(QStringLiteral("time_to_afk"), "300").toInt();
-        m_time_to_logout_msg = config.value(QStringLiteral("time_to_logout_msg"), "1080").toInt();
-        m_time_to_auto_logout = config.value(QStringLiteral("time_to_auto_logout"), "120").toInt();
-        m_uses_auto_logout = config.value(QStringLiteral("uses_auto_logout"), "true").toBool();
+    sInfo() << "Loading AFK settings...";
+    config.beginGroup("AFK Settings");
+        m_time_to_afk = config.value<int>("time_to_afk", 300);
+        m_time_to_logout_msg = config.value<int>("time_to_logout_msg", 1080);
+        m_time_to_auto_logout = config.value<int>("time_to_auto_logout", 120);
+        m_uses_auto_logout = config.value("uses_auto_logout", true);
     config.endGroup(); // AFK Settings
 
-    qInfo() << "Loading Modifier settings...";
-    config.beginGroup(QStringLiteral("Modifiers"));
-        m_uses_xp_mod = config.value(QStringLiteral("uses_xp_mod"), "").toBool();
-        m_xp_mod_multiplier = config.value(QStringLiteral("xp_mod_multiplier"), "").toDouble();
-        m_xp_mod_startdate = QDateTime::fromString(config.value(QStringLiteral("xp_mod_startdate"), "").toString(),
-             "M/d/yyyy h:mm AP");
-        m_xp_mod_enddate = QDateTime::fromString(config.value(QStringLiteral("xp_mod_enddate"), "").toString(),
-             "M/d/yyyy h:mm AP");
+    sInfo() << "Loading Modifier settings...";
+    config.beginGroup(("Modifiers"));
+        m_uses_xp_mod = config.value("uses_xp_mod", false);
+        m_xp_mod_multiplier = config.value("xp_mod_multiplier", 1.0);
+        m_xp_mod_startdate = StringUtils::parseDate("%m/%d/%Y %I:%M %p",config.value<String>("xp_mod_startdate", ""));
+        m_xp_mod_enddate = StringUtils::parseDate("%m/%d/%Y %I:%M %p",config.value<String>("xp_mod_enddate", ""));
     config.endGroup(); // Modifiers
 
-    qInfo() << "Loading Experimental settings...";
-    config.beginGroup(QStringLiteral("Experimental"));
+    sInfo() << "Loading Experimental settings...";
+    config.beginGroup(("Experimental"));
 
     // constrain to a reasonable range
-    int ticks = config.value(QStringLiteral("world_update_ticks_per_sec"), "30").toInt();
+    int ticks = config.value("world_update_ticks_per_sec", 30);
     m_world_update_ticks_per_sec = std::min(std::max(ticks, minimumTicksPerSecond), maximumTicksPerSecond);
 
     config.endGroup(); // Experiemental
@@ -514,18 +511,20 @@ bool GameDataStore::read_settings(const QString &/*directory_path*/)
     return true;
 }
 
-bool GameDataStore::read_powers(const QString &directory_path)
+bool GameDataStore::read_powers(const String &directory_path)
 {
-    qDebug() << "Loading powers:";
-    if(QFile(directory_path+"powers.json").exists() && loadFrom(directory_path+"powers.json", m_all_powers))
+    auto fs = SEGS::getServiceLocator()->getFS();
+    sDebug() << "Loading powers:";
+
+    if(fs->exists(directory_path+"powers.json") && loadFrom(directory_path+"powers.json", m_all_powers))
     {
-        qDebug() << "Loaded power data from powers.json!";
+        sDebug() << "Loaded power data from powers.json!";
             return true;
     }
     else if(read_data_to<AllPowerCategories, powers_i0_requiredCrc>(directory_path,
                                                                     "bin/powers.bin",m_all_powers))
     {
-        qDebug() << "Loaded power data from powers.bin!";
+        sDebug() << "Loaded power data from powers.bin!";
     }
     else
         return false;
@@ -533,9 +532,9 @@ bool GameDataStore::read_powers(const QString &directory_path)
     return true;
 }
 
-bool GameDataStore::read_combine_chances(const QString &directory_path)
+bool GameDataStore::read_combine_chances(const String &directory_path)
 {
-    qDebug() << "Loading Combining schedule:";
+    sDebug() << "Loading Combining schedule:";
     if(!read_data_to<Parse_Combining, combining_i0_requiredCrc>(directory_path, "bin/combine_chances.bin",
                                                                    m_combine_chances))
         return false;
@@ -545,9 +544,9 @@ bool GameDataStore::read_combine_chances(const QString &directory_path)
     return true;
 }
 
-bool GameDataStore::read_effectiveness(const QString &directory_path)
+bool GameDataStore::read_effectiveness(const String &directory_path)
 {
-    qDebug() << "Loading Enhancement Effectiveness:";
+    sDebug() << "Loading Enhancement Effectiveness:";
     if(!read_data_to<Parse_Effectiveness, boosteffectiveness_i0_requiredCrc>(directory_path, "bin/boost_effect_above.bin",
                                                                    m_effectiveness_above))
         return false;
@@ -557,65 +556,65 @@ bool GameDataStore::read_effectiveness(const QString &directory_path)
     return true;
 }
 
-bool GameDataStore::read_pi_schedule(const QString &directory_path)
+bool GameDataStore::read_pi_schedule(const String &directory_path)
 {
-    qDebug() << "Loading PI Schedule:";
+    sDebug() << "Loading PI Schedule:";
     return read_data_to<Parse_PI_Schedule, pischedule_i0_requiredCrc>(directory_path, "bin/schedules.bin",
                                                                       m_pi_schedule);
 }
 
-bool GameDataStore::read_fx(const QString &directory_path)
+bool GameDataStore::read_fx(const String &directory_path)
 {
-    qDebug() << "Loading FX Information:";
-    return read_data_to<std::vector<struct FxInfo>, fxinfos_i0_requiredCrc>(directory_path, "bin/fxinfo.bin",
+    sDebug() << "Loading FX Information:";
+    return read_data_to<Vector<struct FxInfo>, fxinfos_i0_requiredCrc>(directory_path, "bin/fxinfo.bin",
                                                                             m_fx_infos);
 }
 
-bool GameDataStore::read_sequencer_definitions(const QString &directory_path)
+bool GameDataStore::read_sequencer_definitions(const String &directory_path)
 {
-    qDebug() << "Loading Sequencer Information:";
+    sDebug() << "Loading Sequencer Information:";
     return read_data_to<SequencerList, seqencerlist_i0_requiredCrc>(directory_path, "bin/sequencers.bin",m_seq_definitions);
 }
 
-bool GameDataStore::read_store_data(const QString &directory_path)
+bool GameDataStore::read_store_data(const String &directory_path)
 {
-    qDebug() << "Loading shop data:";
+    sDebug() << "Loading shop data:";
     return read_data_to<AllShops_Data, shoplist_i0_requiredCrc>(directory_path, "bin/stores.bin", m_shops_data);
 }
 
-bool GameDataStore::read_store_items_data(const QString &directory_path)
+bool GameDataStore::read_store_items_data(const String &directory_path)
 {
-    qDebug() << "Loading shop items:";
+    sDebug() << "Loading shop items:";
     return read_data_to<AllShopItems_Data, shopitems_i0_requiredCrc>(directory_path, "bin/items.bin", m_shop_items_data);
 }
 
-bool GameDataStore::read_store_depts_data(const QString &directory_path)
+bool GameDataStore::read_store_depts_data(const String &directory_path)
 {
-    qDebug() << "Loading shop depts:";
+    sDebug() << "Loading shop depts:";
     return read_data_to<AllShopDepts_Data, shopdepts_i0_requiredCrc>(directory_path, "bin/depts.bin", m_shop_depts_data);
 }
-bool GameDataStore::read_sequencer_types(const QString &directory_path)
+bool GameDataStore::read_sequencer_types(const String &directory_path)
 {
-    QElapsedTimer timer;
+    SEGS::ElapsedTimer timer;
 
-    qDebug() << "Loading Seq types:";
+    sDebug() << "Loading Seq types:";
 
-    QDebug deb=qDebug().noquote().nospace();
+    auto deb(sDebug());
 
     bool res=loadFrom(directory_path+"converted/ent_types.crl.json",m_seq_types);
     if(res)
-        deb << " OK in "<<QString::number(float(timer.elapsed())/1000.0f,'g',4)<<"s";
+        deb << " OK in "<<StringUtils::num_scientific(float(timer.elapsed())/1000.0f,4)<<"s";
     else
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << directory_path<<"ent_types.crl_json: wrong file format?";
+        sWarning() << "Couldn't load" << directory_path<<"ent_types.crl_json: wrong file format?";
     }
     return res;
 }
 
-bool GameDataStore::read_body_parts(const QString &directory_path)
+bool GameDataStore::read_body_parts(const String &directory_path)
 {
-    qDebug() << "Loading body parts:";
+    sDebug() << "Loading body parts:";
     bool res =
         read_data_to<BodyPartsStorage, bodyparts_i0_requiredCrc>(directory_path, "bin/BodyParts.bin", m_body_parts);
     if(res)
@@ -638,7 +637,7 @@ Power_Data * GameDataStore::editable_power_tpl(uint32_t pcat_idx, uint32_t pset_
     return &m_all_powers.m_categories[pcat_idx].m_PowerSets[pset_idx].m_Powers[pow_idx];
 }
 
-int GameDataStore::getFxNamePackId(const QString &name)
+int GameDataStore::getFxNamePackId(const String &name)
 {
     return m_index_based_packer->getIndex(name);
 }
@@ -648,32 +647,33 @@ const StoredPowerCategory& GameDataStore::get_power_category(uint32_t pcat_idx)
     return m_all_powers.m_categories.at(pcat_idx);
 }
 
-int getEntityOriginIndex(const GameDataStore &data, bool is_player, const QString &origin_name)
+int getEntityOriginIndex(const GameDataStore &data, bool is_player, StringView origin_name)
 {
     const Parse_AllOrigins &origins_to_search(is_player ? data.m_player_origins : data.m_other_origins);
 
     int idx = 0;
     for(const Parse_Origin &orig : origins_to_search)
     {
-        if(origin_name.compare(orig.Name,Qt::CaseInsensitive)==0)
+        if(StringUtils::compare(origin_name,orig.Name,StringUtils::CaseInsensitive)==0)
             return idx;
         idx++;
     }
-    qCDebug(logNpcSpawn) << "Failed to locate origin index for" << origin_name;
+    sCDebug(logNpcSpawn) << "Failed to locate origin index for" << origin_name;
     return -1;
 }
-int getEntityClassIndex(const GameDataStore &data, bool is_player, const QString &class_name)
+
+int getEntityClassIndex(const GameDataStore &data, bool is_player, StringView class_name)
 {
     const Parse_AllCharClasses &classes_to_search(is_player ? data.m_player_classes : data.m_other_classes);
 
     int idx = 0;
     for(const CharClass_Data &classdata : classes_to_search)
     {
-        if(class_name.compare(classdata.m_Name,Qt::CaseInsensitive)==0)
+        if(StringUtils::compare(class_name,classdata.m_Name,StringUtils::CaseInsensitive)==0)
             return idx;
         idx++;
     }
-    qCDebug(logNpcSpawn) << "Failed to locate class index for" << class_name;
+    sCDebug(logNpcSpawn) << "Failed to locate class index for" << class_name;
     return -1;
 }
 

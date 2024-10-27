@@ -7,7 +7,7 @@
 
 #pragma once
 #include "Auth/AuthEvents.h"
-#include <deque>
+#include "Containers/Deque.h"
 
 struct GameServerInfo
 {
@@ -31,12 +31,12 @@ class ServerListResponse : public AuthLinkEvent
 {
 public:
     // [[ev_def:field]]
-    std::deque<GameServerInfo> m_serv_list;
+    Deque<GameServerInfo> m_serv_list;
     // [[ev_def:field]]
     uint8_t  m_preferred_server_idx;
     ServerListResponse() : AuthLinkEvent(evServerListResponse)
     {}
-    void set_server_list(const std::deque<GameServerInfo> &srv) {m_serv_list=srv;}
+    void set_server_list(const Deque<GameServerInfo> &srv) {m_serv_list=srv;}
     void serializeto(GrowingBuffer &buf) const override;
     void serializefrom(GrowingBuffer &buf) override;
     EVENT_IMPL(ServerListResponse)

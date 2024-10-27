@@ -17,7 +17,7 @@ void PlayerProgress::serialize(Archive &archive, uint32_t const version)
 {
     if(version != PlayerProgress::class_version)
     {
-        qCritical() << "Failed to serialize PlayerProgress, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize PlayerProgress, incompatible serialization format version " << version;
         return;
     }
 

@@ -25,7 +25,6 @@
     #include <stdio.h>
 #endif
 
-
 namespace eastl
 {
 

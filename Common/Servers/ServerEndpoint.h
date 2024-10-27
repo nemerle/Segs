@@ -14,9 +14,7 @@
 #include <ace/SOCK_Dgram.h>
 #include <ace/Reactor_Notification_Strategy.h>
 
-#include <unordered_map>
-
-namespace std
+namespace eastl
 {
     // std::hash override for ACE_INET_Addr
     template<>
@@ -40,7 +38,7 @@ class CRUDLink;
 class ServerEndpoint : public EventSrc
 {
     typedef EventSrc super;
-    typedef std::unordered_map<ACE_INET_Addr,CRUDLink *> hmAddrProto;
+    typedef HashMap<ACE_INET_Addr,CRUDLink *> hmAddrProto;
 public:
 
                     ServerEndpoint(const ACE_INET_Addr &local_addr) :

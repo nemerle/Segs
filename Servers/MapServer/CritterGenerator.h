@@ -7,24 +7,22 @@
 
 #pragma once
 
+#include "Containers/HashMap.h"
 #include "GameData/spawn_definitions.h"
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <vector>
 
 struct CritterGenerator
 {
-    QString                                 m_generator_name;
-    QString                                 m_encounter_node_name;
-    CritterSpawnLocations                   m_critter_encounter;
-    std::vector<CritterSpawnDef>            m_possible_critters_and_groups;
+    String                             m_generator_name;
+    String                             m_encounter_node_name;
+    CritterSpawnLocations              m_critter_encounter;
+    Vector<CritterSpawnDef>            m_possible_critters_and_groups;
     void generate(class MapInstance *);
 };
 
 struct CritterGeneratorStore
 {
-    QHash<QString, CritterGenerator> m_generators;
+    HashMap<String, CritterGenerator> m_generators;
     void generate(class MapInstance *instance);
 };
 
-QString makeReadableName(QString &name);
+String makeReadableName(const String &name);

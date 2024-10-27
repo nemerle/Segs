@@ -7,9 +7,8 @@
 #pragma once
 
 #include "GameCommand.h"
-
-#include <QtCore/QString>
-
+#include "Containers/String.h"
+#include "Components/SEGSEvent_impl.h"
 
 namespace SEGSEvents
 {
@@ -21,13 +20,13 @@ class TradeOffer final : public GameCommandEvent
 public:
     EVENT_IMPL(TradeOffer)
     TradeOffer();
-    TradeOffer(uint32_t db_id, const QString& name);
+    TradeOffer(uint32_t db_id, const String& name);
     void serializeto(BitStream& bs) const override;
 
     // [[ev_def:field]]
     uint32_t m_db_id = 0;
     // [[ev_def:field]]
-    QString m_name;
+    String m_name;
 };
 
 

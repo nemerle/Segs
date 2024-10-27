@@ -19,14 +19,13 @@
 #include "DataStorage.h"
 #include "trays_serializers.h"
 #include "attrib_serializers.h"
-#include <QDebug>
 
 #include "Components/Logging.h"
 
 
-void saveTo(const CharacterData &target, const QString &baseName, bool text_format)
+void saveTo(const CharacterData &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"CharacterData",baseName,text_format);
+    SEGS::commonSaveTo(target,"CharacterData",baseName,text_format);
 }
 
 

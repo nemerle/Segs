@@ -1,7 +1,7 @@
 /*
  * SEGS - Super Entity Game Server
  * http://www.segs.dev/
- * Copyright (c) 2006 - 2019 SEGS Team (see AUTHORS.md)
+ * Copyright (c) 2006 - 2024 SEGS Team (see AUTHORS.md)
  * This software is licensed under the terms of the 3-clause BSD License. See LICENSE.md for details.
  */
 
@@ -53,7 +53,7 @@ void EmailHandler::dispatch(Event *ev)
             on_client_disconnected(static_cast<ClientDisconnectedMessage *>(ev));
             break;
         default:
-            qCritical() << "EmailHandler dispatch hits default! Event info: " + QString(ev->info());
+            sCritical() << "EmailHandler dispatch hits default! Event info:" << ev->info();
             break;
     }
 }
@@ -112,7 +112,7 @@ void EmailHandler::on_email_create_response(EmailCreateResponse* msg)
 
 void EmailHandler::on_email_header(EmailHeaderRequest *msg)
 {
-    std::vector<EmailHeaderData> email_headers;
+    Vector<EmailHeaderData> email_headers;
     int unread_emails_count = 0;
     fill_email_headers(email_headers, msg->m_data.m_user_id, unread_emails_count);
 
@@ -150,7 +150,7 @@ void EmailHandler::on_email_read(EmailReadRequest *msg)
     if(email_data.m_sender_id == 0)
         email_data.m_sender_name = "DELETED CHARACTER";
 
-    QString cerealizedEmailData;
+    String cerealizedEmailData;
     serializeToQString(email_data, cerealizedEmailData);
 
     m_db_handler->putq(new EmailMarkAsReadMessage({msg->m_data.m_email_id, cerealizedEmailData}, uint64_t(1)));
@@ -163,7 +163,8 @@ void EmailHandler::on_email_read(EmailReadRequest *msg)
                     sender_data.m_server_id,
                     sender_data.m_instance_id);
 
-        QString msgToSender = QString("Your email with subject %1 has been read by its recipient!").arg(email_data.m_subject);
+        String msgToSender =
+            String(String::CtorSprintf(),"Your email with subject %s has been read by its recipient!",email_data.m_subject.c_str());
 
         sender_map_instance->putq(new EmailWasReadByRecipientMessage(
             {msgToSender}, sender_data.m_session_token));
@@ -206,7 +207,7 @@ void EmailHandler::on_fill_email_recipient_id_response(FillEmailRecipientIdRespo
                 msg->m_data.m_timestamp,
                 false};
 
-    QString cerealizedEmailData;
+    String cerealizedEmailData;
     serializeToQString(email_data, cerealizedEmailData);
 
     m_db_handler->putq(new EmailCreateRequest({
@@ -239,7 +240,7 @@ void EmailHandler::on_email_delete(EmailDeleteMessage *msg)
     m_state.m_stored_email_datas.erase(msg->m_data.m_email_id);
 
     // if the recipient requests an email delete, then surely he has read the email already.
-    // so we don't need remove from m_unread_email_ids here
+    // so we don't need to remove from m_unread_email_ids here
     m_state.m_stored_client_datas[emailData.m_sender_id].
             m_email_state.m_sent_email_ids.erase(msg->m_data.m_email_id);
     m_state.m_stored_client_datas[emailData.m_recipient_id].
@@ -256,7 +257,7 @@ void EmailHandler::on_client_connected(ClientConnectedMessage *msg)
             ClientSessionData{msg->m_data.m_session, msg->m_data.m_server_id, msg->m_data.m_sub_server_id, email_state};
     // send all emails where this client is the recipient
 
-    std::vector<EmailHeaderData> email_headers;
+    Vector<EmailHeaderData> email_headers;
     int unread_emails_count = 0;
     fill_email_headers(email_headers, msg->m_data.m_char_db_id, unread_emails_count);
 
@@ -286,7 +287,7 @@ void EmailHandler::fill_email_state(PlayerEmailState& email_state, uint32_t char
     }
 }
 
-void EmailHandler::fill_email_headers(std::vector<EmailHeaderData>& email_headers, uint32_t char_id, int &unread_emails_count)
+void EmailHandler::fill_email_headers(Vector<EmailHeaderData>& email_headers, uint32_t char_id, int &unread_emails_count)
 {
     for(const auto &email_id: m_state.m_stored_client_datas[char_id].m_email_state.m_received_email_ids)
     {

@@ -95,7 +95,7 @@ void SettingsDialog::xp_mod_checkbox_validator()
 
 void SettingsDialog::open_settings_dialog()
 {
-    QFileInfo config_file(Settings::getSettingsPath());
+    QFileInfo config_file(Settings::getSettingsPath().c_str());
     QString config_file_path = config_file.absoluteFilePath();
     SettingsDialog::read_config_file(config_file_path);
     QString fade_in_value = QString::number(ui->map_player_fade_in->value());
@@ -247,8 +247,8 @@ void SettingsDialog::read_config_file(QString filePath)
 
 void SettingsDialog::generate_default_config_file(QString ip)
 {
-    QSettings config_file_write(Settings::getSettingsPath(), QSettings::IniFormat);
-    QSettings settings_template(Settings::getSettingsTplPath(), QSettings::IniFormat);
+    QSettings config_file_write(Settings::getSettingsPath().c_str(), QSettings::IniFormat);
+    QSettings settings_template(Settings::getSettingsTplPath().c_str(), QSettings::IniFormat);
     config_file_write.beginGroup("MetaData");
     config_file_write.setValue("config_version", settings_template.value("MetaData/config_version","1").toString());
     config_file_write.endGroup(); // MetaData
@@ -339,7 +339,7 @@ void SettingsDialog::generate_default_config_file(QString ip)
 
 void SettingsDialog::save_changes_config_file()
 {
-    QSettings config_file_write(Settings::getSettingsPath(), QSettings::IniFormat);
+    QSettings config_file_write(Settings::getSettingsPath().c_str(), QSettings::IniFormat);
     QString acc_db_driver = ui->acc_dbdriver->currentText();
     QString char_db_driver = ui->char_dbdriver->currentText();
     QString acc_db_name = ui->acc_dbname->text();

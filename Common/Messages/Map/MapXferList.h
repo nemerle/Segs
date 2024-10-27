@@ -6,11 +6,11 @@
  */
 
 #pragma once
+#include "Components/BitStream.h"
 #include "GameCommand.h"
 #include "MapEventTypes.h"
 
 #include "glm/vec3.hpp"
-#include <QtCore/QString>
 
 namespace SEGSEvents
 {
@@ -24,9 +24,9 @@ public:
         // [[ev_def:field]]
         glm::vec3   m_location;
         // [[ev_def:field]]
-        QString     m_name;
+        String     m_name;
         explicit    MapXferList() : GameCommandEvent(evMapXferList) {}
-                    MapXferList(bool has_location, glm::vec3 location, QString name) : GameCommandEvent(evMapXferList),
+                    MapXferList(bool has_location, glm::vec3 location, const String &name) : GameCommandEvent(evMapXferList),
                         m_has_location(has_location),
                         m_location(location),
                         m_name(name)

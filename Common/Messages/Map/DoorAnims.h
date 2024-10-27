@@ -23,10 +23,10 @@ namespace SEGSEvents
         // [[ev_def:field]]
         bool m_has_anims;
         // [[ev_def:field]]
-        QString m_seq_state;
+        String m_seq_state;
 
         explicit DoorAnimStart() : GameCommandEvent(evDoorAnimStart) {}
-        DoorAnimStart(glm::vec3 entry, glm::vec3 target, bool has_anims, QString seq_state) : GameCommandEvent(evDoorAnimStart),
+        DoorAnimStart(glm::vec3 entry, glm::vec3 target, bool has_anims, const String &seq_state) : GameCommandEvent(evDoorAnimStart),
             m_entry_pos(entry),
             m_target_pos(target),
             m_has_anims(has_anims),
@@ -83,7 +83,7 @@ namespace SEGSEvents
         // [[ev_def:field]]
         glm::vec3 location;
         // [[ev_def:field]]
-        QString name;
+        String name;
 
         EnterDoor():MapLinkEvent(MapEventTypes::evEnterDoor)
         {}

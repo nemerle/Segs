@@ -46,7 +46,7 @@ public:
     void    serializefrom(BitStream &bs) override
     {
         ::serializefrom(m_new_costume, bs, getGameData().getPacker());
-        qCDebug(logTailor) << "Changing Costume";
+        sCDebug(logTailor) << "Changing Costume";
     }
 
     EVENT_IMPL(RecvCostumeChange)

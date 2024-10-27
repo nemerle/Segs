@@ -6,9 +6,9 @@
  */
 
 #pragma once
-#include <QtCore/QHash>
-#include <vector>
-#include <qobjectdefs.h>
+#include "Common/Containers/HashMap.h"
+#include <Common/Containers/Vector.h>
+#include <Common/Containers/String.h>
 
 namespace SEGS_Enums
 {
@@ -18,7 +18,6 @@ using namespace SEGS_Enums;
 
 namespace SEGS_Enums_Power
 {
-Q_NAMESPACE
 
 enum class StoredPower_Type
 {
@@ -142,24 +141,20 @@ enum class AttackType : uint32_t {
     Energy = 136,
     Negative_Energy = 140
 };
-Q_ENUM_NS(AttackType)
 
 } // end of SEGS_Enums_Power namespace
 using namespace SEGS_Enums_Power;
 
 struct StoredAttribMod
 {
-    // Older combinations of Qt/moc/CMake require Q_GADGET macro and granting public access
-    // to members. Otherwise, moc files are not generated properly under certain conditions.
-    Q_GADGET
 public:
-    QByteArray         name             = "unknown";
+    String         name             = "unknown";
     int                index_in_power;
-    QByteArray         DisplayAttackerHit = "";
-    QByteArray         DisplayVictimHit = "";
+    String         DisplayAttackerHit = "";
+    String         DisplayVictimHit = "";
     struct Power_Data *parent_StoredPower;
     AttribModTarget    Target           = AttribModTarget::Target;
-    QByteArray         Table            = "43"; //would be easier as int, since the tables are stored in an array
+    String         Table            = "43"; //would be easier as int, since the tables are stored in an array
     float              Scale            = 1.0;
     int                Attrib           = 0; //
     AttribMod_Aspect   Aspect;
@@ -174,54 +169,54 @@ public:
     int                AllowStrength;           // bool?
     int                AllowResistance;         // bool?
     AttribStackType    StackType     = AttribStackType::Replace;
-    std::vector<int>   ContinuingBits;
-    QByteArray         ContinuingFX;
-    std::vector<int>   ConditionalBits; // 5c
-    QByteArray         ConditionalFX;
-    QByteArray         EntityDef;
-    QByteArray         PriorityListOffense;
-    QByteArray         PriorityListDefense;
-    QByteArray         PriorityListPassive;
+    Vector<int>   ContinuingBits;
+    String         ContinuingFX;
+    Vector<int>   ConditionalBits; // 5c
+    String         ConditionalFX;
+    String         EntityDef;
+    String         PriorityListOffense;
+    String         PriorityListDefense;
+    String         PriorityListPassive;
 };
 
 struct Power_Data
 {
-    QByteArray                   m_Name;
+    String                   m_Name;
     int                          ptr_powerset_available;
     struct Parse_PowerSet *      parent_StoredPowerSet;
     int                          category_idx;
     int                          powerset_idx;
     int                          power_index;
-    QByteArray                   DisplayName;
-    QByteArray                   DisplayHelp;
-    QByteArray                   DisplayShortHelp;
-    QByteArray                   DisplayAttackerAttack;
-    QByteArray                   DisplayAttackerHit;
-    QByteArray                   DisplayVictimHit;
-    QByteArray                   IconName;
-    std::vector<SeqBitNames>     ModeSeqBits;
-    std::vector<SeqBitNames>     ActivationBits;
-    std::vector<SeqBitNames>     WindUpBits; // 3c
-    std::vector<SeqBitNames>     InitialAttackBits;
-    std::vector<SeqBitNames>     AttackBits;
-    std::vector<SeqBitNames>     HitBits;
-    std::vector<SeqBitNames>     BlockBits;
-    std::vector<SeqBitNames>     DeathBits;
-    QByteArray                   ActivationFX;
-    QByteArray                   WindUpFX;
-    QByteArray                   InitialAttackFX;
-    QByteArray                   AttackFX;
-    QByteArray                   BlockFX;
-    QByteArray                   HitFX;
-    QByteArray                   DeathFX;
+    String                   DisplayName;
+    String                   DisplayHelp;
+    String                   DisplayShortHelp;
+    String                   DisplayAttackerAttack;
+    String                   DisplayAttackerHit;
+    String                   DisplayVictimHit;
+    String                   IconName;
+    Vector<SeqBitNames>     ModeSeqBits;
+    Vector<SeqBitNames>     ActivationBits;
+    Vector<SeqBitNames>     WindUpBits; // 3c
+    Vector<SeqBitNames>     InitialAttackBits;
+    Vector<SeqBitNames>     AttackBits;
+    Vector<SeqBitNames>     HitBits;
+    Vector<SeqBitNames>     BlockBits;
+    Vector<SeqBitNames>     DeathBits;
+    String                   ActivationFX;
+    String                   WindUpFX;
+    String                   InitialAttackFX;
+    String                   AttackFX;
+    String                   BlockFX;
+    String                   HitFX;
+    String                   DeathFX;
     int                          m_InitialFramesBeforeHit;
     int                          m_FramesBeforeHit;
     int                          m_AttackFrames;
     int                          DelayedHit;
     int                          ProjectileSpeed;
     PowerType                    Type;
-    std::vector<AttackType>      AttackTypes;
-    std::vector<QByteArray>      Requires;
+    Vector<AttackType>      AttackTypes;
+    Vector<String>      Requires;
     float                        Accuracy;
     int                          IgnoreStrength;
     int                          NearGround;
@@ -249,12 +244,12 @@ struct Power_Data
     StoredVisibility             TargetVisibility;
     StoredEntEnum                Target;
     StoredEntEnum                TargetSecondary;
-    std::vector<StoredEntEnum>   EntsAffected;
-    std::vector<StoredEntEnum>   EntsAutoHit;
-    std::vector<uint32_t>        BoostsAllowed;
-    std::vector<uint32_t>        GroupMembership;
-    std::vector<QByteArray>      AIGroups;
-    std::vector<StoredAttribMod> pAttribMod;
+    Vector<StoredEntEnum>   EntsAffected;
+    Vector<StoredEntEnum>   EntsAutoHit;
+    Vector<uint32_t>        BoostsAllowed;
+    Vector<uint32_t>        GroupMembership;
+    Vector<String>      AIGroups;
+    Vector<StoredAttribMod> pAttribMod;
     int                          fDamageGiven;
     int                          iCntUsed;
     int                          iCntHits;
@@ -263,15 +258,15 @@ struct Power_Data
 
 struct Parse_PowerSet
 {
-    QByteArray                   m_Name;
+    String                   m_Name;
     struct StoredPowerCategory * parent_PowerCategory;
-    QByteArray                   DisplayName;
-    QByteArray                   DisplayHelp;
-    QByteArray                   DisplayShortHelp;
-    QByteArray                   IconName;
-    std::vector<Power_Data>      m_Powers;
-    QHash<QString, Power_Data *> m_hash_table;
-    std::vector<int32_t>         Available;
+    String                   DisplayName;
+    String                   DisplayHelp;
+    String                   DisplayShortHelp;
+    String                   IconName;
+    Vector<Power_Data>      m_Powers;
+    HashMap<String, Power_Data *> m_hash_table;
+    Vector<int32_t>         Available;
 };
 
 enum
@@ -281,16 +276,16 @@ enum
 
 struct StoredPowerCategory
 {
-    QByteArray                       name;
-    QByteArray                       disp_name;
-    QByteArray                       disp_help;
-    QByteArray                       disp_short_help;
-    std::vector<Parse_PowerSet>      m_PowerSets;
-    QHash<QString, Parse_PowerSet *> m_powers_hash;
+    String                       name;
+    String                       disp_name;
+    String                       disp_help;
+    String                       disp_short_help;
+    Vector<Parse_PowerSet>      m_PowerSets;
+    HashMap<String, Parse_PowerSet *> m_powers_hash;
 };
 
 struct AllPowerCategories
 {
-    std::vector<StoredPowerCategory>      m_categories;
-    QHash<QString, StoredPowerCategory *> categories_hash;
+    Vector<StoredPowerCategory>      m_categories;
+    HashMap<String, StoredPowerCategory *> categories_hash;
 };

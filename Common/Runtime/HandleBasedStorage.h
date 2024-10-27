@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "Handle.h"
+#include "Common/Containers/Vector.h"
+#include "Common/Runtime/Handle.h"
 #include <cassert>
 #include <cstddef>
-#include <vector>
 
 template <int idx_bits, int gen_bits, typename T>
 struct SingularStoreHandleT : public HandleT<idx_bits, gen_bits,T>
@@ -31,7 +31,7 @@ struct HandleBasedStorage
 {
     using HType          = SingularStoreHandleT<20,12,T>;
     using InternalHandle = Handle<20, 12>;
-    using container_type = std::vector<T>;
+    using container_type = Vector<T>;
     using iterator       = typename container_type::iterator;
 
     template <typename... Args>
@@ -73,7 +73,7 @@ struct HandleBasedStorage
 
     HType handle_for_entry(const T &entry) const
     {
-        int expected_idx=std::distance(m_nodes.data(),&entry);
+        int expected_idx=eastl::distance(m_nodes.data(),&entry);
         assert(expected_idx>=0);
         assert(expected_idx<m_nodes.size());
         return HType {uint32_t(expected_idx),m_sparse_array[expected_idx].gen};
@@ -87,10 +87,10 @@ struct HandleBasedStorage
     }
 private:
 
-    std::vector<InternalHandle> m_sparse_array;
-    uint32_t                    m_free_list_head = HType::FREE_LIST_TERMINATOR;
-    container_type              m_nodes;
-    std::vector<uint32_t>       m_dense_to_sparse;
+    Vector<InternalHandle> m_sparse_array;
+    uint32_t               m_free_list_head = HType::FREE_LIST_TERMINATOR;
+    container_type         m_nodes;
+    Vector<uint32_t>       m_dense_to_sparse;
 
     void addToFreeList(uint32_t node_idx)
     {

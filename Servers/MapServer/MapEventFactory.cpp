@@ -47,7 +47,7 @@ MapLinkEvent *MapEventFactory::EventFromStream(BitStream &bs)
         case 12: return new MapXferComplete;
             //   default: return new MapUnknownRequest;
     }
-    qCWarning(logMapEvents, "Unhandled event type %d", opcode);
+    sCFWarning(logMapEvents, "Unhandled event type %d", opcode);
     return nullptr;
 }
 
@@ -116,7 +116,7 @@ MapLinkEvent *MapEventFactory::CommandEventFromStream(BitStream & bs)
         case 70: return new StoreSellItem;
         case 77: return new BrowserClose;
     }
-    qCWarning(logMapEvents, "Unhandled command event type %d", opcode);
+    sCFWarning(logMapEvents, "Unhandled command event type %d", opcode);
     return nullptr;
 }
 

@@ -6,13 +6,16 @@
  */
 
 #pragma once
+#include "Containers/String.h"
+#include "Containers/Vector.h"
+
+#include <QtCore/QtContainerFwd>
 
 struct MapClientSession;
-class QStringList;
 
 // Slash Commands related to ScriptEngine and Script Files
 
 // Access Level 9 Commands
-void cmdHandler_Script(const QStringList &params, MapClientSession &sess);
-void cmdHandler_SmileX(const QStringList &params, MapClientSession &sess);
-void cmdHandler_ReloadScripts(const QStringList &/*params*/, MapClientSession &sess);
+void cmdHandler_Script(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_SmileX(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_ReloadScripts(const Vector<String> &/*params*/, MapClientSession &sess);

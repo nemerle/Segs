@@ -258,7 +258,7 @@ int AuthLink::handle_input( ACE_HANDLE )
     ssize_t recv_cnt;
     if((recv_cnt = m_peer.recv(buffer, sizeof(buffer))) <= 0)
     {
-        qCDebug(logConnection) << "Connection closed";
+        sCDebug(logConnection) << "Connection closed";
         return -1;
     }
     ACE_Guard<ACE_Thread_Mutex> guard_buffer(m_buffer_mutex);

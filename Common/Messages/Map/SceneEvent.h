@@ -10,9 +10,6 @@
 #include "Messages/Map/MapEventTypes.h"
 #include "Messages/Map/MapRef.h"
 
-#include <QtCore/QString>
-#include <vector>
-#include <string>
 #include <stdint.h>
 
 class BitStream;
@@ -31,7 +28,7 @@ public:
     void    serializeto(BitStream &tgt) const override;
 
     // [[ev_def:field]]
-    QString m_map_desc;
+    String m_map_desc;
     // [[ev_def:field]]
     uint32_t ref_count;
     // [[ev_def:field]]
@@ -49,11 +46,11 @@ public:
     // [[ev_def:field]]
     bool is_new_world;
     // [[ev_def:field]]
-    std::vector<QString> m_trays;
+    Vector<String> m_trays;
     // [[ev_def:field]]
-    std::vector<uint32_t> m_crc;
+    Vector<uint32_t> m_crc;
     // [[ev_def:field]]
-    std::vector<MapRef> m_refs;
+    Vector<MapRef> m_refs;
     // [[ev_def:field]]
     int unkn1;
     // [[ev_def:field]]

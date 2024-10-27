@@ -17,8 +17,10 @@
 #include "MapServer/MapServer.h"
 #include "GameData/GameDataStore.h"
 
-#include <QtCore/QDebug>
-#include <algorithm>
+EntityStore::~EntityStore()
+{
+    
+}
 
 EntityStore::EntityStore()
 {
@@ -84,9 +86,9 @@ void EntityManager::sendGlobalEntDebugInfo( BitStream &tgt ) const
  */
 void EntityManager::sendDeletes( BitStream &tgt,MapClientSession &client ) const
 {
-    std::vector<int> entities_to_remove;
+    Vector<int> entities_to_remove;
     // find the entities this client believes exist, but they are no longer amongst us.
-    for(const std::pair<const int,ClientEntityStateBelief> &entry : client.m_worldstate_belief)
+    for(const eastl::pair<const int,ClientEntityStateBelief> &entry : client.m_worldstate_belief)
     {
         if(entry.second.m_entity==nullptr)
             continue;
@@ -114,7 +116,7 @@ void EntityManager::sendEntities(BitStream& bs, MapClientSession &target, bool /
     int delta;
     if(m_live_entlist.empty())
     {
-        qDebug() << "Trying to send an empty entity list, probably leftover packets to last disconnected client";
+        sDebug() << "Trying to send an empty entity list, probably leftover packets to last disconnected client";
         return;
     }
 

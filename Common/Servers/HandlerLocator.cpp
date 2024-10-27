@@ -22,10 +22,10 @@ EventProcessor * HandlerLocator::m_auth_handler = nullptr;
 EventProcessor * HandlerLocator::m_email_handler = nullptr;
 EventProcessor * HandlerLocator::m_friend_handler = nullptr;
 EventProcessor * HandlerLocator::m_team_handler = nullptr;
-std::deque<EventProcessor *> HandlerLocator::m_game_servers;
-std::deque<EventProcessor *> HandlerLocator::m_game_db_servers;
-std::deque<EventProcessor *> HandlerLocator::m_map_servers;
-std::deque<std::deque<EventProcessor *>> HandlerLocator::m_map_instances;
+Deque<EventProcessor *> HandlerLocator::m_game_servers;
+Deque<EventProcessor *> HandlerLocator::m_game_db_servers;
+Deque<EventProcessor *> HandlerLocator::m_map_servers;
+Deque<Deque<EventProcessor *>> HandlerLocator::m_map_instances;
 
 MessageBus * HandlerLocator::m_message_bus=nullptr;
 void shutDownAllActiveHandlers()

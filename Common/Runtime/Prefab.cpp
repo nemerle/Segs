@@ -1,122 +1,134 @@
 #include "Prefab.h"
 
+#include "Common/Utils/IServiceLocator.h"
 #include "SceneGraph.h"
 #include "Model.h"
 #include "Common/GameData/trick_serializers.h"
 #include "Common/GameData/GameDataStore.h"
 #include "Common/GameData/scenegraph_serializers.h" //for getFilepathCaseInsensitive
 
-#include <QDir>
-#include <QDebug>
 
 namespace SEGS
 {
-struct GeoSet;
+GeoSet::~GeoSet() {
+    for(Model *m : subs)
+        delete m;
+}
 }
 
-QHash<QString,SEGS::GeoSet *> s_name_to_geoset;
+HashMap<String,SEGS::GeoSet *> s_name_to_geoset;
 
 using namespace SEGS;
 
-GeoSet *findAndPrepareGeoSet(FSWrapper &fs,const QString &fname,const QString &base_path)
+GeoSet *findAndPrepareGeoSet(IFilesystem *fs,const String &fname,const String &base_path)
 {
     GeoSet *geoset = nullptr;
-    QString name_fixed = fname;
+    String name_fixed = fname;
     name_fixed.replace(".anm", ".geo");
-    QString true_path = getFilepathCaseInsensitive(fs,base_path + name_fixed);
+    String true_path = getFilepathCaseInsensitive(fs,base_path + name_fixed);
 
-    QIODevice *fp = fs.open(true_path);
+    IFile *fp = fs->open(true_path);
     if(fp)
     {
         geoset = new GeoSet;
         //TODO: QDir(base_path).relativeFilePath(true_path) should be provided by fs service.
-        geoset->geopath = QDir(base_path).relativeFilePath(true_path).toUtf8();
+        geoset->geopath = PathUtils::path_to(base_path,true_path);
         geosetLoadHeader(fp, geoset);
         fp->seek(0);
         s_name_to_geoset[fname] = geoset;
         delete fp;
     }
     else
-        qCritical() << "Can't find .geo file" << fname;
+        sCritical() << "Can't find .geo file" << fname;
 
     return geoset;
 }
 
 /// load the given geoset, used when loading scene-subgraph and nodes
-GeoSet * geosetLoad(FSWrapper &fs, const QString &m, const QString &base_path)
+GeoSet * geosetLoad(IFilesystem *fs, const String &m, const String &base_path)
 {
-    GeoSet * res = s_name_to_geoset.value(m,nullptr);
+    GeoSet * res = s_name_to_geoset.at(m,nullptr);
     if(res)
         return res;
 
     return findAndPrepareGeoSet(fs,m,base_path);
 }
 
-Model *PrefabStore::modelFind(const QString &geoset_name, const QString &model_name, LoadingContext &ctx)
+Model *PrefabStore::modelFind(const String &geoset_name, const String &model_name, LoadingContext &ctx)
 {
     Model *ptr_sub = nullptr;
-    if(model_name.isEmpty() || geoset_name.isEmpty())
+    if(model_name.empty() || geoset_name.empty())
     {
-        qCritical() << "Bad model/geometry set requested:";
-        if(!model_name.isEmpty())
-            qCritical() << "Model: " << model_name;
-        if(!geoset_name.isEmpty())
-            qCritical() << "GeoFile: " << geoset_name;
+        sCritical() << "Bad model/geometry set requested:";
+        if(!model_name.empty())
+            sCritical() << "Model: " << model_name;
+        if(!geoset_name.empty())
+            sCritical() << "GeoFile: " << geoset_name;
         return nullptr;
     }
 
-    GeoSet *geoset = geosetLoad(*ctx.fs_wrap,geoset_name, m_base_path);
+    GeoSet *geoset = geosetLoad(ctx.fs_wrap,geoset_name, m_base_path);
     if(!geoset) { // failed to load the geometry set
-        m_missing_geosets.insert(geoset_name.toUtf8());
+        m_missing_geosets.insert(geoset_name);
         return nullptr;
     }
 
-    int end_of_name_idx = model_name.indexOf("__");
-    if(end_of_name_idx == -1)
+    auto end_of_name_idx = model_name.find("__");
+    if(end_of_name_idx == String::npos)
         end_of_name_idx = model_name.size();
 
-    QStringRef basename(model_name.midRef(0, end_of_name_idx));
+    StringView basename(StringView(model_name).substr(0, end_of_name_idx));
 
     for(Model *m : geoset->subs)
     {
-        QString geo_name = m->name;
-        if(geo_name.isEmpty())
+        StringView geo_name = m->name;
+        if(geo_name.empty())
             continue;
 
-        bool subs_in_place = (geo_name.size() <= end_of_name_idx || geo_name.midRef(end_of_name_idx).startsWith("__"));
-        if(subs_in_place && geo_name.startsWith(basename, Qt::CaseInsensitive))
+        bool subs_in_place = (geo_name.size() <= end_of_name_idx || geo_name.substr(end_of_name_idx).starts_with("__"));
+        if(subs_in_place && StringUtils::begins_with(geo_name,basename, StringUtils::CaseInsensitive))
             ptr_sub = m; // TODO: return immediately
     }
 
     return ptr_sub;
 }
 
-bool PrefabStore::prepareGeoLookupArray(const QString &base_path)
+bool PrefabStore::prepareGeoLookupArray(const String &base_path)
 {
-    QFile defnames(base_path + "bin/defnames.bin");
-    if(!defnames.open(QFile::ReadOnly))
+    auto services=getServiceLocator();
+    auto fs=services->getFS();
+    String bin_path =base_path + "bin/defnames.bin";
+    auto file=fs->open(bin_path);
+    if(!file)
     {
-        qCritical() << "Failed to open bin/defnames.bin";
+        sCritical() << "Failed to open bin/defnames.bin:" << bin_path;
         return false;
     }
 
-    QByteArray lookup_str;
     GeoStoreDef *current_geosetinf = nullptr;
-    QByteArrayList defnames_arr = defnames.readAll().replace("CHUNKS.geo", "Chunks.geo").split('\0');
-    for(QByteArray str : defnames_arr)
+    auto data=IFile_readAll(file);
+    Vector<StringView> defnames_arr;
+    String::split_ref(defnames_arr, StringView(data.data(),data.size()), '\0');
+    for(StringView &str : defnames_arr)
     {
-        int last_slash = str.lastIndexOf('/');
-        if(-1 != last_slash)
+        if(str=="CHUNKS.geo")
+            str = StringView("Chunks.geo");
+    }
+    for(StringView str : defnames_arr)
         {
-            QByteArray geo_path = str.mid(0, last_slash);
-            lookup_str = geo_path.toLower();
-            current_geosetinf = &m_dir_to_geoset[lookup_str];
-            current_geosetinf->geopath = geo_path;
+        auto last_slash = str.rfind('/');
+        if(String::npos != last_slash)
+        {
+            String geo_path(str.substr(0, last_slash));
+            String lookup_str          = geo_path.to_lower();
+            current_geosetinf          = &m_dir_to_geoset[lookup_str];
+            current_geosetinf->geopath = eastl::move(geo_path);
         }
-        current_geosetinf->entries << str.mid(last_slash + 1);
-        m_modelname_to_geostore[str.mid(last_slash + 1)] = current_geosetinf;
+        current_geosetinf->entries.emplace_back(str.substr(last_slash + 1));
+        m_modelname_to_geostore[String(str.substr(last_slash + 1))] = current_geosetinf;
     }
 
+    delete file;
     return true;
 }
 
@@ -143,13 +155,13 @@ bool PrefabStore::loadPrefabForNode(SceneNode *node, LoadingContext &ctx) //grou
     if(!gf->loaded)
     {
         gf->loaded = true;
-        geosetLoad(*ctx.fs_wrap,gf->geopath, m_base_path); // load given subgraph's root geoset
+        geosetLoad(ctx.fs_wrap,gf->geopath, m_base_path); // load given subgraph's root geoset
         loadSubgraph(gf->geopath,ctx,*this);
     }
 
     return true;
 }
-bool PrefabStore::loadNamedPrefab(const QByteArray &name, LoadingContext &ctx, NodeLoadRequest* load_request) //groupFileLoadFromName
+bool PrefabStore::loadNamedPrefab(const String &name, LoadingContext &ctx, NodeLoadRequest* load_request) //groupFileLoadFromName
 {
     GeoStoreDef *geo_store = groupGetFileEntryPtr(name);
     if(!geo_store)
@@ -158,10 +170,10 @@ bool PrefabStore::loadNamedPrefab(const QByteArray &name, LoadingContext &ctx, N
     {
         if(load_request)
         {
-            QFileInfo geofi(geo_store->geopath);
-            QString base_file = geofi.path();
-            load_request->base_file = base_file.toUtf8();
-            load_request->node_name = qPrintable(QFileInfo(name).fileName());
+            String geofi(geo_store->geopath);
+            StringView base_file = PathUtils::path(geofi);
+            load_request->base_file = base_file;
+            load_request->node_name = PathUtils::get_file(name);
             assert(geo_store->entries.contains(load_request->node_name));
         }
     }
@@ -172,7 +184,7 @@ bool PrefabStore::loadNamedPrefab(const QByteArray &name, LoadingContext &ctx, N
     if (ctx.prevent_nesting)
         return true;
     // load given prefab's geoset
-    GeoSet *gs = geosetLoad(*ctx.fs_wrap,geo_store->geopath, m_base_path);
+    GeoSet *gs = geosetLoad(ctx.fs_wrap,geo_store->geopath, m_base_path);
     if(!gs) {
 
     }
@@ -180,24 +192,30 @@ bool PrefabStore::loadNamedPrefab(const QByteArray &name, LoadingContext &ctx, N
     return loadPrefabForNode(getNodeByName(*ctx.m_target,name), ctx);
 }
 
-Model *PrefabStore::groupModelFind(const QByteArray &path, LoadingContext &ctx)
+Model *PrefabStore::groupModelFind(const String &path, LoadingContext &ctx)
 {
-    QByteArray model_name = path.mid(path.lastIndexOf('/') + 1);
+    String model_name = path.substr(path.rfind('/') + 1);
     auto val = groupGetFileEntryPtr(model_name);
     return val ? modelFind(val->geopath, model_name,ctx) : nullptr;
 }
 
-GeoStoreDef * PrefabStore::groupGetFileEntryPtr(const QByteArray &full_name)
+GeoStoreDef * PrefabStore::groupGetFileEntryPtr(const String &full_name)
 {
-    QByteArray key = full_name.mid(full_name.lastIndexOf('/') + 1);
-    key = key.mid(0, key.indexOf("__"));
-    return m_modelname_to_geostore.value(key, nullptr);
+    String key = full_name.substr(full_name.rfind('/') + 1);
+    key = key.substr(0, key.find("__"));
+    return m_modelname_to_geostore.at(key, nullptr);
 }
 
 void PrefabStore::sceneGraphWasReset()
 {
     for(auto & v : m_dir_to_geoset)
-        v.loaded = false;
+        v.second.loaded = false;
+}
+
+PrefabStore::~PrefabStore() {
+    for(auto & v : s_name_to_geoset)
+        delete v.second;
+    s_name_to_geoset.clear();
 }
 
 Model *getModelById(GeoSet *gset, int id)

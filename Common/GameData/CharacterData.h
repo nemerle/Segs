@@ -11,7 +11,7 @@
 #include "Common/GameData/Friend.h"
 #include "Common/GameData/Powers.h"
 
-#include <QString>
+#include "Common/Containers/String.h"
 #include <stdint.h>
 
 
@@ -19,14 +19,14 @@ struct CharacterData
 {
         enum : uint32_t {class_version       = 12}; // v12: Moved Contacts/Clues/Souviners/Tasks to PlayerData
 
-        QString     m_titles[3];             // Generic, Origin, Special
-        QString     m_class_name;
-        QString     m_origin_name;
-        QString     m_battle_cry;
-        QString     m_character_description;
-        QString     m_afk_msg;
-        QString     m_alignment         = "hero";
-        QString     m_last_online;
+        String     m_titles[3];             // Generic, Origin, Special
+        String     m_class_name;
+        String     m_origin_name;
+        String     m_battle_cry;
+        String     m_character_description;
+        String     m_afk_msg;
+        String     m_alignment         = "hero";
+        String     m_last_online;
         uint32_t    m_current_costume_idx = 0;
         uint32_t    m_level             = 0;
         uint32_t    m_combat_level      = 0; // might be different if player is sidekick or exemplar.

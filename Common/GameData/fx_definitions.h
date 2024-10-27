@@ -1,12 +1,11 @@
 #pragma once
 #include "Components/Colors.h"
 
-#include "GameData/anim_definitions.h"
-#include "GameData/seq_definitions.h"
+#include "Common/GameData/anim_definitions.h"
+#include "Common/GameData/seq_definitions.h"
 
-#include <QtCore/QByteArray>
-#include <vector>
-#include <array>
+#include <Common/Containers/Vector.h>
+#include <EASTL/array.h>
 
 struct TextureAnim_Data;
 
@@ -23,7 +22,7 @@ enum SplatFlags {
 enum SplatFalloffType : uint32_t;
 struct FxBehavior
 {
-    QByteArray name;
+    String  name;
     bool initialized=false;
     int lastChangeDate=0;
     glm::vec3 m_StartJitter;
@@ -35,8 +34,8 @@ struct FxBehavior
     float m_FadeInLength=0;
     float m_FadeOutLength=0;
     uint8_t m_Alpha=0;
-    std::array<ColorFx,5> m_ColorEffect;
-    std::vector<RGB> m_preparedColors;
+    eastl::array<ColorFx,5> m_ColorEffect;
+    Vector<RGB> m_preparedColors;
     glm::vec3 m_Scale;
     glm::vec3 m_ScaleRate;
     glm::vec3 m_ScaleTime;
@@ -53,7 +52,7 @@ struct FxBehavior
     float m_ShakeFallOff=0;
     float m_ShakeRadius=0;
     int m_SplatFlags=0;
-    std::vector<TextureAnim_Data> m_stAnim;
+    Vector<TextureAnim_Data> m_stAnim;
     SplatFalloffType m_SplatFalloffType=SplatFalloffType(0);
     float m_SplatNormalFade=0;
     float m_SplatSetBack=0;
@@ -64,11 +63,11 @@ struct FxBehavior
     float m_PulseBrightness=0;
 };
 
-using Fx_AllBehaviors = std::vector<FxBehavior>;
+using Fx_AllBehaviors = Vector<FxBehavior>;
 struct EventSplat
 {
-    QByteArray tex1;
-    QByteArray tex2;
+    String tex1;
+    String tex2;
 };
 enum GeoEvent_Flags {
     Event_LookAtCamera = 2,
@@ -77,7 +76,7 @@ enum GeoEvent_Flags {
 };
 struct FxSoundData
 {
-    QByteArray m_Name;
+    String m_Name;
     float m_Radius = 100.0f;
     float m_Fade = 20.0f;
     float m_Volume = 1.0f;
@@ -85,30 +84,30 @@ struct FxSoundData
 
 struct FxGeoEntry_Event
 {
-    QByteArray m_EName;
-    QByteArray m_Type;
-    QByteArray m_At;
-    QByteArray m_Bhvr;
-    std::vector<std::vector<QByteArray>> m_Geom;
+    String m_EName;
+    String  m_Type;
+    String  m_At;
+    String  m_Bhvr;
+    Vector<Vector<String >> m_Geom;
     int m_AltPiv=0;
-    QByteArray m_AnimPiv;
-    QByteArray m_Anim;
-    QByteArray m_SetState;
-    std::vector<std::vector<QByteArray>> m_Part;
-    QByteArray m_ChildFx;
-    QByteArray m_LookAt;
-    QByteArray m_Magnet;
-    QByteArray m_POther;
-    QByteArray m_PMagnet;
-    std::vector<EventSplat> m_Splats;
-    std::vector<FxSoundData> m_Sounds;
+    String  m_AnimPiv;
+    String  m_Anim;
+    String  m_SetState;
+    Vector<Vector<String >> m_Part;
+    String  m_ChildFx;
+    String  m_LookAt;
+    String  m_Magnet;
+    String  m_POther;
+    String  m_PMagnet;
+    Vector<EventSplat> m_Splats;
+    Vector<FxSoundData> m_Sounds;
     int m_Debris=0;
-    QByteArray m_WorldGroup;
-    std::pair<uint8_t,uint8_t> m_Power;
+    String  m_WorldGroup;
+    eastl::pair<uint8_t,uint8_t> m_Power;
     float m_LifeSpan=0;
     int m_Flags=0;
-    std::vector<std::vector<QByteArray>> m_Until;
-    std::vector<std::vector<QByteArray>> m_While;
+    Vector<Vector<String >> m_Until;
+    Vector<Vector<String >> m_While;
     // Converted bits.
     SeqBitSet m_UntilBits;
     SeqBitSet m_WhileBits;
@@ -140,18 +139,18 @@ enum FxCondition_Bits
 };
 struct FxInfo_Condition
 {
-    QByteArray m_On;
+    String  m_On;
     float m_Time;
     int m_Dist;
     float m_Chance;
     int DoMany;
-    std::vector<FxGeoEntry_Event> m_Event;
+    Vector<FxGeoEntry_Event> m_Event;
     int trigger; // FxCondition_Bits
-    std::vector<std::vector<QByteArray>> str_TriggerBits;
+    Vector<Vector<String >> str_TriggerBits;
     SeqBitSet triggerstates[9];
 };
 struct FxInfo_Input {
-    QByteArray m_InpName;
+    String  m_InpName;
 };
 enum FxInfo_Flags {
     FxInfo_SoundOnly=2,
@@ -160,10 +159,10 @@ enum FxInfo_Flags {
 };
 struct FxInfo
 {
-    std::vector<QByteArray> inputs;
-    std::vector<FxInfo_Input> m_Inputs;
-    std::vector<FxInfo_Condition> m_Conditions;
-    QByteArray fxname;
+    Vector<String > inputs;
+    Vector<FxInfo_Input> m_Inputs;
+    Vector<FxInfo_Condition> m_Conditions;
+    String  fxname;
     int m_LifeSpan;
     int m_Lighting;
     FxInfo_Flags m_Flags; //FxInfo_Flags
@@ -173,4 +172,4 @@ struct FxInfo
     uint8_t initialized() const { return m_initialized &0xFF;}
     int last_change_date;
 };
-using Fx_AllInfos = std::vector<FxInfo>;
+using Fx_AllInfos = Vector<FxInfo>;

@@ -15,7 +15,7 @@ void VisitLocation::serialize(Archive &archive, uint32_t const version)
 {
     if(version != VisitLocation::class_version)
     {
-        qCritical() << "Failed to serialize VisitLocation, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize VisitLocation, incompatible serialization format version " << version;
         return;
     }
 

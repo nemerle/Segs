@@ -58,7 +58,7 @@ namespace SEGSEvents
                     bs.StoreString(contact.m_location.m_location_name);
                 }
 
-                 qCDebug(logMapEvents) << "ContactStatusList Event serializeTo. currentStanding: " << contact.m_current_standing << " contactIdx: " <<contact.m_contact_idx;
+                 sCDebug(logMapEvents) << "ContactStatusList Event serializeTo. currentStanding: " << contact.m_current_standing << " contactIdx: " <<contact.m_contact_idx;
                 ++count;
             }
         }
@@ -104,7 +104,7 @@ namespace SEGSEvents
         void serializefrom(BitStream &bs) override
         {
             m_srv_idx = bs.GetPackedBits(1);
-            qCDebug(logMapEvents) << "ReceiveContactStatus Event";
+            sCDebug(logMapEvents) << "ReceiveContactStatus Event";
         }
 
         EVENT_IMPL(ReceiveContactStatus)

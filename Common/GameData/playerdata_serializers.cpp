@@ -27,7 +27,7 @@ void serialize(Archive &archive, PlayerData &pd, uint32_t const version)
 {
     if(version != PlayerData::class_version)
     {
-        qCritical() << "Failed to serialize PlayerData, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize PlayerData, incompatible serialization format version " << version;
         return;
     }
     archive(cereal::make_nvp("AuthData", pd.m_auth_data));

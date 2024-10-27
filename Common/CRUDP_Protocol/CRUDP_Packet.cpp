@@ -13,8 +13,7 @@
 #include "CRUDP_Packet.h"
 
 #include "Components/BitStream.h"
-
-#include <QtCore/QDebug>
+#include "Components/Logging.h"
 
 CrudP_Packet::CrudP_Packet()
 {
@@ -73,7 +72,7 @@ uint32_t CrudP_Packet::GetPackedBits(uint32_t nBits)
     return m_stream->GetPackedBits(nBits);
 }
 
-void CrudP_Packet::GetString(QString &tgt)
+void CrudP_Packet::GetString(String &tgt)
 {
     m_stream->GetString(tgt);
 }
@@ -128,11 +127,11 @@ void CrudP_Packet::setContents(const BitStream &t)
 
 void CrudP_Packet::dump() const
 {
-    qDebug() << "CrudP_Packet debug dump:";
-    qDebug().nospace() << "\tSeqence Number 0x" << QString::number(m_seqNo,16);
-    qDebug() << "\tSiblings "<<m_numSibs;
-    qDebug() << "\tContains "<<getNumAcks()<<"acks";
-    qDebug() << "\tCompressed"<<m_compressed;
+    sDebug() << "CrudP_Packet debug dump:";
+    sDebug() << "\tSeqence Number 0x" << eastl::to_string(m_seqNo,16);
+    sDebug() << "\tSiblings "<<m_numSibs;
+    sDebug() << "\tContains "<<getNumAcks()<<"acks";
+    sDebug() << "\tCompressed"<<m_compressed;
 }
 
 uint32_t CrudP_Packet::getNextAck()

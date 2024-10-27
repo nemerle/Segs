@@ -8,19 +8,12 @@
 #pragma once
 
 #include "Common/GameData/Contact.h"
-#include "Common/GameData/Entity.h"
-#include <array>
-#include <memory>
-#include <string>
-#include <QtCore/QFileInfo> // for include support
-#include <QtCore/QDir>
-#include <QtCore/QDebug>
 #include "MapSceneGraph.h"
 
-class QString;
 struct MapClientSession;
 class MapInstance;
 class ScriptingEnginePrivate;
+class Entity;
 
 class ScriptingEngine
 {
@@ -31,22 +24,22 @@ public:
     void register_GenericTypes();
     void register_CharacterTypes();
     void register_SpawnerTypes();
-    int loadAndRunFile(const QString &path);
+    int loadAndRunFile(const String &path);
     void callFuncWithMapInstance(MapInstance *mi, const char *name, int arg1);
-    std::string callFuncWithClientContext(MapClientSession *client,const char *name,int arg1);
-    std::string callFuncWithClientContext(MapClientSession *client,const char *name,int arg1, glm::vec3 loc);
-    std::string callFuncWithClientContext(MapClientSession *client, const char *name, const char *arg1, glm::vec3 loc);
-    std::string callFunc(const char *name,int arg1);
-    std::string callFunc(const char *name,int arg1, glm::vec3 loc);
-    std::string callFunc(const char *name, const char *arg1, glm::vec3 loc);
-    std::string callFunc(const char *name, std::vector<Contact> contact_list);
+    String callFuncWithClientContext(MapClientSession *client,const char *name,int arg1);
+    String callFuncWithClientContext(MapClientSession *client,const char *name,int arg1, glm::vec3 loc);
+    String callFuncWithClientContext(MapClientSession *client, const char *name, const char *arg1, glm::vec3 loc);
+    String callFunc(const char *name,int arg1);
+    String callFunc(const char *name,int arg1, glm::vec3 loc);
+    String callFunc(const char *name, const char *arg1, glm::vec3 loc);
+    String callFunc(const char *name, const Vector<Contact> &contact_list);
     void updateMapInstance(MapInstance * instance);
     void updateClientContext(MapClientSession * client);
-    int runScript(const QString &script_contents,const char *script_name="unnamed script");
-    int runScript(MapClientSession *client,const QString &script_contents,const char *script_name="unnamed script");
-    bool setIncludeDir(const QString &path);
+    int runScript(const String &script_contents,const char *script_name="unnamed script");
+    int runScript(MapClientSession *client,const String &script_contents,const char *script_name="unnamed script");
+    bool setIncludeDir(const String &path);
 private:
-    std::unique_ptr<ScriptingEnginePrivate> m_private;
+    eastl::unique_ptr<ScriptingEnginePrivate> m_private;
 
     MapInstance *mi;
     MapClientSession *cl;

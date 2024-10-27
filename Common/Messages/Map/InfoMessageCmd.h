@@ -22,10 +22,10 @@ public:
     // [[ev_def:field]]
     MessageChannel  m_channel_type;
     // [[ev_def:field]]
-    QString         m_msg;
+    String         m_msg;
 
 explicit InfoMessageCmd() : GameCommandEvent(evInfoMessageCmd) {}
-    InfoMessageCmd(MessageChannel ch, const QString &msg) : GameCommandEvent(evInfoMessageCmd),
+    InfoMessageCmd(MessageChannel ch, StringView msg) : GameCommandEvent(evInfoMessageCmd),
         m_channel_type(ch),
         m_msg(msg)
     {

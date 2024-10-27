@@ -101,7 +101,7 @@ public:
             char_obj.insert("CurrentAttribs", cur_attribs); // cereal objects are wrapped in key 'value0'
 
             QString chardoc = db->saveBlob(char_obj);
-            qCDebug(logMigration).noquote() << chardoc; // print output for debug
+            sCDebug(logMigration) << qPrintable(chardoc); // print output for debug
 
             QString querytext = QString("UPDATE characters SET chardata='%1'")
                     .arg(chardoc);

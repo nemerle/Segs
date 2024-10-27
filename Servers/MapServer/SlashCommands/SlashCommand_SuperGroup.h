@@ -6,11 +6,11 @@
  */
 
 #pragma once
-
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 struct MapClientSession;
-class QStringList;
 
 // Slash Commands related to SuperGroups
 
 // Access Level 9 Commands (GMs)
-void cmdHandler_SetSuperGroup(const QStringList &params, MapClientSession &sess);
+void cmdHandler_SetSuperGroup(const Vector<String> &params, MapClientSession &sess);

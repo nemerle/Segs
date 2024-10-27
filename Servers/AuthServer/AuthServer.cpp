@@ -26,7 +26,6 @@
 #include <QtCore/QSettings>
 #include <QtCore/QString>
 #include <QtCore/QFile>
-#include <QtCore/QDebug>
 
 using namespace SEGSEvents;
 
@@ -96,19 +95,19 @@ bool AuthServer::ReadConfigAndRestart()
 {
     ACE_Guard<ACE_Thread_Mutex> guard(m_mutex);
 
-    qInfo() << "Loading AuthServer settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    sInfo() << "Loading AuthServer settings...";
+    Settings config(Settings::getSettingsPath());
 
-    config.beginGroup(QStringLiteral("AuthServer"));
-    if(!config.contains(QStringLiteral("location_addr")))
-        qDebug() << "Config file is missing 'location_addr' entry in AuthServer group, will try to use default";
+    config.beginGroup(("AuthServer"));
+    if(!config.contains(("location_addr")))
+        sDebug() << "Config file is missing 'location_addr' entry in AuthServer group, will try to use default";
 
-    QString location_addr = config.value(QStringLiteral("location_addr"),"127.0.0.1:2106").toString();
+    String location_addr = config.value(("location_addr"),String("127.0.0.1:2106"));
     config.endGroup(); // AuthServer
 
     if(!parseAddress(location_addr,m_location))
     {
-        qCritical() << "Badly formed IP address" << location_addr;
+        sCritical() << "Badly formed IP address" << location_addr;
         return false;
     }
 
@@ -118,7 +117,7 @@ bool AuthServer::ReadConfigAndRestart()
 /*!
  * @brief Starts this server up, by opening the connection acceptor on given location.
  * This method can be called multiple times, to re-open the listening socket on different addresses.
- * @return bool, if it's false, we somehow failed to start. Error report is logged by qCritical
+ * @return bool, if it's false, we somehow failed to start. Error report is logged by sCritical
  *
  */
 bool AuthServer::Run()
@@ -130,11 +129,11 @@ bool AuthServer::Run()
     }
     if(m_acceptor->open(m_location) == -1)
     {
-        qCritical() << "Auth server failed to accept connections on:" << m_location.get_host_addr() << "errno: " << ACE_OS::last_error();
+        sCritical() << "Auth server failed to accept connections on:" << m_location.get_host_addr() << "errno: " << ACE_OS::last_error();
         return false;
     }
 
-    qInfo() << "AuthServer now listening on" << m_location.get_host_addr() << ":"
+    sInfo() << "AuthServer now listening on" << m_location.get_host_addr() << ":"
             << m_location.get_port_number();
 
     m_running=true;

@@ -11,9 +11,6 @@
 #include "Messages/Map/GameCommand.h"
 #include "Common/Servers/ClientManager.h"
 
-#include <map>
-#include <memory>
-
 
 class MapHandler;
 class MapInstance;
@@ -32,9 +29,9 @@ struct ClientEntityStateBelief
 
 struct MapClientSession : public ClientSession
 {
-    using mNetCommands = std::map<int, NetCommand *>;
-    using vBelief      = std::map<int, ClientEntityStateBelief>;
-    using vStoredCommands = std::vector<std::unique_ptr<SEGSEvents::GameCommandEvent>>;
+    using mNetCommands = Map<int, NetCommand *>;
+    using vBelief      = Map<int, ClientEntityStateBelief>;
+    using vStoredCommands = Vector<eastl::unique_ptr<SEGSEvents::GameCommandEvent>>;
     friend class CharacterDatabase;
 
         uint32_t                m_client_id    = 0;
@@ -45,7 +42,7 @@ struct MapClientSession : public ClientSession
         vStoredCommands         m_contents;
         MapInstance *           m_current_map = nullptr;
         Entity *                m_ent         = nullptr;
-        QString                 m_name; // current character name, stored here for quick lookups
+        String                  m_name; // current character name, stored here for quick lookups
         SEGSTimer *             m_tick_source = nullptr;
         vBelief                 m_worldstate_belief;
         bool                    m_in_map                        = false;
@@ -54,7 +51,7 @@ struct MapClientSession : public ClientSession
         uint32_t                is_connected_to_game_server_id = 0;
         uint32_t                is_connected_to_map_server_id   = 0;
         uint32_t                is_connected_to_map_instance_id = 0;
-        void                    addCommandToSendNextUpdate(std::unique_ptr<SEGSEvents::GameCommandEvent> &&v);
+        void                    addCommandToSendNextUpdate(eastl::unique_ptr<SEGSEvents::GameCommandEvent> &&v);
         void                    AddShortcut(int index, NetCommand *command);
 
         uint32_t                auth_id() const { return m_client_id; }
@@ -69,7 +66,7 @@ struct MapClientSession : public ClientSession
         template<class T, typename... Args>
         void addCommand(Args&&... args)
         {
-            addCommandToSendNextUpdate(std::make_unique<T>(std::forward<Args>(args)...));
+            addCommandToSendNextUpdate(eastl::make_unique<T>(eastl::forward<Args>(args)...));
         }
 
 protected:
@@ -78,5 +75,5 @@ protected:
 template<class T, typename... Args>
 void addSessionCommand(MapClientSession &sess,Args&&... args)
 {
-    sess.addCommand(std::make_unique<T>(std::forward<Args>(args)...));
+    sess.addCommand(eastl::make_unique<T>(eastl::forward<Args>(args)...));
 }

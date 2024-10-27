@@ -9,8 +9,7 @@
 #include "GameCommand.h"
 #include "GameData/Powers.h"
 #include "GameData/Trade.h"
-
-#include <vector>
+#include "Components/SEGSEvent_impl.h"
 
 namespace SEGSEvents
 {
@@ -30,9 +29,9 @@ public:
     // [[ev_def:field]]
     TradeMember m_trade_other;
     // [[ev_def:field]]
-    std::vector<CharacterEnhancement> m_enhancements;
+    Vector<CharacterEnhancement> m_enhancements;
     // [[ev_def:field]]
-    std::vector<CharacterInspiration> m_inspirations;
+    Vector<CharacterInspiration> m_inspirations;
 };
 
 

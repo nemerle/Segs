@@ -44,13 +44,13 @@ void DBConnection::runUpgrades()
         if(getName() != step->getName())
             continue;
 
-        qCDebug(logMigration) << "Checking migration step version:" << step->getName() << step->getTargetVersion();
+        sCFDebug(logMigration,"Checking migration step version: %s %d",qPrintable(step->getName()),step->getTargetVersion());
 
         if(step->getTargetVersion() > final_version)
             final_version = step->getTargetVersion();
     }
 
-    qCDebug(logMigration) << "Final migration version:" << final_version;
+    sCDebug(logMigration) << "Final migration version:" << final_version;
 
     // check database version against schema in default folder
     if(start_version >= final_version)
@@ -135,7 +135,7 @@ int DBConnection::getDBVersion()
         version = m_query->value(0).toInt();
     }
 
-    qCDebug(logDB) << "Fetching database version:" << getName() << version;
+    sCFDebug(logDB,"Fetching database version: %s %d",qPrintable(getName()),version);
     return version;
 }
 
@@ -167,7 +167,7 @@ bool DBConnection::updateTableVersions(const DBSchemas &table_schemas)
         if(!m_query->exec())
             return false;
 
-        qCDebug(logMigration) << "Updating Version:" << table.m_table_name << table.m_version << table.m_last_updated;
+        sCFDebug(logMigration,"Updating Version: %s %d %s",qPrintable(table.m_table_name),table.m_version,qPrintable(table.m_last_updated));
     }
 
     return true;

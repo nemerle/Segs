@@ -11,8 +11,7 @@
 #include "Components/serialization_common.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-#include <vector>
+#include "Common/Containers/String.h"
 
 extern int g_max_num_costume_slots;
 
@@ -36,12 +35,12 @@ struct CostumePart
         Neck,
         UarmR,
     };
-    QString m_geometry;
-    QString m_texture_1;
-    QString m_texture_2;
-    QString name_3;
-    QString name_4;
-    QString name_5;
+    String m_geometry;
+    String m_texture_1;
+    String m_texture_2;
+    String name_3;
+    String name_4;
+    String name_5;
     uint32_t m_colors[2] = {0};
     uint8_t m_type = 0; // arms/legs etc..
     bool m_full_part;
@@ -62,21 +61,21 @@ public:
     uint32_t    m_skin_color    = 0;
     bool        m_send_full_costume;
     int         m_num_parts     = 0;
-    std::vector<CostumePart> m_parts;
+    Vector<CostumePart> m_parts;
 
     static Costume NullCostume;
 
     void storeCharselParts(BitStream &bs) const;
     void storeCharsel(BitStream &bs) const;
-    void serializeToDb(QString &tgt) const;
-    void serializeFromDb(const QString &src);
+    void serializeToDb(String &tgt) const;
+    void serializeFromDb(const String &src);
     void dump() const;
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);
 };
 
-using vCostumes = std::vector<Costume>;
+using vCostumes = Vector<Costume>;
 
 void serializefrom(Costume &tgt, BitStream &bs, const ColorAndPartPacker *packer);
 void serializeto(const Costume &tgt, BitStream &bs, const ColorAndPartPacker *packer);

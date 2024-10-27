@@ -103,7 +103,7 @@
  *
  *  C++20 functionality
  *     EA_COMPILER_NO_DESIGNATED_INITIALIZERS
- *     
+ *
  *-----------------------------------------------------------------------------
  *
  * Supplemental documentation
@@ -212,8 +212,8 @@
 
     // EA_COMPILER_HAS_BUILTIN
     #ifndef EA_COMPILER_HAS_BUILTIN
-		#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 10))
-			#define EA_COMPILER_HAS_BUILTIN(x) __has_builtin(x)
+        #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 10))
+            #define EA_COMPILER_HAS_BUILTIN(x) __has_builtin(x)
         #else
             #define EA_COMPILER_HAS_BUILTIN(x) 0
         #endif
@@ -297,8 +297,8 @@
     #if !defined(EA_COMPILER_CPP17_ENABLED) && defined(__cplusplus)
         #if (__cplusplus >= 201703L)
             #define EA_COMPILER_CPP17_ENABLED 1
-		#elif defined(_MSVC_LANG) && (_MSVC_LANG >= 201703L) // C++17+
-			#define EA_COMPILER_CPP17_ENABLED 1
+        #elif defined(_MSVC_LANG) && (_MSVC_LANG >= 201703L) // C++17+
+            #define EA_COMPILER_CPP17_ENABLED 1
         #endif
     #endif
 
@@ -308,17 +308,17 @@
 	// Defined as 1 if the compiler has its available C++20 support enabled, else undefined.
 	// This does not mean that all of C++20 or any particular feature of C++20 is supported
 	// by the compiler. It means that whatever C++20 support the compiler has is enabled.
- 	//
+	//
 	// We cannot use (__cplusplus >= 202003L) alone because some compiler vendors have
 	// decided to not define __cplusplus like thus until they have fully completed their
 	// C++20 support.
 	#if !defined(EA_COMPILER_CPP20_ENABLED) && defined(__cplusplus)
- 		// TODO(rparoin): enable once a C++20 value for the __cplusplus macro has been published
-		// #if (__cplusplus >= 202003L)
-		//     #define EA_COMPILER_CPP20_ENABLED 1
-		// #elif defined(_MSVC_LANG) && (_MSVC_LANG >= 202003L) // C++20+
-		//     #define EA_COMPILER_CPP20_ENABLED 1
-		// #endif
+		// TODO(rparoin): enable once a C++20 value for the __cplusplus macro has been published
+		 #if (__cplusplus >= 202003L)
+			 #define EA_COMPILER_CPP20_ENABLED 1
+		 #elif defined(_MSVC_LANG) && (_MSVC_LANG >= 202003L) // C++20+
+			 #define EA_COMPILER_CPP20_ENABLED 1
+		 #endif
 	#endif
 
 
@@ -337,10 +337,10 @@
 
 	// Clang's GCC-compatible driver.
 	#elif defined(__clang__) && !defined(_MSC_VER)
-        #define EA_COMPILER_CLANG   1
-        #define EA_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
-        #define EA_COMPILER_NAME    "clang"
-        #define EA_COMPILER_STRING  EA_COMPILER_NAME __clang_version__
+		#define EA_COMPILER_CLANG   1
+		#define EA_COMPILER_VERSION (__clang_major__ * 100 + __clang_minor__)
+		#define EA_COMPILER_NAME    "clang"
+		#define EA_COMPILER_STRING  EA_COMPILER_NAME __clang_version__
 
     // GCC (a.k.a. GNUC)
     #elif defined(__GNUC__) // GCC compilers exist for many platforms.
@@ -359,7 +359,7 @@
             #define EA_COMPILER_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS 1
         #endif
 
-    // Borland C++
+	// Borland C++
 	#elif defined(__BORLANDC__)
 		#define EA_COMPILER_BORLANDC 1
 		#define EA_COMPILER_VERSION  __BORLANDC__
@@ -377,8 +377,8 @@
 	// Intel C++
 	// The Intel Windows compiler masquerades as VC++ and defines _MSC_VER.
 	// The Intel compiler is based on the EDG compiler front-end.
-    #elif defined(__ICL) || defined(__ICC)
-        #define EA_COMPILER_INTEL 1
+	#elif defined(__ICL) || defined(__ICC)
+		#define EA_COMPILER_INTEL 1
 
         // Should we enable the following? We probably should do so since enabling it does a lot more good than harm
         // for users. The Intel Windows compiler does a pretty good job of emulating VC++ and so the user would likely
@@ -572,8 +572,8 @@
         #define EA_COMPILER_NO_RTTI 1
     #elif defined(_MSC_VER) && !defined(_CPPRTTI)
         #define EA_COMPILER_NO_RTTI 1
-	#elif defined(__ARMCC_VERSION) && defined(__TARGET_CPU_MPCORE) && !defined(__RTTI)
-		#define EA_COMPILER_NO_RTTI 1
+    #elif defined(__ARMCC_VERSION) && defined(__TARGET_CPU_MPCORE) && !defined(__RTTI)
+        #define EA_COMPILER_NO_RTTI 1
     #endif
 
 
@@ -599,7 +599,7 @@
         #elif (defined(EA_COMPILER_CLANG) || defined(EA_COMPILER_GNUC) || defined(EA_COMPILER_INTEL) || defined(EA_COMPILER_RVCT)) && !defined(__EXCEPTIONS) // GCC and most EDG-based compilers define __EXCEPTIONS when exception handling is enabled.
             #define EA_COMPILER_NO_EXCEPTIONS 1
 
-		#elif (defined(EA_COMPILER_MSVC)) && !defined(_CPPUNWIND)
+        #elif (defined(EA_COMPILER_MSVC)) && !defined(_CPPUNWIND)
             #define EA_COMPILER_NO_UNWIND 1
 
         #endif // EA_COMPILER_NO_EXCEPTIONS / EA_COMPILER_NO_UNWIND
@@ -621,7 +621,7 @@
         #if defined(_MSC_VER)
             #define EA_DISABLE_ALL_VC_WARNINGS()  \
                 __pragma(warning(push, 0)) \
-				__pragma(warning(disable: 4244 4265 4267 4350 4472 4509 4548 4623 4710 4985 6320 4755 4625 4626 4702 4668)) // Some warnings need to be explicitly called out.
+                __pragma(warning(disable: 4244 4265 4267 4350 4472 4509 4548 4623 4710 4985 6320 4755 4625 4626 4702 4668)) // Some warnings need to be explicitly called out.
         #else
             #define EA_DISABLE_ALL_VC_WARNINGS()
         #endif
@@ -696,18 +696,18 @@
             #define EA_THROW_SPEC_NEW_NONE()    throw()
             #define EA_THROW_SPEC_DELETE_NONE() throw()
 
-        #else
+		#else
 			#if defined(EA_PLATFORM_SONY)
 				#define EA_THROW_SPEC_NEW(X)        _THROWS(X)
 			#elif defined(_MSC_VER)
-                // Disabled warning "nonstandard extension used: 'throw (...)'" as this warning is a W4 warning which is usually off by default
-                // and doesn't convey any important information but will still complain when building with /Wall (which most teams do)
-                #define EA_THROW_SPEC_NEW(X)        __pragma(warning(push)) __pragma(warning(disable: 4987)) _THROWS(X) __pragma(warning(pop))
-            #else
-                #define EA_THROW_SPEC_NEW(X)        _THROW1(X)
-            #endif
-            #define EA_THROW_SPEC_NEW_NONE()    _THROW0()
-            #define EA_THROW_SPEC_DELETE_NONE() _THROW0()
+				// Disabled warning "nonstandard extension used: 'throw (...)'" as this warning is a W4 warning which is usually off by default
+				// and doesn't convey any important information but will still complain when building with /Wall (which most teams do)
+				#define EA_THROW_SPEC_NEW(X)        __pragma(warning(push)) __pragma(warning(disable: 4987)) _THROWS(X) __pragma(warning(pop))
+			#else
+				#define EA_THROW_SPEC_NEW(X)        _THROW1(X)
+			#endif
+			#define EA_THROW_SPEC_NEW_NONE()    _THROW0()
+			#define EA_THROW_SPEC_DELETE_NONE() _THROW0()
 
         #endif
     #elif defined(EA_COMPILER_NO_EXCEPTIONS) && !defined(EA_COMPILER_RVCT) && !defined(EA_PLATFORM_LINUX) && !defined(EA_PLATFORM_APPLE) && !defined(CS_UNDEFINED_STRING)
@@ -727,16 +727,16 @@
     //
     // If defined, then the compiler doesn't provide a Standard C++ library.
     //
-	#if defined(EA_PLATFORM_ANDROID)
-		// Disabled because EA's eaconfig/android_config/android_sdk packages currently 
-		// don't support linking STL libraries. Perhaps we can figure out what linker arguments
-		// are needed for an app so we can manually specify them and then re-enable this code.
-		//#include <android/api-level.h>
-		//
-		//#if (__ANDROID_API__ < 9) // Earlier versions of Android provide no std C++ STL implementation.
-			#define EA_COMPILER_NO_STANDARD_CPP_LIBRARY 1
-		//#endif
-	#endif
+    #if defined(EA_PLATFORM_ANDROID)
+        // Disabled because EA's eaconfig/android_config/android_sdk packages currently
+        // don't support linking STL libraries. Perhaps we can figure out what linker arguments
+        // are needed for an app so we can manually specify them and then re-enable this code.
+        //#include <android/api-level.h>
+        //
+        //#if (__ANDROID_API__ < 9) // Earlier versions of Android provide no std C++ STL implementation.
+            #define EA_COMPILER_NO_STANDARD_CPP_LIBRARY 1
+        //#endif
+    #endif
 
 
     // EA_COMPILER_NO_STATIC_VARIABLE_INIT
@@ -1179,7 +1179,7 @@
     // http://en.cppreference.com/w/cpp/language/inline
     //
     #if !defined(EA_COMPILER_NO_INLINE_VARIABLES)
-        #define EA_COMPILER_NO_INLINE_VARIABLES 1
+        // #define EA_COMPILER_NO_INLINE_VARIABLES 1
     #endif
 
 
@@ -1753,13 +1753,13 @@
     // that it also supports non-trivial classes (e.g. with ctors). EA_COMPILER_NO_THREAD_LOCAL refers
     // specifically to full C++11 thread_local support. The EAThread package provides a wrapper for
     // __thread via EA_THREAD_LOCAL (which unfortunately sounds like C++ thread_local).
-	//
-	// https://en.cppreference.com/w/cpp/keyword/thread_local
+    //
+    // https://en.cppreference.com/w/cpp/keyword/thread_local
     //
     #if !defined(EA_COMPILER_NO_THREAD_LOCAL)
-		#if defined(EA_COMPILER_CPP11_ENABLED) && defined(__clang__) && EA_COMPILER_HAS_FEATURE(cxx_thread_local)
-			// supported.
-		#elif defined(EA_COMPILER_CPP11_ENABLED) && defined(_MSC_VER) && (EA_COMPILER_VERSION >= 1900)     // VS2015+
+        #if defined(EA_COMPILER_CPP11_ENABLED) && defined(__clang__) && EA_COMPILER_HAS_FEATURE(cxx_thread_local)
+            // supported.
+        #elif defined(EA_COMPILER_CPP11_ENABLED) && defined(_MSC_VER) && (EA_COMPILER_VERSION >= 1900)     // VS2015+
             // supported.
         #elif defined(EA_COMPILER_CPP11_ENABLED) && defined(__GNUC__) && (EA_COMPILER_VERSION >= 4008)   // GCC 4.8+
             // supported.

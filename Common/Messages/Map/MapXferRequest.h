@@ -9,7 +9,6 @@
 #include "GameCommand.h"
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
-#include <QtCore/QString>
 
 namespace SEGSEvents
 {

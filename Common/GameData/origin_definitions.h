@@ -6,19 +6,19 @@
  */
 
 #pragma once
-#include <vector>
-#include <QtCore/QString>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 
 struct Parse_Origin
 {
-    QByteArray Name;
-    QByteArray DisplayName;
-    QByteArray DisplayHelp;
-    QByteArray DisplayShortHelp;
+    String Name;
+    String DisplayName;
+    String DisplayHelp;
+    String DisplayShortHelp;
     int NumBonusPowerSets;
     int NumBonusPowers;
     int NumBonusBoostSlots;
     int NumContacts;
     float ContactBonusLength;
 };
-using Parse_AllOrigins = std::vector<Parse_Origin>;
+using Parse_AllOrigins = Vector<Parse_Origin>;

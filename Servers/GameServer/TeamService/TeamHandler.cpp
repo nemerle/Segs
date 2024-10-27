@@ -18,12 +18,12 @@ using namespace SEGSEvents;
 
 void TeamHandler::notify_team_of_changes(Team *t, uint64_t session_token)
 {
-    std::vector<uint32_t> ids;
-    std::vector<QString> names;
+    Vector<uint32_t> ids;
+    Vector<String> names;
 
     for (const auto &member : t->m_data.m_team_members)
     {
-        qCDebug(logTeams) << "notifying team members:" << \
+        sCDebug(logTeams) << "notifying team members:" << \
             member.tm_idx << \
             member.tm_name << \
             member.tm_pending;
@@ -72,7 +72,7 @@ bool TeamHandler::delete_team(Team *t)
         if (team->m_data.m_team_idx == t->m_data.m_team_idx)
         {
             index_to_remove = i;
-            qCDebug(logTeams) << "Removing team:" << t->m_data.m_team_idx;
+            sCDebug(logTeams) << "Removing team:" << t->m_data.m_team_idx;
             delete team;
             break;
         }
@@ -80,7 +80,7 @@ bool TeamHandler::delete_team(Team *t)
 
     if (index_to_remove == -1)
     {
-        qCDebug(logTeams) << "Team not found:" << t->m_data.m_team_idx;
+        sCDebug(logTeams) << "Team not found:" << t->m_data.m_team_idx;
         return false;
     }
 
@@ -90,79 +90,79 @@ bool TeamHandler::delete_team(Team *t)
     return true;
 }
 
-bool TeamHandler::name_is_lfg(const QString &name)
+bool TeamHandler::name_is_lfg(const String &name)
 {
     for (LFGMember &m : m_state.m_lfg_list)
-	{
-        if (m.m_name == name) 
+    {
+        if (m.m_name == name)
             return true;
-	}
+    }
 
-	return false;
+    return false;
 }
 
 bool TeamHandler::db_id_is_lfg(const uint32_t db_id)
 {
-    for (LFGMember &m : m_state.m_lfg_list) 
-	{
+    for (LFGMember &m : m_state.m_lfg_list)
+    {
         if (m.m_db_id == db_id)
             return true;
-	}
+    }
 
-	return false;
+    return false;
 }
 
 void TeamHandler::add_lfg(LFGMember m)
 {
-	m_state.m_lfg_list.emplace_back(m);
+    m_state.m_lfg_list.emplace_back(m);
 }
 
 void TeamHandler::remove_lfg(const uint32_t db_id)
 {
-    auto iter = std::find_if( m_state.m_lfg_list.begin(), m_state.m_lfg_list.end(),
+    auto iter = eastl::find_if( m_state.m_lfg_list.begin(), m_state.m_lfg_list.end(),
                               [db_id](const LFGMember& mem)-> bool {return db_id == mem.m_db_id;});
 
     if(iter != m_state.m_lfg_list.end())
     {
         iter = m_state.m_lfg_list.erase(iter);
-        qCDebug(logLFG) << "Removing" << iter->m_name << "from LFG List";
-	}
+        sCDebug(logLFG) << "Removing" << iter->m_name << "from LFG List";
+    }
 }
 
 Team *TeamHandler::team_for_db_id(const uint32_t db_id)
 {
-    for (Team *t : m_state.m_team_list) 
-	{
-        if (t->containsEntityID(db_id)) 
+    for (Team *t : m_state.m_team_list)
+    {
+        if (t->containsEntityID(db_id))
             return t;
-	}
+    }
 
-	return nullptr;
+    return nullptr;
 }
 
-Team* TeamHandler::team_for_name(const QString &name)
+Team* TeamHandler::team_for_name(const String &name)
 {
-    for (Team *t : m_state.m_team_list) 
-	{
-        if (t->containsEntityName(name)) 
+    for (Team *t : m_state.m_team_list)
+    {
+        if (t->containsEntityName(name))
             return t;
-	}
+    }
 
-	return nullptr;
+    return nullptr;
 }
 
-uint32_t TeamHandler::id_for_name(const QString &name)
+uint32_t TeamHandler::id_for_name(const String &name)
 {
     for (const auto &e : m_state.m_id_to_name)
         if (e.second == name)
             return e.first;
 
-    qCCritical(logTeams) << "Couldn't find id for name:" << name;
+    sCCritical(logTeams) << "Couldn't find id for name:" << name;
 
     return 0;
 }
 
-bool TeamHandler::name_known(const QString &name)
+bool TeamHandler::name_known(const String &name)
 {
     for (const auto &e : m_state.m_id_to_name)
         if (e.second == name)
@@ -177,7 +177,7 @@ void TeamHandler::on_client_connected(ClientConnectedMessage *msg)
 //
 //    bool player_on_team = false;
 //
-//    for (Team *t : m_state.m_team_list) 
+//    for (Team *t : m_state.m_team_list)
 //	{
 //        if (t->containsEntityID(id))
 //        {
@@ -195,135 +195,135 @@ void TeamHandler::on_client_disconnected(ClientDisconnectedMessage *msg)
 
 void TeamHandler::on_user_router_opaque_response(UserRouterOpaqueResponse *msg)
 {
-	const uint32_t sender_id = msg->m_data.m_req.m_sender_id;
-	const UserRouterError e = msg->m_data.m_error;
+    const uint32_t sender_id = msg->m_data.m_req.m_sender_id;
+    const UserRouterError e = msg->m_data.m_error;
 
     Event *src_event = from_storage(msg->m_data.m_req.m_payload);
 
-	QString m = "Unknown Error";
-	MessageChannel c = MessageChannel::USER_ERROR;
+    String m = "Unknown Error";
+    MessageChannel c = MessageChannel::USER_ERROR;
 
-	switch (src_event->type())
-	{
-		case evTeamMemberInvitedMessage:
-		{
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-				m = "The user you invited is offline.";
-			}
-			else 
-			{
-				m = "Team invite sent!";
-				c = MessageChannel::TEAM;
-			}
-			break;
-		}
-		case evTeamToggleLFGMessage:
-		{
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-		
-				qCritical() << "got user offline error for toggling lfg";
-				m = "Weird error on toggling LFG.";
-			}
-			else 
-			{
-				m = "Toggling LFG";
-				c = MessageChannel::TEAM;
-			}
-			break;
-		}
-		case evTeamRefreshLFGMessage:
-		{
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-		
-				qCritical() << "got user offline error for refreshing lfg list";
-				m = "Weird error on refreshing LFG.";
-			}
-			else 
-			{
-				m = "Refreshing LFG list";
-				c = MessageChannel::TEAM;
-			}
-			break;
-		}
+    switch (src_event->type())
+    {
+        case evTeamMemberInvitedMessage:
+        {
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+                m = "The user you invited is offline.";
+            }
+            else
+            {
+                m = "Team invite sent!";
+                c = MessageChannel::TEAM;
+            }
+            break;
+        }
+        case evTeamToggleLFGMessage:
+        {
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+
+                sCritical() << "got user offline error for toggling lfg";
+                m = "Weird error on toggling LFG.";
+            }
+            else
+            {
+                m = "Toggling LFG";
+                c = MessageChannel::TEAM;
+            }
+            break;
+        }
+        case evTeamRefreshLFGMessage:
+        {
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+
+                sCritical() << "got user offline error for refreshing lfg list";
+                m = "Weird error on refreshing LFG.";
+            }
+            else
+            {
+                m = "Refreshing LFG list";
+                c = MessageChannel::TEAM;
+            }
+            break;
+        }
         case evTeamUpdatedMessage:
         {
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-				qCritical() << "got user offline error while trying to update teams";
-				m = "Weird error on updating team.";
-			}
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+                sCritical() << "got user offline error while trying to update teams";
+                m = "Weird error on updating team.";
+            }
 
             return;
         }
         case evTeamMemberKickedMessage:
         {
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-				qCritical() << "got user offline error while trying to kick team member";
-				m = "Weird error on kicking member from team.";
-			}
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+                sCritical() << "got user offline error while trying to kick team member";
+                m = "Weird error on kicking member from team.";
+            }
 
             return;
         }
         case evTeamLeaveTeamMessage:
         {
-			if (e == UserRouterError::USER_OFFLINE)
-			{
-				qCritical() << "got user offline error while trying to leave team";
-				m = "Weird error on leaving team.";
-			}
+            if (e == UserRouterError::USER_OFFLINE)
+            {
+                sCritical() << "got user offline error while trying to leave team";
+                m = "Weird error on leaving team.";
+            }
 
             return;
         }
-		default:
-			qCritical() << "MUST HANDLE OPAQUE RESPONSE FOR EVENT:" << src_event->type();
-			break;
-	}
+        default:
+            sCritical() << "MUST HANDLE OPAQUE RESPONSE FOR EVENT:" << src_event->type();
+            break;
+    }
 
-	m_state.m_map_handler->putq(new UserRouterInfoMessage({m, c, sender_id, sender_id}, 0));
+    m_state.m_map_handler->putq(new UserRouterInfoMessage({m, c, sender_id, sender_id}, 0));
 }
 
 void TeamHandler::on_user_router_query_response(UserRouterQueryResponse *msg)
 {
-    qCritical() << " got response a" << msg->m_data.m_request_id << msg->m_data.m_request_name;
-    qCritical() << " got response b" << msg->m_data.m_response_id << msg->m_data.m_response_name;
+    sCritical() << " got response a" << msg->m_data.m_request_id << msg->m_data.m_request_name;
+    sCritical() << " got response b" << msg->m_data.m_response_id << msg->m_data.m_response_name;
 
-	assert(m_state.m_pending_events.count(msg->m_data.m_response_name));
+    assert(m_state.m_pending_events.count(msg->m_data.m_response_name));
 
-	m_state.m_id_to_name[msg->m_data.m_response_id] = msg->m_data.m_response_name;
+    m_state.m_id_to_name[msg->m_data.m_response_id] = msg->m_data.m_response_name;
 
-	for (const auto &elem : m_state.m_pending_events)
+    for (const auto &elem : m_state.m_pending_events)
     {
-		if (elem.first == msg->m_data.m_response_name)
+        if (elem.first == msg->m_data.m_response_name)
         {
-			dispatch(elem.second);
+            dispatch(elem.second);
             elem.second->release();
         }
     }
 
-	m_state.m_pending_events.erase(msg->m_data.m_response_name);
+    m_state.m_pending_events.erase(msg->m_data.m_response_name);
 }
 
 void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
 {
 
     const uint32_t leader_id = msg->m_data.m_leader_id;
-    QString leader_name = msg->m_data.m_leader_name;
-    QString invitee_name = msg->m_data.m_invitee_name;
+    String leader_name = msg->m_data.m_leader_name;
+    String invitee_name = msg->m_data.m_invitee_name;
 
     // TODO: look this up for verification
     m_state.m_id_to_name[leader_id] = leader_name;
 
     if (!name_known(invitee_name))
     {
-        qCDebug(logTeams) << "looking up name:" << invitee_name;
+        sCDebug(logTeams) << "looking up name:" << invitee_name;
         m_state.m_pending_events.insert({invitee_name, msg->shallow_copy()});
 
         m_state.m_map_handler->putq(new UserRouterQueryRequest(
-            {0, invitee_name}, 
+            {0, invitee_name},
             msg->session_token(), this));
 
         return;
@@ -331,19 +331,19 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
 
     const uint32_t invitee_id = id_for_name(invitee_name);
 
-	if (invitee_name == leader_name)
-	{
-		QString m = "You cannot invite yourself to a team.";
-		m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
-		return;
-	}
+    if (invitee_name == leader_name)
+    {
+        String m = "You cannot invite yourself to a team.";
+        m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+        return;
+    }
 
     Team *leader_team = nullptr;
     Team *invitee_team = nullptr;
 
-    for (Team *t : m_state.m_team_list) 
+    for (Team *t : m_state.m_team_list)
     {
-        if (t->containsEntityID(leader_id)) 
+        if (t->containsEntityID(leader_id))
             leader_team = t;
 
         if (t->containsEntityID(invitee_id))
@@ -351,30 +351,30 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
     }
 
     // if the leader has a team, make sure it's not full
-    if (leader_team != nullptr) 
+    if (leader_team != nullptr)
     {
         if (!leader_team->isTeamLeader(leader_id)) {
-            QString m = "You must be the team leader to invite a player.";
-			m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            String m = "You must be the team leader to invite a player.";
+            m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
             return;
         }
 
-        if (leader_team->isFull()) 
+        if (leader_team->isFull())
         {
-            QString m = "Your team is full or has too many pending invites. You cannot invite another player.";
-			m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            String m = "Your team is full or has too many pending invites. You cannot invite another player.";
+            m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
             return;
         }
-    } 
+    }
 
-    if (invitee_team != nullptr) 
+    if (invitee_team != nullptr)
     {
-        QString m;
+        String m;
 
         if (invitee_team->isNamePending(invitee_name))
-            m = QString("%1 is already deciding about a team invitation.").arg(invitee_name);
+            m = invitee_name+" is already deciding about a team invitation.";
         else
-            m = QString("%1 is already on a team.").arg(invitee_name);
+            m = invitee_name+" is already on a team.";
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage({m, MessageChannel::TEAM, leader_id, leader_id}, 0));
 
@@ -384,13 +384,13 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
     if (leader_team == nullptr)
     {
         // create Team with transient=true
-		leader_team = new Team(true);
+        leader_team = new Team(true);
 
         TeamingError e = leader_team->addTeamMember(leader_id, leader_name, false);
 
         if (e != TeamingError::OK)
         {
-            qCritical() << "Error adding entity ID to new team" << int(e);
+            sCritical() << "Error adding entity ID to new team" << int(e);
             delete leader_team;
             return;
         }
@@ -402,7 +402,7 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
 
     if (e != TeamingError::OK)
     {
-        qCritical() << "Error adding entity name to team" << int(e);
+        sCritical() << "Error adding entity name to team" << int(e);
         return;
     }
 
@@ -410,7 +410,7 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
 
     assert(leader_team && invitee_team);
 
-    qCDebug(logTeams) << "team invite sent_by: " << leader_name << "(" << leader_id << ") | sent_to: " << invitee_name;
+    sCDebug(logTeams) << "team invite sent_by: " << leader_name << "(" << leader_id << ") | sent_to: " << invitee_name;
 
     // forward Opaque Invite message to UserRouter
     // This will cause MapInstance to send a TeamOffer to the Invitee
@@ -420,14 +420,14 @@ void TeamHandler::on_team_member_invited(TeamMemberInvitedMessage *msg)
 void TeamHandler::on_team_member_kicked(TeamMemberKickedMessage *msg) {
 
     uint32_t leader_id = msg->m_data.m_leader_id;
-    QString kickee_name = msg->m_data.m_kickee_name;
+    String kickee_name = msg->m_data.m_kickee_name;
 
-    qCDebug(logTeams) << "kicked_by: | " << leader_id << "sent_to: " << kickee_name;
+    sCDebug(logTeams) << "kicked_by: | " << leader_id << "sent_to: " << kickee_name;
 
     // first make sure kicker is the leader of a team
     Team *team = nullptr;
 
-    for (Team *t : m_state.m_team_list) 
+    for (Team *t : m_state.m_team_list)
     {
         if (t->isTeamLeader(leader_id))
         {
@@ -438,11 +438,11 @@ void TeamHandler::on_team_member_kicked(TeamMemberKickedMessage *msg) {
 
     if (team == nullptr)
     {
-		QString m = "You are not the leader of a team.";
-		qCritical() << m << leader_id;
+        String m = "You are not the leader of a team.";
+        sCritical() << m << leader_id;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            {m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
 
         return;
     }
@@ -464,28 +464,28 @@ void TeamHandler::on_team_member_kicked(TeamMemberKickedMessage *msg) {
             delete_team(team);
         }
     }
-    else 
+    else
     {
-		QString m = "There was an error kicking that player.";
-		qCritical() << m << leader_id << kickee_name;
+        String m = "There was an error kicking that player.";
+        sCritical() << m << leader_id << kickee_name;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            {m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
     }
 
-    
+
 }
 
 void TeamHandler::on_team_member_make_leader(SEGSEvents::TeamMakeLeaderMessage *msg)
 {
     uint32_t leader_id = msg->m_data.m_leader_id;
-    QString new_leader_name = msg->m_data.m_new_leader_name;
+    String new_leader_name = msg->m_data.m_new_leader_name;
 
-    qCDebug(logTeams) << "passing leadership from:" << leader_id << "to:" << new_leader_name;
+    sCDebug(logTeams) << "passing leadership from:" << leader_id << "to:" << new_leader_name;
 
     Team *team = nullptr;
 
-    for (Team *t : m_state.m_team_list) 
+    for (Team *t : m_state.m_team_list)
     {
         if (t->isTeamLeader(leader_id))
         {
@@ -496,22 +496,22 @@ void TeamHandler::on_team_member_make_leader(SEGSEvents::TeamMakeLeaderMessage *
 
     if (team == nullptr)
     {
-		QString m = "You are not the leader of a team.";
-		qCritical() << m << leader_id;
+        String m = "You are not the leader of a team.";
+        sCritical() << m << leader_id;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            {m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
 
         return;
     }
 
     if (!team->containsEntityName(new_leader_name) || team->isNamePending(new_leader_name))
     {
-		QString m = "You must pass leadership to a player on your team.";
-		qCritical() << m << leader_id;
+        String m = "You must pass leadership to a player on your team.";
+        sCritical() << m << leader_id;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
+            {m, MessageChannel::USER_ERROR, leader_id, leader_id}, 0));
 
         return;
     }
@@ -519,13 +519,13 @@ void TeamHandler::on_team_member_make_leader(SEGSEvents::TeamMakeLeaderMessage *
     if (!name_known(new_leader_name))
     {
         // queue event and query for new name
-        
+
         m_state.m_pending_events.insert({new_leader_name, msg->shallow_copy()});
 
         m_state.m_map_handler->putq(new UserRouterQueryRequest(
-            {0, new_leader_name}, 
+            {0, new_leader_name},
             msg->session_token(), this));
-        
+
         return;
     }
 
@@ -539,7 +539,7 @@ void TeamHandler::on_team_leave_team(SEGSEvents::TeamLeaveTeamMessage *msg)
 
     Team *team = nullptr;
 
-    for (Team *t : m_state.m_team_list) 
+    for (Team *t : m_state.m_team_list)
     {
         if (t->containsEntityID(id))
         {
@@ -550,11 +550,11 @@ void TeamHandler::on_team_leave_team(SEGSEvents::TeamLeaveTeamMessage *msg)
 
     if (team == nullptr)
     {
-		QString m = "You are not on a team.";
-		qCritical() << m << id;
+        String m = "You are not on a team.";
+        sCritical() << m << id;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, id, id}, 0));
+            {m, MessageChannel::USER_ERROR, id, id}, 0));
 
         return;
     }
@@ -578,71 +578,71 @@ void TeamHandler::on_team_leave_team(SEGSEvents::TeamLeaveTeamMessage *msg)
     }
     else
     {
-		QString m = "There was an error leaving the team.";
-		qCritical() << m << id;
+        String m = "There was an error leaving the team.";
+        sCritical() << m << id;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, id, id}, 0));
+            {m, MessageChannel::USER_ERROR, id, id}, 0));
     }
 }
 
-void TeamHandler::on_team_member_invite_handled(uint32_t invitee_id, QString &invitee_name, QString &leader_name, bool accepted, uint64_t session_token) {
+void TeamHandler::on_team_member_invite_handled(uint32_t invitee_id, String &invitee_name, String &leader_name, bool accepted, uint64_t session_token) {
 
-    qCDebug(logTeams) << "invite handled_by: " << accepted << invitee_id << invitee_name << leader_name;
+    sCDebug(logTeams) << "invite handled_by: " << accepted << invitee_id << invitee_name << leader_name;
 
     Team *invitee_team = nullptr;
 
-    for (Team *t : m_state.m_team_list) 
+    for (Team *t : m_state.m_team_list)
     {
         if (t->containsEntityName(invitee_name))
             invitee_team = t;
     }
 
-	if (invitee_team == nullptr)
-	{
-		QString m = "The team invitation has expired or is invalid.";
-		qCritical() << m << invitee_id << invitee_name << leader_name;
+    if (invitee_team == nullptr)
+    {
+        String m = "The team invitation has expired or is invalid.";
+        sCritical() << m << invitee_id << invitee_name << leader_name;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
+            {m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
 
-		return;
-	} 
+        return;
+    }
     else if (!invitee_team->isTeamLeader(id_for_name(leader_name)))
-	{
-		QString m = "The team leader has changed since this invite was sent.";
-		qCritical() << m << invitee_id << invitee_name << leader_name;
+    {
+        String m = "The team leader has changed since this invite was sent.";
+        sCritical() << m << invitee_id << invitee_name << leader_name;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
+            {m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
 
-		return;
-	}
-	else if (!invitee_team->isNamePending(invitee_name))
-	{
-		QString m = "The team invitation has has already been handled.";
-		qCritical() << m << invitee_id << invitee_name << leader_name;
+        return;
+    }
+    else if (!invitee_team->isNamePending(invitee_name))
+    {
+        String m = "The team invitation has has already been handled.";
+        sCritical() << m << invitee_id << invitee_name << leader_name;
 
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
+            {m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
 
-		return;
-	}
+        return;
+    }
 
     if (accepted)
     {
         TeamingError e = invitee_team->acceptTeamInvite(invitee_name, invitee_id);
 
-        if (e == TeamingError::OK) 
+        if (e == TeamingError::OK)
         {
             invitee_team->m_transient = false;
             // update clients
-            
+
             notify_team_of_changes(invitee_team, session_token);
         }
         else
         {
-            qCCritical(logTeams) << "Team invitation responded to, but invalid:" << invitee_team->m_data.m_team_idx << invitee_name;
+            sCCritical(logTeams) << "Team invitation responded to, but invalid:" << invitee_team->m_data.m_team_idx << invitee_name;
         }
     }
     else
@@ -651,15 +651,15 @@ void TeamHandler::on_team_member_invite_handled(uint32_t invitee_id, QString &in
 
         if (e == TeamingError::TEAM_DISBANDED)
         {
-            qCDebug(logTeams) << "Team disbanded:" << invitee_team->m_data.m_team_idx;
+            sCDebug(logTeams) << "Team disbanded:" << invitee_team->m_data.m_team_idx;
             delete_team(invitee_team);
-            qCDebug(logTeams) <<"Num teams:" << m_state.m_team_list.size();
+            sCDebug(logTeams) <<"Num teams:" << m_state.m_team_list.size();
         }
 
         if (e == TeamingError::TEAM_DISBANDED || \
             e == TeamingError::OK)
         {
-            QString m = "The team invitation has been declined.";
+            String m = "The team invitation has been declined.";
             m_state.m_map_handler->putq(new UserRouterInfoMessage(
                 {m, MessageChannel::USER_ERROR, invitee_id, invitee_id}, 0));
         }
@@ -668,71 +668,71 @@ void TeamHandler::on_team_member_invite_handled(uint32_t invitee_id, QString &in
 
 void TeamHandler::on_team_refresh_lfg(TeamRefreshLFGMessage *msg)
 {
-	const uint32_t db_id = msg->m_data.m_db_id;
-	const QString &name = msg->m_data.m_name;
+    const uint32_t db_id = msg->m_data.m_db_id;
+    const String &name = msg->m_data.m_name;
 
-	msg->m_data.m_lfg_list = m_state.m_lfg_list;
+    msg->m_data.m_lfg_list = m_state.m_lfg_list;
 
-	m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
+    m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
         {to_storage(msg), db_id, name, {db_id}, {name}},
-		msg->session_token(), this));
+        msg->session_token(), this));
 }
 
 void TeamHandler::on_team_toggle_lfg(TeamToggleLFGMessage *msg)
 {
-	const uint32_t db_id = msg->m_data.m_db_id;
-	const QString &name = msg->m_data.m_name;
+    const uint32_t db_id = msg->m_data.m_db_id;
+    const String &name = msg->m_data.m_name;
 
-	if (db_id_is_lfg(db_id))
-	{
-		remove_lfg(db_id);
-		msg->m_data.m_char_data.m_lfg = false;
+    if (db_id_is_lfg(db_id))
+    {
+        remove_lfg(db_id);
+        msg->m_data.m_char_data.m_lfg = false;
 
-		// forward Opaque ToggleLFG message to UserRouter
-		// This will cause MapInstance to update the entity's value with m_lfg
-		m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
+        // forward Opaque ToggleLFG message to UserRouter
+        // This will cause MapInstance to update the entity's value with m_lfg
+        m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
             {to_storage(msg), db_id, name, {db_id}, {name}},
-			msg->session_token(), this));
+            msg->session_token(), this));
 
-		return;
-	}
+        return;
+    }
 
-	// enable LFG
+    // enable LFG
 
-	Team *t = team_for_db_id(db_id);
+    Team *t = team_for_db_id(db_id);
 
-	if (t != nullptr && !t->isNamePending(name))
-	{
-		QString m = "You are already on a team! You cannot enable LFG.";
+    if (t != nullptr && !t->isNamePending(name))
+    {
+        String m = "You are already on a team! You cannot enable LFG.";
         m_state.m_map_handler->putq(new UserRouterInfoMessage(
-			{m, MessageChannel::USER_ERROR, db_id, db_id}, 0));
+            {m, MessageChannel::USER_ERROR, db_id, db_id}, 0));
 
-		return;
-	}
+        return;
+    }
 
-	LFGMember m;
-	m.m_db_id 		= db_id;
-	m.m_name 		= name;
+    LFGMember m;
+    m.m_db_id 		= db_id;
+    m.m_name 		= name;
     m.m_classname   = msg->m_data.m_char_data.m_class_name;
     m.m_origin      = msg->m_data.m_char_data.m_origin_name;
     m.m_level       = msg->m_data.m_char_data.m_level;
 
-	add_lfg(m);
+    add_lfg(m);
 
-	msg->m_data.m_char_data.m_lfg = true;
+    msg->m_data.m_char_data.m_lfg = true;
 
-	// forward Opaque ToggleLFG message to UserRouter
-	// This will cause MapInstance to update the entity's value with m_lfg
-	m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
+    // forward Opaque ToggleLFG message to UserRouter
+    // This will cause MapInstance to update the entity's value with m_lfg
+    m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
         {to_storage(msg), db_id, name, {db_id}, {name}},
-		msg->session_token(), this));
+        msg->session_token(), this));
 
-	// since the LFG flag is true
-	// send message to pop up window also
+    // since the LFG flag is true
+    // send message to pop up window also
     TeamRefreshLFGMessage refresh_lfg_msg({db_id, name, m_state.m_lfg_list}, 0);
-	m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
+    m_state.m_map_handler->putq(new UserRouterOpaqueRequest(
         {to_storage(&refresh_lfg_msg), db_id, name, {db_id}, {name}},
-		msg->session_token(), this));
+        msg->session_token(), this));
 }
 
 void TeamHandler::dispatch(SEGSEvents::Event *ev)
@@ -744,7 +744,7 @@ void TeamHandler::dispatch(SEGSEvents::Event *ev)
         m_state.m_map_handler = HandlerLocator::getMap_Handler(m_state.m_game_server_id);
     }
 
-    qCDebug(logTeams) << ev->type();
+    sCDebug(logTeams) << ev->type();
 
     switch(ev->type())
     {
@@ -770,10 +770,10 @@ void TeamHandler::dispatch(SEGSEvents::Event *ev)
             on_team_member_invite_handled(msg->m_data.m_invitee_id, msg->m_data.m_invitee_name, msg->m_data.m_leader_name, false, msg->session_token());
             break;
         }
-		case evTeamToggleLFGMessage:
+        case evTeamToggleLFGMessage:
             on_team_toggle_lfg(static_cast<TeamToggleLFGMessage *>(ev));
             break;
-		case evTeamRefreshLFGMessage:
+        case evTeamRefreshLFGMessage:
             on_team_refresh_lfg(static_cast<TeamRefreshLFGMessage *>(ev));
             break;
         case evUserRouterQueryResponse:
@@ -783,11 +783,11 @@ void TeamHandler::dispatch(SEGSEvents::Event *ev)
             on_user_router_opaque_response(static_cast<UserRouterOpaqueResponse *>(ev));
             break;
         case Internal_EventTypes::evClientConnectedMessage:
-			on_client_connected(static_cast<ClientConnectedMessage *>(ev));
-			break;
+            on_client_connected(static_cast<ClientConnectedMessage *>(ev));
+            break;
         case Internal_EventTypes::evClientDisconnectedMessage:
-			on_client_disconnected(static_cast<ClientDisconnectedMessage *>(ev));
-			break;
+            on_client_disconnected(static_cast<ClientDisconnectedMessage *>(ev));
+            break;
         default:
             assert(false);
             break;

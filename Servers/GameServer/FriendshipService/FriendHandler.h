@@ -11,9 +11,6 @@
 #include "Common/Servers/InternalEvents.h"
 #include "Common/Servers/ClientManager.h"
 #include "Common/GameData/Friend.h"
-#include <unordered_map>
-#include <set>
-#include <vector>
 
 namespace SEGSEvents
 {
@@ -31,7 +28,7 @@ struct MapInfo
 
 struct PlayerInfo
 {
-    std::set<uint32_t> m_players_added; //a set of player ids that added this friend
+    Set<uint32_t> m_players_added; //a set of player ids that added this friend
     FriendsList m_friends_list;
     MapInfo m_map_info;
     bool m_is_online;

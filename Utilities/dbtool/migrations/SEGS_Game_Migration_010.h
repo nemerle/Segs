@@ -26,9 +26,7 @@ public:
     // execute the migration
     bool execute(DBConnection *db) override
     {
-        qCDebug(logMigration).noquote() << QString("PERFORMING UPGRADE %1 on %2")
-                          .arg(getTargetVersion())
-                          .arg(db->getName());
+        sCFDebug(logMigration,"PERFORMING UPGRADE %d on %s",getTargetVersion(),qPrintable(db->getName()));
 
         // Add player progress to characters table column player_data
         db->m_query->prepare("SELECT * FROM 'characters'");
@@ -48,7 +46,7 @@ public:
             player_obj.insert("Progress", progress_obj);
 
             QString player_data_json = db->saveBlob(player_obj);
-            qCDebug(logMigration).noquote() << "progress:" << player_data_json; // print output for debug
+            sCDebug(logMigration)<< "progress:" << qPrintable(player_data_json); // print output for debug
 
             QString querytext = QString("UPDATE characters SET player_data='%1'")
                     .arg(player_data_json);

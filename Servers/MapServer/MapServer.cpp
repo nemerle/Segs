@@ -32,6 +32,7 @@
 #include <QtCore/QString>
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
+#include <QtCore/QRegularExpression>
 
 
 #include <set>
@@ -72,13 +73,13 @@ MapServer::~MapServer()
 
 bool MapServer::Run()
 {
-    QFSWrapper qfs;
     assert(m_owner_game_server_id != INVALID_GAME_SERVER_ID);
 
     if(!getGameData().read_game_data(RUNTIME_DATA_PATH))
         return false;
 
-    if(!getRuntimeData().prepare(&qfs,RUNTIME_DATA_PATH))
+    auto fs = SEGS::getServiceLocator()->getFS();
+    if(!getRuntimeData().prepare(fs,RUNTIME_DATA_PATH))
         return false;
     assert(d->m_manager.num_templates() > 0);
 
@@ -95,59 +96,64 @@ bool MapServer::Run()
 bool MapServer::ReadConfigAndRestart()
 {
     qInfo() << "Loading MapServer settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    Settings config(Settings::getSettingsPath());
 
     // tell all instances to shut down
     d->m_manager.shut_down_all();
 
     config.beginGroup("MapServer");
-    if(!config.contains(QStringLiteral("listen_addr")))
+    if(!config.contains(("listen_addr")))
         qDebug() << "Config file is missing 'listen_addr' entry in MapServer group, will try to use default";
-    if(!config.contains(QStringLiteral("location_addr")))
+    if(!config.contains(("location_addr")))
         qDebug() << "Config file is missing 'location_addr' entry in MapServer group, will try to use default";
-    if(!config.contains(QStringLiteral("player_fade_in")))
+    if(!config.contains(("player_fade_in")))
         qDebug() << "Config file is missing 'player_fade_in' entry in MapServer group, will try to use default";
 
-    QString listen_addr = config.value("listen_addr","127.0.0.1:7003").toString();
-    QString location_addr = config.value("location_addr","127.0.0.1:7003").toString();
+    String listen_addr = config.value<String>("listen_addr","127.0.0.1:7003");
+    String location_addr = config.value<String>("location_addr","127.0.0.1:7003");
 
-    QString map_templates_dir = config.value("maps",".").toString();
+    String map_templates_dir = config.value<String>("maps", ".");
     if(!parseAddress(listen_addr,m_base_listen_point))
     {
-        qCritical() << "Badly formed IP address" << listen_addr;
+        sCritical() << "Badly formed IP address" << listen_addr;
         return false;
     }
     if(!parseAddress(location_addr,m_base_location))
     {
-        qCritical() << "Badly formed IP address" << location_addr;
+        sCritical() << "Badly formed IP address" << location_addr;
         return false;
     }
 
     bool ok = true;
-    QVariant fade_in_variant = config.value("player_fade_in","380.0");
-    getGameData().m_player_fade_in = fade_in_variant.toFloat(&ok);
+    getGameData().m_player_fade_in = config.value<float>("player_fade_in",380.0f, &ok);
     if(!ok)
     {
-        qCritical() << "Badly formed float for 'player_fade_in': " << fade_in_variant.toString();
+        sCritical() << "Badly formed float for 'player_fade_in':" << config.value("player_fade_in");
         return false;
     }
 
-    QVariant motd_timer = config.value("motd_timer","3600.0");
-    getGameData().m_motd_timer = motd_timer.toFloat(&ok);
+    getGameData().m_motd_timer = config.value("motd_timer", 3600.0f,&ok);
     if(!ok)
     {
-        qCritical() << "Badly formed float for 'motd_timer': " << motd_timer.toString();
+        sCritical() << "Badly formed float for 'motd_timer': " << config.value("motd_timer");
         return false;
     }
 
     // get costume slot unlock levels for use in finalizeLevel()
-    getGameData().m_costume_slot_unlocks = config.value(QStringLiteral("costume_slot_unlocks"), "19,29,39,49").toString().remove(QRegExp("\\s")).split(',');
+    auto split_regex = QString::fromUtf8(config.value<String>(("costume_slot_unlocks"), "19,29,39,49").c_str())
+                           .remove(QRegularExpression("\\s"))
+                           .split(',');
+    getGameData().m_costume_slot_unlocks.clear();
+    for (const auto &s : split_regex)
+    {
+        getGameData().m_costume_slot_unlocks.emplace_back(qPrintable(s));
+    }
 
     config.endGroup(); // MapServer
 
     if(!d->m_manager.load_templates(map_templates_dir,m_owner_game_server_id,m_id,{m_base_listen_point,m_base_location}))
     {
-        postGlobalEvent(new ServiceStatusMessage({ QString("MapServer: Cannot load map templates from %1").arg(map_templates_dir),-1 },0));
+        postGlobalEvent(new ServiceStatusMessage({ "MapServer: Cannot load map templates from "+map_templates_dir,-1 },0));
         return false;
     }
 
@@ -196,10 +202,10 @@ void MapServer::on_expect_client(ExpectMapClientRequest *ev)
     // TODO: handle contention while creating 2 characters with the same name from different clients
     // TODO: SELECT account_id from characters where name=ev->m_character_name
     const ExpectMapClientRequestData &request_data(ev->m_data);
-    MapTemplate *tpl    = map_manager().get_template(request_data.m_map_name.toLower());
+    MapTemplate *tpl    = map_manager().get_template(request_data.m_map_name.to_lower());
     if(nullptr==tpl)
     {
-        qCDebug(logMapEvents) << "Returning response for base location...";
+        sCDebug(logMapEvents) << "Returning response for base location...";
         ev->src()->putq(new ExpectMapClientResponse({1, 0, m_base_location}, ev->session_token()));
         return;
     }
@@ -219,11 +225,11 @@ void MapServer::on_client_map_xfer(ClientMapXferMessage *ev)
 {
     if(m_current_map_transfers.find(ev->m_data.m_session) == m_current_map_transfers.end())
     {
-        m_current_map_transfers.insert(std::pair<uint64_t, MapXferData>(ev->m_data.m_session, ev->m_data.m_map_data));
+        m_current_map_transfers.insert(eastl::pair(ev->m_data.m_session, ev->m_data.m_map_data));
     }
     else
     {
-        qCDebug(logMapXfers) << QString("Client session %1 attempted to request a second map transfer while having an existing transfer in progress").arg(ev->m_data.m_session);
+        sCFDebug(logMapXfers,"Client session %d attempted to request a second map transfer while having an existing transfer in progress",ev->m_data.m_session);
     }
 }
 

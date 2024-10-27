@@ -80,7 +80,7 @@ namespace
         ok &=  s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             if("GeoSet"==_name) {
@@ -103,7 +103,7 @@ namespace
         ok &=  s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -126,7 +126,7 @@ namespace
         ok &=  s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -158,7 +158,7 @@ namespace
         ok &=  s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -215,15 +215,15 @@ bool loadFrom(BinStore *s,GeoSet_Data *target)
     ok &=  s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
         if("Info"==_name) {
-            target->m_Infos.push_back({});
+            target->m_Infos.push_back();
             ok &= loadFrom(s,target->m_Infos.back());
         } else if("Mask"==_name) {
-            target->m_Masks.push_back({});
+            target->m_Masks.push_back();
             ok &= loadFrom(s,target->m_Masks.back());
         } else
             assert(!"unknown field referenced.");
@@ -240,7 +240,7 @@ bool loadFrom(BinStore *s,Pallette_Data *target)
     bool ok =  s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -262,7 +262,7 @@ bool loadFrom(BinStore * s, AllTailorCosts_Data * target)
     bool ok = s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -283,7 +283,7 @@ bool loadFrom(BinStore * s, CostumeSet_Data * target)
     bool ok = s->prepare_nested();
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -300,9 +300,9 @@ bool loadFrom(BinStore * s, CostumeSet_Data * target)
 
 }
 
-void saveTo(const AllTailorCosts_Data & target, const QString & baseName, bool text_format)
+void saveTo(const AllTailorCosts_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"TailorCosts",baseName,text_format);
+    SEGS::commonSaveTo(target,"TailorCosts",baseName,text_format);
 }
 
 template<class Archive>
@@ -367,19 +367,19 @@ static void serialize(Archive & archive, Costume2_Data & m)
     archive(cereal::make_nvp("Origins",m.m_Origins));
 }
 
-void saveTo(const CostumeSet_Data & target, const QString & baseName, bool text_format)
+void saveTo(const CostumeSet_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"Costumes",baseName,text_format);
+    SEGS::commonSaveTo(target,"Costumes",baseName,text_format);
 }
 
-void saveTo(const Pallette_Data & target, const QString & baseName, bool text_format)
+void saveTo(const Pallette_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"Palette",baseName,text_format);
+    SEGS::commonSaveTo(target,"Palette",baseName,text_format);
 }
 
-void saveTo(const GeoSet_Data & target, const QString & baseName, bool text_format)
+void saveTo(const GeoSet_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"GeoSet",baseName,text_format);
+    SEGS::commonSaveTo(target,"GeoSet",baseName,text_format);
 }
 
 //! @}

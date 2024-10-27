@@ -42,16 +42,16 @@ class InfoMessageCmd; // leverage InfoMessageCmd
 
 struct SlashCommand
 {
-    QStringList m_valid_prefixes;
-    QString m_help_text;
-    std::function<void(const QStringList &, MapClientSession &)> m_handler;
+    Vector<String> m_valid_prefixes;
+    String m_help_text;
+    eastl::function<void(const Vector<String> &, MapClientSession &)> m_handler;
     uint32_t m_required_access_level;
 };
 
 // bool canAccessCommand(const SlashCommand &cmd, const Entity &e); --> function not defined (yet)
 bool canAccessCommand(const SlashCommand &cmd, MapClientSession &src);
 // CmdList needs access to g_defined_slash_commands
-void cmdHandler_CmdList(const QStringList &params, MapClientSession &sess);
+void cmdHandler_CmdList(const Vector<String> &params, MapClientSession &sess);
 
 static const SlashCommand g_defined_slash_commands[] = {
     /* SlashCommand - Access Level 1 */
@@ -76,7 +76,7 @@ static const SlashCommand g_defined_slash_commands[] = {
     {{"toggleLogging", "log"}, "Modify log categories (e.g. input, teams, ...)", cmdHandler_ToggleLogging, 9},
     {{"damage", "heal"}, "Make current target (or self) take damage/health", cmdHandler_SendFloatingNumbers, 9},
     {{"setSeq"},"Set Sequence values <update> <move_idx> <duration>", &cmdHandler_SetSequence, 9},
-    {{"addTriggeredMove"},"Set TriggeredMove values <move_idx> <delay> <fx_idx>", &cmdHandler_AddTriggeredMove, 9},
+    {{"addTriggeredMove"},"Set TriggeredMove values <move_idx> <delay> <fx_idx>", cmdHandler_AddTriggeredMove, 9},
     {{"timestate", "setTimeStateLog"},"Set TimeStateLog value.", cmdHandler_AddTimeStateLog, 9},
     {{"clientstate"},"Set ClientState mode", &cmdHandler_SetClientState, 9},
     {{"levelupxp"},"Level Up Character to Level Provided", &cmdHandler_LevelUpXp, 9},
@@ -220,8 +220,8 @@ bool canAccessCommand(const SlashCommand &cmd, MapClientSession &src)
     if(alvl >= cmd.m_required_access_level)
         return true;
 
-    QString msg = "You do not have adequate permissions to use the command: " + cmd.m_valid_prefixes.first();
-    qCDebug(logSlashCommand) << msg;
+    String msg = "You do not have adequate permissions to use the command: " + cmd.m_valid_prefixes.front();
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::USER_ERROR, msg, src);
     return false;
 }
@@ -230,11 +230,11 @@ bool canAccessCommand(const SlashCommand &cmd, MapClientSession &src)
 /************************************************************
  *  Slash Command Handlers
  ***********************************************************/
-void cmdHandler_CmdList(const QStringList &params, MapClientSession &sess)
+void cmdHandler_CmdList(const Vector<String> &params, MapClientSession &sess)
 {
 
-    QString msg = "Below is a list of all slash commands that your account can access. They are not case sensitive.\n";
-    QString content = "<face heading><span align=center><color #ff0000>Command List</color></span></face><br>\n<br>\n";
+    String msg = "Below is a list of all slash commands that your account can access. They are not case sensitive.\n";
+    String content = "<face heading><span align=center><color #ff0000>Command List</color></span></face><br>\n<br>\n";
 
     for (const auto &sc : g_defined_slash_commands)
     {
@@ -247,49 +247,64 @@ void cmdHandler_CmdList(const QStringList &params, MapClientSession &sess)
             continue;
 
         // Use msg for std out, msg_dlg for ingame dialog box
-        msg += "\t" + sc.m_valid_prefixes.join(", ") + " [" + QString::number(sc.m_required_access_level) +
+        msg += "\t" + String::joined(sc.m_valid_prefixes,", ") + " [" + eastl::to_string(sc.m_required_access_level) +
                "]:\t" + sc.m_help_text + "\n";
-        content += QString("<color #ffCC99><i>%1</i></color>[<color #66ffff>%2</color>]: %3<br>")
-                       .arg(sc.m_valid_prefixes.join(", "))
-                       .arg(sc.m_required_access_level)
-                       .arg(sc.m_help_text);
+        content.append_sprintf("<color #ffCC99><i>%s</i></color>[<color #66ffff>%d</color>]: %s<br>",
+                       String::joined(sc.m_valid_prefixes,", ").c_str(), sc.m_required_access_level, sc.m_help_text.c_str());
     }
 
     // Browser output
     sess.addCommand<Browser>(content);
     // CMD line (debug) output
-    qCDebug(logSlashCommand).noquote() << params.join(" ") << ":\n" << msg;
+    sCDebug(logSlashCommand) << String::joined(params," ") << ":\n" << msg;
 }
 
 } // end of anonymous namespace
 
-
+static bool commandMatches(const SlashCommand &cmd, StringView command_name)
+{
+    for (const String &pref : cmd.m_valid_prefixes)
+    {
+        if (0==pref.comparei(command_name))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 /************************************************************
  *  runCommand for executing commands on MapClientSession
  ***********************************************************/
-void runCommand(const QString &str, MapClientSession &sess)
+void runCommand(const String &str, MapClientSession &sess)
 {
     // Split args on spaces (but leave quote-enclosed spaces)
-    QStringList args = str.split(QRegularExpression("\"?( |$)(?=(([^\"]*\"){2})*[^\"]*$)\"?"));
+    QStringList args = QString(str.c_str()).split(QRegularExpression("\"?( |$)(?=(([^\"]*\"){2})*[^\"]*$)\"?"));
     // Regex always produces an empty match for $
     args.pop_back();
     // May also produce an extra empty match if input ends in quote
     if (args.back().isEmpty())
         args.pop_back();
 
-    QString command_name = args.takeFirst();
+    String command_name = qPrintable(args.takeFirst());
+
+    Vector<String> args_parts;
+    args_parts.reserve(args.size());
+    for (const QString &s : args)
+    {
+        args_parts.push_back(qPrintable(s));
+    }
 
     for (const auto &cmd : g_defined_slash_commands)
     {
-        if(cmd.m_valid_prefixes.contains(command_name, Qt::CaseInsensitive))
+        if (commandMatches(cmd,command_name))
         {
             if(!canAccessCommand(cmd, sess))
                 return; // no access, so return early
-            cmd.m_handler(args, sess);
+            cmd.m_handler(args_parts, sess);
             return; // return here to avoid unknown command msg
         }
     }
-    qCDebug(logSlashCommand) << "Unknown game command:" << str;
+    sCDebug(logSlashCommand) << "Unknown game command:" << str;
 }
 
 //! @}

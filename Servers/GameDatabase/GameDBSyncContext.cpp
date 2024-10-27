@@ -92,36 +92,36 @@ bool GameDbSyncContext::loadAndConfigure()
     }
 
     qInfo() << "Loading GameDbSync settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    Settings config(Settings::getSettingsPath());
 
-    config.beginGroup(QStringLiteral("AdminServer"));
-    QStringList driver_list {"QSQLITE", "QPSQL", "QMYSQL"};
+    config.beginGroup(("AdminServer"));
+    FixedVector<StringView,3,false> driver_list = {"QSQLITE", "QPSQL", "QMYSQL"};
     our_id.to_string(thread_name_buf); // Ace is using template specialization to acquire the lenght of passed buffer
 
-    config.beginGroup(QStringLiteral("CharacterDatabase"));
+    config.beginGroup(("CharacterDatabase"));
     // this indent is here to mark the nesting of config block
-        QString dbdriver = config.value(QStringLiteral("db_driver"),"QSQLITE").toString();
-        QString dbhost = config.value(QStringLiteral("db_host"),"127.0.0.1").toString();
-        int dbport = config.value(QStringLiteral("db_port"),"5432").toInt();
-        QString dbname = config.value(QStringLiteral("db_name"),"segs_game.db").toString();
-        QString dbuser = config.value(QStringLiteral("db_user"),"segsadmin").toString();
-        QString dbpass = config.value(QStringLiteral("db_pass"),"segs123").toString();
+        String dbdriver = config.value(("db_driver"),String("QSQLITE"));
+        String dbhost = config.value(("db_host"),String("127.0.0.1"));
+        int dbport = config.value(("db_port"),5432);
+        String dbname = config.value(("db_name"),String("segs_game.db"));
+        String dbuser = config.value(("db_user"),String("segsadmin"));
+        String dbpass = config.value(("db_pass"),String("segs123"));
     config.endGroup(); // CharacterDatabase
     config.endGroup(); // AdminServer
 
-    QSqlDatabase *db2;
-    if(!driver_list.contains(dbdriver.toUpper()))
+    if(!driver_list.contains(dbdriver.to_upper()))
     {
-        qCritical() << "Database driver" << dbdriver << " not supported";
+        sCritical() << "Database driver" << dbdriver << " not supported";
         return false;
     }
 
-    db2 = new QSqlDatabase(QSqlDatabase::addDatabase(dbdriver,QStringLiteral("CharacterDatabase_")+thread_name_buf));
-    db2->setHostName(dbhost);
+    QSqlDatabase* db2 = new QSqlDatabase(
+        QSqlDatabase::addDatabase(dbdriver.c_str(), QString("CharacterDatabase_") + thread_name_buf));
+    db2->setHostName(dbhost.c_str());
     db2->setPort(dbport);
-    db2->setDatabaseName(dbname);
-    db2->setUserName(dbuser);
-    db2->setPassword(dbpass);
+    db2->setDatabaseName(dbname.c_str());
+    db2->setUserName(dbuser.c_str());
+    db2->setPassword(dbpass.c_str());
     m_db.reset(db2); // at this point we become owner of the db
 
     if(dbdriver == "QMYSQL")
@@ -131,7 +131,7 @@ bool GameDbSyncContext::loadAndConfigure()
 
     if(!m_db->open())
     {
-        qCritical().noquote() << "Failed to open database:" << dbname;
+        sCritical() << "Failed to open database:" << dbname;
         db2->setConnectOptions();
         return false;
     }
@@ -147,7 +147,7 @@ bool GameDbSyncContext::loadAndConfigure()
         return false;
     }
 
-    qCDebug(logDB) << "Preparing Queries...";
+    sCDebug(logDB) << "Preparing Queries...";
     m_prepared_account_insert = std::make_unique<QSqlQuery>(*m_db);
     m_prepared_account_select = std::make_unique<QSqlQuery>(*m_db);
     m_prepared_entity_select = std::make_unique<QSqlQuery>(*m_db);
@@ -235,53 +235,53 @@ bool GameDbSyncContext::loadAndConfigure()
 
 bool GameDbSyncContext::performUpdate(const CharacterUpdateData &data)
 {
-    qCDebug(logDB) << "Attempting to update Character" << data.m_id;
+    sCDebug(logDB) << "Attempting to update Character" << data.m_id;
 
     m_prepared_char_update->bindValue(QStringLiteral(":id"), data.m_id); // for WHERE statement only
-    m_prepared_char_update->bindValue(QStringLiteral(":char_name"), data.m_char_name);
-    m_prepared_char_update->bindValue(QStringLiteral(":costume_data"), data.m_costume_data);
-    m_prepared_char_update->bindValue(QStringLiteral(":chardata"), data.m_char_data);
-    m_prepared_char_update->bindValue(QStringLiteral(":entitydata"), data.m_entity_data);
-    m_prepared_char_update->bindValue(QStringLiteral(":player_data"), data.m_player_data);
+    m_prepared_char_update->bindValue(QStringLiteral(":char_name"), data.m_char_name.c_str());
+    m_prepared_char_update->bindValue(QStringLiteral(":costume_data"), data.m_costume_data.c_str());
+    m_prepared_char_update->bindValue(QStringLiteral(":chardata"), data.m_char_data.c_str());
+    m_prepared_char_update->bindValue(QStringLiteral(":entitydata"), data.m_entity_data.c_str());
+    m_prepared_char_update->bindValue(QStringLiteral(":player_data"), data.m_player_data.c_str());
     m_prepared_char_update->bindValue(QStringLiteral(":supergroup_id"), data.m_supergroup_id);
 
    if(!doIt(*m_prepared_char_update))
         return false;
 
-    qCDebug(logDB) << "Updating Character Successful" << data.m_char_name;
+    sCDebug(logDB) << "Updating Character Successful" << data.m_char_name;
     return true;
 }
 
 bool GameDbSyncContext::performUpdate(const CostumeUpdateData &data)
 {
-    qCDebug(logDB) << "Attempting to update Player" << data.m_id;
+    sCDebug(logDB) << "Attempting to update Player" << data.m_id;
 
     m_prepared_costume_update->bindValue(QStringLiteral(":id"), data.m_id);
-    m_prepared_costume_update->bindValue(QStringLiteral(":costume_data"), data.m_costume_data);
+    m_prepared_costume_update->bindValue(QStringLiteral(":costume_data"), data.m_costume_data.c_str());
 
     if(!doIt(*m_prepared_costume_update))
         return false;
 
-    qCDebug(logDB) << "Updating Costume Successful" << data.m_id;
+    sCDebug(logDB) << "Updating Costume Successful" << data.m_id;
     return true;
 }
 
 bool GameDbSyncContext::performUpdate(const PlayerUpdateData &data)
 {
-    qCDebug(logDB) << "Attempting to update Player" << data.m_id;
+    sCDebug(logDB) << "Attempting to update Player" << data.m_id;
 
     m_prepared_player_update->bindValue(QStringLiteral(":id"), data.m_id);
-    m_prepared_player_update->bindValue(QStringLiteral(":player_data"), data.m_player_data);
+    m_prepared_player_update->bindValue(QStringLiteral(":player_data"), data.m_player_data.c_str());
     if(!doIt(*m_prepared_player_update))
         return false;
 
-    qCDebug(logDB) << "Updating Player Successful" << data.m_id;
+    sCDebug(logDB) << "Updating Player Successful" << data.m_id;
     return true;
 }
 
 bool GameDbSyncContext::getAccount(const GameAccountRequestData &data,GameAccountResponseData &result)
 {
-    qCDebug(logDB) << "Trying to find account in the database" << data.m_auth_account_id;
+    sCDebug(logDB) << "Trying to find account in the database" << data.m_auth_account_id;
     m_prepared_account_select->bindValue(0,quint64(data.m_auth_account_id));
     if(!doIt(*m_prepared_account_select))
         return false;
@@ -320,15 +320,15 @@ bool GameDbSyncContext::getAccount(const GameAccountRequestData &data,GameAccoun
         character.m_db_id = (m_prepared_char_select->value("id").toUInt());
         character.m_account_id = (m_prepared_char_select->value("account_id").toUInt());
         QString name=m_prepared_char_select->value("char_name").toString();
-        character.m_name =  name.isEmpty() ? EMPTY_STRING : name;
-        character.m_serialized_costume_data = m_prepared_char_select->value("costume_data").toString();
-        character.m_serialized_chardata = m_prepared_char_select->value("chardata").toString();
-        character.m_serialized_entity_data = m_prepared_char_select->value("entitydata").toString();
-        character.m_serialized_player_data = m_prepared_char_select->value("player_data").toString();
-        qCDebug(logDB) << "Serializing Character" << character.m_name;
+        character.m_name =  String(name.isEmpty() ? EMPTY_STRING : name.toUtf8().data());
+        character.m_serialized_costume_data = m_prepared_char_select->value("costume_data").toString().toUtf8().data();
+        character.m_serialized_chardata     = m_prepared_char_select->value("chardata").toString().toUtf8().data();
+        character.m_serialized_entity_data  = m_prepared_char_select->value("entitydata").toString().toUtf8().data();
+        character.m_serialized_player_data  = m_prepared_char_select->value("player_data").toString().toUtf8().data();
+        sCDebug(logDB) << "Serializing Character" << character.m_name;
     }
 
-    qCDebug(logDB) << "Returning Account" << data.m_auth_account_id;
+    sCDebug(logDB) << "Returning Account" << data.m_auth_account_id;
     return true;
 }
 
@@ -339,32 +339,32 @@ bool GameDbSyncContext::removeCharacter(const RemoveCharacterRequestData &data)
     if(!doIt(*m_prepared_char_delete))
         return false;
 
-    qCDebug(logDB) << "Removing Character" << data.account_id << data.slot_idx;
+    sCDebug(logDB) << "Removing Character" << data.account_id << data.slot_idx;
     return true;
 }
 
 bool GameDbSyncContext::checkNameClash(const WouldNameDuplicateRequestData &data, WouldNameDuplicateResponseData &result)
 {
-    m_prepared_char_exists->bindValue(0,data.m_name);
+    m_prepared_char_exists->bindValue(0,data.m_name.c_str());
     if(!doIt(*m_prepared_char_exists))
         return false;
     if(!m_prepared_char_exists->next())
         return false;
     // TODO: handle case of multiple accounts with same name ?
     result.m_would_duplicate = m_prepared_char_exists->value(0).toBool();
-    qCDebug(logDB) << "No name clash for" << data.m_name;
+    sCDebug(logDB) << "No name clash for" << data.m_name;
     return true;
 }
 
 bool GameDbSyncContext::createNewChar(const CreateNewCharacterRequestData &data, CreateNewCharacterResponseData &result)
 {
-    qCDebug(logDB) << "Creating new Character in GameDatabase";
+    sCDebug(logDB) << "Creating new Character in GameDatabase";
     DbTransactionGuard grd(*m_db);
     m_prepared_get_char_slots->bindValue(0,data.m_client_id);
     if(!doIt(*m_prepared_get_char_slots))
         return false;
 
-    std::set<int> slots_in_use;
+    Set<int> slots_in_use;
     while(m_prepared_get_char_slots->next())
     {
         slots_in_use.insert(m_prepared_get_char_slots->value(0).toInt());
@@ -393,11 +393,11 @@ bool GameDbSyncContext::createNewChar(const CreateNewCharacterRequestData &data,
 
     m_prepared_char_insert->bindValue(":slot_index", uint32_t(selected_slot));
     m_prepared_char_insert->bindValue(":account_id", data.m_character.m_account_id);
-    m_prepared_char_insert->bindValue(":char_name", data.m_character.m_name);
-    m_prepared_char_insert->bindValue(":costume_data", data.m_character.m_serialized_costume_data);
-    m_prepared_char_insert->bindValue(":chardata", data.m_character.m_serialized_chardata);
-    m_prepared_char_insert->bindValue(":entitydata", data.m_ent_data);
-    m_prepared_char_insert->bindValue(":player_data", data.m_character.m_serialized_player_data);
+    m_prepared_char_insert->bindValue(":char_name", data.m_character.m_name.c_str());
+    m_prepared_char_insert->bindValue(":costume_data", data.m_character.m_serialized_costume_data.c_str());
+    m_prepared_char_insert->bindValue(":chardata", data.m_character.m_serialized_chardata.c_str());
+    m_prepared_char_insert->bindValue(":entitydata", data.m_ent_data.c_str());
+    m_prepared_char_insert->bindValue(":player_data", data.m_character.m_serialized_player_data.c_str());
     m_prepared_char_insert->bindValue(":supergroup_id", 0);
 
     if(!doIt(*m_prepared_char_insert))
@@ -407,7 +407,7 @@ bool GameDbSyncContext::createNewChar(const CreateNewCharacterRequestData &data,
     result.m_char_id = char_id;
     result.slot_idx = selected_slot;
 
-    qCDebug(logDB) << "Inserted Character ID" << char_id << "at" << selected_slot;
+    sCDebug(logDB) << "Inserted Character ID" << char_id << "at" << selected_slot;
 
     grd.commit();
     return true;
@@ -421,15 +421,15 @@ bool GameDbSyncContext::getEntity(const GetEntityRequestData &data, GetEntityRes
     if(!m_prepared_entity_select->next())
         return false;
     result.m_supergroup_id = m_prepared_entity_select->value("supergroup_id").toUInt();
-    result.m_ent_data = m_prepared_entity_select->value("entitydata").toString();
+    result.m_ent_data = m_prepared_entity_select->value("entitydata").toString().toUtf8().data();
 
-    qCDebug(logDB) << "Returning Entity" << data.m_char_id;
+    sCDebug(logDB) << "Returning Entity" << data.m_char_id;
     return true;
 }
 
 bool GameDbSyncContext::getEntityByName(const GetEntityByNameRequestData &data, GetEntityByNameResponseData &result)
 {
-    m_prepared_entity_select_by_name->bindValue(0, data.m_char_name);
+    m_prepared_entity_select_by_name->bindValue(0, data.m_char_name.c_str());
 
     if(!doIt(*m_prepared_entity_select_by_name))
         return false;
@@ -437,9 +437,9 @@ bool GameDbSyncContext::getEntityByName(const GetEntityByNameRequestData &data, 
         return false;
 
     result.m_supergroup_id = m_prepared_entity_select_by_name->value("supergroup_id").toUInt();
-    result.m_ent_data = m_prepared_entity_select_by_name->value("entitydata").toString();
+    result.m_ent_data = m_prepared_entity_select_by_name->value("entitydata").toString().toUtf8().data();
 
-    qCDebug(logDB) << "Returning Entity" << data.m_char_name;
+    sCDebug(logDB) << "Returning Entity" << data.m_char_name;
 
     return true;
 }
@@ -448,12 +448,12 @@ bool GameDbSyncContext::getEntityByName(const GetEntityByNameRequestData &data, 
 bool GameDbSyncContext::updateClientOptions(const SetClientOptionsData &data)
 {
     m_prepared_options_update->bindValue(":id", data.m_client_id); // for WHERE statement only
-    m_prepared_options_update->bindValue(":options", data.m_options);
-    m_prepared_options_update->bindValue(":keybinds", data.m_keybinds);
+    m_prepared_options_update->bindValue(":options", data.m_options.c_str());
+    m_prepared_options_update->bindValue(":keybinds", data.m_keybinds.c_str());
     if(!doIt(*m_prepared_options_update))
         return false;
 
-    qCDebug(logDB) << "Updating Client Options Successful" << data.m_client_id;
+    sCDebug(logDB) << "Updating Client Options Successful" << data.m_client_id;
     return true;
 }
 
@@ -463,7 +463,7 @@ bool GameDbSyncContext::createEmail(const EmailCreateRequestData &data, EmailCre
 
     m_prepared_email_insert->bindValue(":sender_id", data.m_sender_id);
     m_prepared_email_insert->bindValue(":recipient_id", data.m_recipient_id);
-    m_prepared_email_insert->bindValue(":email_data", data.m_email_data);
+    m_prepared_email_insert->bindValue(":email_data", data.m_email_data.c_str());
 
     if(!doIt(*m_prepared_email_insert))
         return false;
@@ -483,7 +483,7 @@ bool GameDbSyncContext::createEmail(const EmailCreateRequestData &data, EmailCre
 bool GameDbSyncContext::markEmailAsRead(const EmailMarkAsReadData &data)
 {
     m_prepared_email_mark_as_read->bindValue(":id", data.m_email_id);
-    m_prepared_email_mark_as_read->bindValue(":email_data", data.m_email_data);
+    m_prepared_email_mark_as_read->bindValue(":email_data", data.m_email_data.c_str());
     return doIt(*m_prepared_email_mark_as_read);
 }
 
@@ -512,7 +512,7 @@ bool GameDbSyncContext::getEmail(const GetEmailRequestData &data, GetEmailRespon
         return false;
 
     result.m_email_id = m_prepared_email_select->value("id").toUInt();
-    result.m_email_data = m_prepared_email_select->value("email_data").toString();
+    result.m_email_data = m_prepared_email_select->value("email_data").toString().toUtf8().data();
 
     return true;
 }
@@ -529,7 +529,7 @@ bool GameDbSyncContext::getEmails(const GetEmailsRequestData &/*data*/, GetEmail
         emailResponseData.m_email_id = m_prepared_email_select_all->value("id").toUInt();
         emailResponseData.m_sender_id = m_prepared_email_select_all->value("sender_id").toUInt();
         emailResponseData.m_recipient_id = m_prepared_email_select_all->value("recipient_id").toUInt();
-        emailResponseData.m_cerealized_email_data = m_prepared_email_select_all->value("email_data").toString();
+        emailResponseData.m_cerealized_email_data = m_prepared_email_select_all->value("email_data").toString().toUtf8().data();
         result.m_email_response_datas.push_back(emailResponseData);
     }
 
@@ -538,7 +538,7 @@ bool GameDbSyncContext::getEmails(const GetEmailsRequestData &/*data*/, GetEmail
 
 bool GameDbSyncContext::fillEmailRecipientId(const FillEmailRecipientIdRequestData &data, FillEmailRecipientIdResponseData &result)
 {
-    m_prepared_email_fill_recipient_id->bindValue(":recipient_name", data.m_recipient_name);
+    m_prepared_email_fill_recipient_id->bindValue(":recipient_name", data.m_recipient_name.c_str());
 
     if(!doIt(*m_prepared_email_fill_recipient_id))
         return false;

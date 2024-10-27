@@ -10,8 +10,6 @@
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 
@@ -20,7 +18,7 @@ class EmailRead final : public GameCommandEvent
 {
 public:
     explicit EmailRead() : GameCommandEvent(MapEventTypes::evEmailRead) {}
-    EmailRead(const int id, const QString &message, const QString sender) : GameCommandEvent(MapEventTypes::evEmailRead),
+    EmailRead(const int id, const String &message, const String &sender) : GameCommandEvent(MapEventTypes::evEmailRead),
         m_id(id), m_message(message), m_sender_name(sender)
     {
     }
@@ -37,11 +35,11 @@ public:
     // [[ev_def:field]]
     int m_id;
     // [[ev_def:field]]
-    QString m_message;
+    String m_message;
     // [[ev_def:field]]
     int m_count = 1; //Doesn't do anything in Issue 0, seemingly, so hardcoding as 1
     // [[ev_def:field]]
-    QString m_sender_name;
+    String m_sender_name;
 
     EVENT_IMPL(EmailRead)
 };

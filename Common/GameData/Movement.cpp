@@ -81,7 +81,7 @@ static int32_t cscIdDelta(uint16_t a, uint16_t b)
     }
     else if (diff < -0x7fff)
     {
-        return diff + 0xffff; 
+        return diff + 0xffff;
     }
     return diff;
 }
@@ -361,7 +361,7 @@ static void entMotionUpdateControlsPrePhysics(Entity* ent, const TickState* tick
 
         if (logMovement().isDebugEnabled() && ent->m_motion_state.m_debug)
         {
-            qCDebug(logMovement, "\nAdding: %s += \t%dms (%dms total)\n",
+            sCDebug(logMovement) << String(String::CtorSprintf(),"\nAdding: %s += \t%dms (%dms total)\n",
                     s_key_name[key],
                     milliseconds,
                     ent->m_input_state.m_key_press_duration_ms[key]);
@@ -371,6 +371,8 @@ static void entMotionUpdateControlsPrePhysics(Entity* ent, const TickState* tick
 
 static void entMotionSetInputVelocity(Entity* ent, const TickState* tick_state) // based on pmotionSetVel()
 {
+    using namespace magic_enum::bitwise_operators;
+
     if (ent->m_motion_state.m_no_collision)
     {
         ent->m_move_type |= MOVETYPE_NOCOLL;
@@ -509,11 +511,11 @@ static void entMotionSetInputVelocity(Entity* ent, const TickState* tick_state) 
     {
         if(logMovement().isDebugEnabled() && ent->m_motion_state.m_debug && ent->m_type == EntType::PLAYER)
         {
-            qCDebug(logMovement) << "Moving so turning off AFK";
+            sCDebug(logMovement) << "Moving so turning off AFK";
         }
 
         setAFK(*ent->m_char, false);
-        ent->m_entity_update_flags.setFlag(ent->UpdateFlag::AFK);
+        ent->m_entity_update_flags |= ent->UpdateFlag::AFK;
     }
 }
 
@@ -645,7 +647,7 @@ void processNewInputs(Entity &e)
         {
             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
             {
-                qCDebug(logInput, "csc range %hu->%hu",
+                sCDebug(logInput) << String(String::CtorSprintf(),"csc range %hu->%hu",
                         input_change.m_first_control_state_change_id,
                         input_change.m_first_control_state_change_id + (uint16_t)input_change.m_control_state_changes.size() - 1);
             }
@@ -659,10 +661,10 @@ void processNewInputs(Entity &e)
 
             if (logInput().isDebugEnabled() && e.m_input_state.m_debug && csc_id_delta > 0)
             {
-                qCDebug(logInput, "skipping %d changes", csc_id_delta);
+                sCDebug(logInput) << String(String::CtorSprintf(),"skipping %d changes", csc_id_delta);
             }
 
-            // if csc_id_delta >= control_state_changes.size() then all of 
+            // if csc_id_delta >= control_state_changes.size() then all of
             // these changes are old and should be ignored
             if (csc_id_delta < (int32_t)input_change.m_control_state_changes.size())
             {
@@ -689,7 +691,7 @@ void processNewInputs(Entity &e)
                         {
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "key %hhu = %hhu", csc.control_id, csc.data.key_state);
+                                sCDebug(logInput) << String(String::CtorSprintf(),"key %hhu = %hhu", csc.control_id, csc.data.key_state);
                             }
 
                             uint8_t key = csc.control_id;
@@ -726,7 +728,7 @@ void processNewInputs(Entity &e)
                         case BinaryControl::PITCH:
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "pitch=%f", csc.data.angle);
+                                sCFDebug(logInput, "pitch=%f", csc.data.angle);
                             }
 
                             tick_state.orientation_changed = true;
@@ -736,7 +738,7 @@ void processNewInputs(Entity &e)
                         case BinaryControl::YAW:
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "yaw=%f", csc.data.angle);
+                                sCFDebug(logInput, "yaw=%f", csc.data.angle);
                             }
 
                             tick_state.orientation_changed = true;
@@ -746,7 +748,7 @@ void processNewInputs(Entity &e)
                         case 9:
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "every_4_ticks=%hhu", csc.data.every_4_ticks);
+                                sCFDebug(logInput, "every_4_ticks=%hhu", csc.data.every_4_ticks);
                             }
 
                             input_state->m_every_4_ticks = csc.data.every_4_ticks;
@@ -755,7 +757,7 @@ void processNewInputs(Entity &e)
                         case 10:
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "nocoll=%d", csc.data.no_collision);
+                                sCFDebug(logInput, "nocoll=%d", csc.data.no_collision);
                             }
 
                             e.m_motion_state.m_no_collision = csc.data.no_collision;
@@ -764,7 +766,7 @@ void processNewInputs(Entity &e)
                         case 8:
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                             {
-                                qCDebug(logInput, "doing tick, controls_disabled=%d, time_diff_1=%u, time_diff_2=%u, velocity_scale=%hhu",
+                                sCFDebug(logInput, "doing tick, controls_disabled=%d, time_diff_1=%u, time_diff_2=%u, velocity_scale=%hhu",
                                         csc.data.control_id_8.controls_disabled,
                                         csc.data.control_id_8.time_diff_1,
                                         csc.data.control_id_8.time_diff_2,
@@ -822,19 +824,19 @@ void processNewInputs(Entity &e)
                                 {
                                     ++count;
 
-                                    QString keys = "";
+                                    String keys = "";
                                     for (int key = 0; key <= BinaryControl::LAST_BINARY_VALUE; ++key)
                                     {
                                         if (input_state->m_key_press_duration_ms[key])
                                         {
-                                            keys += QString::asprintf("%s%s (%dms), ",
+                                            keys.append_sprintf("%s%s (%dms), ",
                                                         tick_state.key_released[key] ? "-" : "+",
                                                         s_key_name[key],
                                                         input_state->m_key_press_duration_ms[key]);
                                         }
                                     }
 
-                                    qCDebug(logMovement,
+                                    sCFDebug(logMovement,
                                             "\n"
                                             "%4d.    keys:      %s\n"
                                             "        pos:       (%1.8f, %1.8f, %1.8f)\n"
@@ -847,7 +849,7 @@ void processNewInputs(Entity &e)
                                             "        newvel:    (%1.8f, %1.8f, %1.8f)\n"
                                             "%s%s\n",
                                             count,
-                                            keys.toUtf8().constData(),
+                                            keys.c_str(),
                                             e.m_motion_state.m_last_pos.x, e.m_motion_state.m_last_pos.y, e.m_motion_state.m_last_pos.z,
                                             e.m_motion_state.m_velocity.x, e.m_motion_state.m_velocity.y, e.m_motion_state.m_velocity.z,
                                             final_input_velocity.x, final_input_velocity.y, final_input_velocity.z,
@@ -878,14 +880,14 @@ void processNewInputs(Entity &e)
 
                             if (logInput().isDebugEnabled() && e.m_input_state.m_debug && input_change.m_has_pitch_and_yaw)
                             {
-                                qCDebug(logInput, "extended pitch=%f, yaw=%f", input_change.m_pitch, input_change.m_yaw);
+                                sCFDebug(logInput, "extended pitch=%f, yaw=%f", input_change.m_pitch, input_change.m_yaw);
                             }
 
                         break;
                     }
                 }
 
-                // assuming that the client never sends a partial tick, if that's not the case 
+                // assuming that the client never sends a partial tick, if that's not the case
                 // then tick_state needs to move into the entity somewhere
                 assert(tick_state.length_ms == 0);
 
@@ -893,7 +895,7 @@ void processNewInputs(Entity &e)
 
                 if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                 {
-                    qCDebug(logInput, "processed csc %hu->%hu",
+                    sCFDebug(logInput, "processed csc %hu->%hu",
                         input_state->m_next_expected_control_state_change_id,
                         input_state->m_next_expected_control_state_change_id + new_csc_count - 1);
                 }
@@ -910,7 +912,7 @@ void processNewInputs(Entity &e)
                 {
                     if (logInput().isDebugEnabled() && e.m_input_state.m_debug)
                     {
-                        qCDebug(logInput, "keys input state mismatch");
+                        sCDebug(logInput)<<"keys input state mismatch";
                     }
                     input_state->m_keys[key] = input_change.m_keys[key];
                 }
@@ -919,7 +921,7 @@ void processNewInputs(Entity &e)
 
         if (logInput().isDebugEnabled() && e.m_input_state.m_debug && input_change.m_has_pitch_and_yaw)
         {
-            qCDebug(logInput, "extended pitch=%f, yaw=%f", input_change.m_pitch, input_change.m_yaw);
+            sCFDebug(logInput, "extended pitch=%f, yaw=%f", input_change.m_pitch, input_change.m_yaw);
         }
     }
 
@@ -934,30 +936,35 @@ void addPosUpdate(Entity &e, const PosUpdate &p)
 
 void forcePosition(Entity &e, glm::vec3 pos)
 {
+    using namespace magic_enum::bitwise_operators;
     e.m_entity_data.m_pos = pos;
     e.m_force_pos_and_cam = true;
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::MOVEMENT);
+    e.m_entity_update_flags |= e.UpdateFlag::MOVEMENT;
 }
 
 void forceOrientation(Entity &e, glm::vec3 pyr)
 {
+    using namespace magic_enum::bitwise_operators;
+
     e.m_direction = glm::quat(pyr);
     e.m_entity_data.m_orientation_pyr = pyr;
     e.m_force_pos_and_cam = true;
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::MOVEMENT);
+    e.m_entity_update_flags |= e.UpdateFlag::MOVEMENT;
 }
 
 // Move to Sequences or Triggers files later
 void addTriggeredMove(Entity &e, uint32_t move_idx, uint32_t delay, uint32_t fx_idx)
 {
+    using namespace magic_enum::bitwise_operators;
+
     TriggeredMove tmove;
     tmove.m_move_idx = move_idx;
     tmove.m_ticks_to_delay = delay;
     tmove.m_trigger_fx_idx = fx_idx;
 
     e.m_triggered_moves.push_back(tmove);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::ANIMATIONS);
-    qCDebug(logAnimations) << "Queueing triggered move:"
+    e.m_entity_update_flags |= e.UpdateFlag::ANIMATIONS;
+    sCDebug(logAnimations) << "Queueing triggered move:"
                            << move_idx << delay << fx_idx;
 }
 

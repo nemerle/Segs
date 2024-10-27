@@ -9,7 +9,6 @@
 
 #include "Common/Servers/InternalEvents.h"
 
-#include <QDateTime>
 namespace SEGSEvents
 {
 
@@ -26,8 +25,8 @@ enum AuthDBEventTypes : uint32_t
 
 struct CreateAccountData
 {
-    QString username;
-    QString password;
+    String username;
+    String password;
     int access_level;
     template <class Archive>
     void serialize( Archive & ar )
@@ -40,7 +39,7 @@ ONE_WAY_MESSAGE(AuthDBEventTypes,CreateAccount)
 
 struct AuthDbStatusData
 {
-    QString message;
+    String message;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -54,8 +53,8 @@ struct RetrieveAccountResponseData
 {
     static constexpr uint64_t INVALID_ACCOUNT_ID = 0;
 
-    QString m_login;
-    QDateTime m_creation_date;
+    String m_login;
+    DateTime m_creation_date;
     uint32_t m_acc_server_acc_id;
     uint8_t m_access_level;
 
@@ -72,8 +71,8 @@ struct RetrieveAccountResponseData
 
 struct RetrieveAccountRequestData
 {
-    QString  m_login;
-    QString  m_password;
+    String  m_login;
+    String  m_password;
     uint32_t m_id; // if this is 0, the lookup will be done by login, otherwise by id
     template <class Archive>
     void serialize( Archive & ar )
@@ -86,8 +85,8 @@ TWO_WAY_MESSAGE(AuthDBEventTypes,RetrieveAccount)
 
 struct ValidatePasswordRequestData
 {
-    QString username;
-    QString password;
+    String username;
+    String password;
     template <class Archive>
     void serialize( Archive & ar )
     {

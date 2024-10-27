@@ -20,7 +20,7 @@
 #include "GameData/GameDataStore.h"
 #include "GameData/playerdata_definitions.h"
 #include "GameData/npc_definitions.h"
-#include <QtCore/QDebug>
+//#include <QtCore/QDebug>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -43,7 +43,7 @@ void Entity::sendPvP(BitStream &bs)
 
 void Entity::fillFromCharacter(const GameDataStore &data)
 {
-    m_hasname = !m_char->getName().isEmpty();
+    m_hasname = !m_char->getName().empty();
     m_entity_data.m_origin_idx = getEntityOriginIndex(data,true, getOrigin(*m_char));
     m_entity_data.m_class_idx = getEntityClassIndex(data,true, getClass(*m_char));
     m_is_hero = true;
@@ -55,38 +55,39 @@ void Entity::fillFromCharacter(const GameDataStore &data)
  */
 void Entity::beginLogout(uint16_t time_till_logout)
 {
+    using namespace magic_enum::bitwise_operators;
     m_is_logging_out = true;
-    m_entity_update_flags.setFlag(UpdateFlag::LOGOUT);
+    m_entity_update_flags |= UpdateFlag::LOGOUT;
     m_time_till_logout = time_till_logout*1000;
 }
 
-const QString &Entity::name() const
+const String &Entity::name() const
 {
     return m_char->getName();
 }
 
 void Entity::dump()
 {
-    QString msg = "EntityDebug\n  "
+    String msg = "EntityDebug\n  "
             + name()
-            + "\n  db_id: " + QString::number(m_db_id)
-            + "\n  entity idx: " + QString::number(m_idx)
-            + "\n  access level: " + QString::number(m_entity_data.m_access_level)
-            + "\n  m_type: " + QString::number(uint8_t(m_type))
-            + "\n  class idx: " + QString::number(m_entity_data.m_class_idx)
-            + "\n  origin idx: " + QString::number(m_entity_data.m_origin_idx)
-            + "\n  mapidx: " + QString::number(m_entity_data.m_map_idx)
-            + "\n  pos: " + QString::number(m_entity_data.m_pos.x) + ", "
-                          + QString::number(m_entity_data.m_pos.y) + ", "
-                          + QString::number(m_entity_data.m_pos.z)
-            + "\n  orient: " + QString::number(m_entity_data.m_orientation_pyr.p) + ", "
-                             + QString::number(m_entity_data.m_orientation_pyr.y) + ", "
-                             + QString::number(m_entity_data.m_orientation_pyr.r)
-            + "\n  target: " + QString::number(m_target_idx)
-            + "\n  assist target: " + QString::number(m_assist_target_idx)
-            + "\n  m_SG_id: " + QString::number(m_supergroup.m_SG_id);
+            + "\n  db_id: " + eastl::to_string(m_db_id)
+            + "\n  entity idx: " + eastl::to_string(m_idx)
+            + "\n  access level: " + eastl::to_string(m_entity_data.m_access_level)
+            + "\n  m_type: " + eastl::to_string(uint8_t(m_type))
+            + "\n  class idx: " + eastl::to_string(m_entity_data.m_class_idx)
+            + "\n  origin idx: " + eastl::to_string(m_entity_data.m_origin_idx)
+            + "\n  mapidx: " + eastl::to_string(m_entity_data.m_map_idx)
+            + "\n  pos: " + eastl::to_string(m_entity_data.m_pos.x) + ", "
+                          + eastl::to_string(m_entity_data.m_pos.y) + ", "
+                          + eastl::to_string(m_entity_data.m_pos.z)
+            + "\n  orient: " + eastl::to_string(m_entity_data.m_orientation_pyr.p) + ", "
+                             + eastl::to_string(m_entity_data.m_orientation_pyr.y) + ", "
+                             + eastl::to_string(m_entity_data.m_orientation_pyr.r)
+            + "\n  target: " + eastl::to_string(m_target_idx)
+            + "\n  assist target: " + eastl::to_string(m_assist_target_idx)
+            + "\n  m_SG_id: " + eastl::to_string(m_supergroup.m_SG_id);
 
-    qDebug().noquote() << msg;
+    sDebug() << msg;
 
     if(m_team != nullptr)
         m_team->dump();
@@ -98,7 +99,7 @@ void Entity::dump()
     dumpFriends(*this);
 }
 
-void Entity::setActiveDialogCallback(std::function<void(int)> callback)
+void Entity::setActiveDialogCallback(eastl::function<void(int)> callback)
 {
     this->m_active_dialog = callback;
 }

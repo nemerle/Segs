@@ -6,21 +6,22 @@
  */
 
 #pragma once
-#include <set>
-#include <deque>
-#include <vector>
+#include "Common/Containers/Deque.h"
+#include "Common/Containers/Set.h"
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
+#include "Containers/ChronoWrapper.h"
+#include "EASTL/unique_ptr.h"
 #include <stdint.h>
-#include <chrono>
-#include <memory>
 
 class PacketCollector;
 static const uint32_t maxPacketSize    = 1472;
 static const uint32_t packetHeaderSize = 8;
 class BitStream;
-class QString;
+
 class CrudP_Packet
 {
-    using time_point = std::chrono::steady_clock::time_point;
+    using time_point = SteadyChronoWrapper;
 public:
     friend class PacketCollector;
 
@@ -31,7 +32,7 @@ public:
 
     uint32_t  GetBits(uint32_t nBits);
     uint32_t  GetPackedBits(uint32_t nBits);
-    void GetString(QString &str);
+    void GetString(String &str);
 
     float GetFloat();
     void StoreBits(uint32_t nBits, uint32_t dataBits);
@@ -89,11 +90,11 @@ protected:
     uint32_t m_numSibs;
     uint32_t m_sibId;
     uint32_t m_sibPos;
-    time_point m_creation_time = std::chrono::steady_clock::now();
+    time_point m_creation_time = time_point::now();
     time_point m_xfer_time;
     uint32_t m_retransmit_count;
-    std::set<uint32_t> m_acks;
+    Set<uint32_t> m_acks;
 };
-using lCrudP_Packet = std::deque<std::unique_ptr<CrudP_Packet>>;
-using vCrudP_Packet = std::vector<CrudP_Packet *>;
+using lCrudP_Packet = Deque<eastl::unique_ptr<CrudP_Packet>>;
+using vCrudP_Packet = Vector<CrudP_Packet *>;
 using ivCrudP_Packet = vCrudP_Packet::iterator;

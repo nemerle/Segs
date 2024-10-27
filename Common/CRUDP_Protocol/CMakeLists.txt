@@ -31,15 +31,12 @@ scan_event_types(CRUDPEvents ${CMAKE_CURRENT_SOURCE_DIR})
 add_event_sources(CRUDPEvents target_SOURCES)
 
 INCLUDE_DIRECTORIES(${target_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(SYSTEM ${ACE_path})
 
 ADD_LIBRARY(CRUDP_Protocol STATIC ${target_SOURCES})
 target_include_directories(CRUDP_Protocol INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(CRUDP_Protocol PUBLIC Qt5::Core)
+target_link_libraries(CRUDP_Protocol PUBLIC EASTL ace_IMP)
 target_link_libraries(CRUDP_Protocol INTERFACE SEGS_Components)
-add_dependencies(CRUDP_Protocol ace_IMP)
-
 
 if(ENABLE_TESTS)
     add_subdirectory(UnitTests)

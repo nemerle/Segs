@@ -22,11 +22,11 @@
  * Team Methods
  */
 uint32_t Team::m_team_idx_counter = 0;
-bool Team::isNamePending(const QString &name)
+bool Team::isNamePending(const String &name)
 {
-    for (const TeamMember &tm : m_data.m_team_members) 
+    for (const TeamMember &tm : m_data.m_team_members)
     {
-        if (tm.tm_name == name && tm.tm_pending) 
+        if (tm.tm_name == name && tm.tm_pending)
         {
             return true;
         }
@@ -35,16 +35,16 @@ bool Team::isNamePending(const QString &name)
     return false;
 }
 
-bool Team::isFull() 
+bool Team::isFull()
 {
     return m_data.m_team_members.size() >= m_max_team_size;
 }
 
-bool Team::containsEntityID(uint32_t entity_id) 
+bool Team::containsEntityID(uint32_t entity_id)
 {
-    for (const TeamMember &tm : m_data.m_team_members) 
+    for (const TeamMember &tm : m_data.m_team_members)
     {
-        if (tm.tm_idx == entity_id) 
+        if (tm.tm_idx == entity_id)
         {
             return true;
         }
@@ -53,11 +53,11 @@ bool Team::containsEntityID(uint32_t entity_id)
     return false;
 }
 
-bool Team::containsEntityName(const QString &name) 
+bool Team::containsEntityName(const String &name)
 {
-    for (const TeamMember &tm : m_data.m_team_members) 
+    for (const TeamMember &tm : m_data.m_team_members)
     {
-        if (QString::compare(tm.tm_name, name, Qt::CaseInsensitive) == 0)
+        if (tm.tm_name.comparei(name) == 0)
         {
             return true;
         }
@@ -66,7 +66,7 @@ bool Team::containsEntityName(const QString &name)
     return false;
 }
 
-TeamingError Team::acceptTeamInvite(const QString &name, uint32_t entity_id)
+TeamingError Team::acceptTeamInvite(const String &name, uint32_t entity_id)
 {
     for (TeamMember &_t : m_data.m_team_members)
         if (_t.tm_name == name)
@@ -80,7 +80,7 @@ TeamingError Team::acceptTeamInvite(const QString &name, uint32_t entity_id)
 
 }
 
-TeamingError Team::addTeamMember(uint32_t entity_id, const QString &name, bool pending)
+TeamingError Team::addTeamMember(uint32_t entity_id, const String &name, bool pending)
 {
     if(m_data.m_team_members.size() >= m_max_team_size)
         return TeamingError::TEAM_FULL;
@@ -101,14 +101,14 @@ TeamingError Team::addTeamMember(uint32_t entity_id, const QString &name, bool p
 
 TeamingError Team::removeTeamMember(uint32_t entity_id)
 {
-    auto iter = std::find_if(m_data.m_team_members.begin(), m_data.m_team_members.end(),
+    auto iter = eastl::find_if(m_data.m_team_members.begin(), m_data.m_team_members.end(),
                               [entity_id](const Team::TeamMember& t) -> bool {return entity_id == t.tm_idx;});
 
     if(iter == m_data.m_team_members.end())
-		return TeamingError::NOT_ON_TEAM;
+        return TeamingError::NOT_ON_TEAM;
 
-	iter = m_data.m_team_members.erase(iter);
-	// TODO: sidekick stuff
+    iter = m_data.m_team_members.erase(iter);
+    // TODO: sidekick stuff
 
     if(m_data.m_team_members.size() < 2)
         return TeamingError::TEAM_DISBANDED;
@@ -123,24 +123,24 @@ Team::~Team() = default;
 
 void Team::dump()
 {
-    QString output = "Debugging Team: " + QString::number(m_data.m_team_idx)
-             + "\n\t size: " + QString::number(m_data.m_team_members.size())
-             + "\n\t leader db_id: " + QString::number(m_data.m_team_leader_idx)
-             + "\n\t has mission? " + QString::number(m_data.m_has_taskforce)
+    String output = "Debugging Team: " + eastl::to_string(m_data.m_team_idx)
+             + "\n\t size: " + eastl::to_string(m_data.m_team_members.size())
+             + "\n\t leader db_id: " + eastl::to_string(m_data.m_team_leader_idx)
+             + "\n\t has mission? " + eastl::to_string(m_data.m_has_taskforce)
              + "\nTeam Members: ";
-    qDebug().noquote() << output;
+    sDebug() << output;
 
     dumpAllTeamMembers();
 }
 
 void Team::dumpAllTeamMembers()
 {
-    QString output = "Team Members:";
+    String output = "Team Members:";
 
     for (auto &member : m_data.m_team_members)
-        output += "\n\t" + member.tm_name + " db_id: " + QString::number(member.tm_idx);
+        output += "\n\t" + member.tm_name + " db_id: " + eastl::to_string(member.tm_idx);
 
-    qDebug().noquote() << output;
+    sDebug() << output;
 }
 
 bool Team::isTeamLeader(uint32_t entity_id)
@@ -172,13 +172,13 @@ bool inviteTeam(Entity &src, Entity &tgt)
 {
     if(src.name() == tgt.name())
     {
-        qCDebug(logTeams) << "You cannot invite yourself to a team.";
+        sCDebug(logTeams) << "You cannot invite yourself to a team.";
         return false;
     }
     //TODO: this has to be reworked when TeamingServices come along
     if(!src.m_has_team)
     {
-        qCDebug(logTeams) << src.name() << "is forming a team.";
+        sCDebug(logTeams) << src.name() << "is forming a team.";
         src.m_team = new Team;
         src.m_team->addTeamMember(src.m_db_id,src.name(),0);
 
@@ -191,7 +191,7 @@ bool inviteTeam(Entity &src, Entity &tgt)
         src.m_team->addTeamMember(tgt.m_db_id,tgt.name(),0);
         return true;
     }
-    qCDebug(logTeams) << src.name() << "is not team leader.";
+    sCDebug(logTeams) << src.name() << "is not team leader.";
     return false;
 }
 
@@ -208,7 +208,7 @@ void leaveTeam(Entity &e)
 {
     if(!e.m_team)
     {
-        qCWarning(logTeams) << "Trying to leave a team, but Entity has no team!?";
+        sCWarning(logTeams) << "Trying to leave a team, but Entity has no team!?";
         return;
     }
 
@@ -217,9 +217,9 @@ void leaveTeam(Entity &e)
 
 void removeTeamMember(Team &self, Entity *e)
 {
-    qCDebug(logTeams) << "Searching team members for" << e->name() << "to remove them.";
+    sCDebug(logTeams) << "Searching team members for" << e->name() << "to remove them.";
     uint32_t id_to_find = e->m_db_id;
-    auto iter = std::find_if( self.m_data.m_team_members.begin(), self.m_data.m_team_members.end(),
+    auto iter = eastl::find_if( self.m_data.m_team_members.begin(), self.m_data.m_team_members.end(),
                               [id_to_find](const Team::TeamMember& t)->bool {return id_to_find==t.tm_idx;});
     if(iter!=self.m_data.m_team_members.end())
     {
@@ -236,7 +236,7 @@ void removeTeamMember(Team &self, Entity *e)
             removeSidekick(*e, sidekick_id);
         }
 
-        qCDebug(logTeams) << "Removing" << iter->tm_name << "from team" << self.m_data.m_team_idx;
+        sCDebug(logTeams) << "Removing" << iter->tm_name << "from team" << self.m_data.m_team_idx;
         if(logTeams().isDebugEnabled())
             self.dumpAllTeamMembers();
     }
@@ -244,11 +244,11 @@ void removeTeamMember(Team &self, Entity *e)
     if(self.m_data.m_team_members.size() > 1)
         return;
 
-    qCDebug(logTeams) << "One player left on team. Removing last entity and deleting team.";
+    sCDebug(logTeams) << "One player left on team. Removing last entity and deleting team.";
     if(logTeams().isDebugEnabled())
         self.dumpAllTeamMembers();
 
-    qWarning() << "Team should post an Team-removal event to the target entity.";
+    sWarning() << "Team should post an Team-removal event to the target entity.";
     // TODO: this should post an Team-removal event to the target entity, since we can't access other server's
     // Entity lists
 
@@ -262,7 +262,7 @@ void removeTeamMember(Team &self, Entity *e)
     self.m_data.m_team_members.clear();
     self.m_data.m_team_leader_idx = 0;
 
-    qCDebug(logTeams) << "After removing all entities.";
+    sCDebug(logTeams) << "After removing all entities.";
     if(logTeams().isDebugEnabled())
         self.dumpAllTeamMembers();
 }
@@ -311,7 +311,7 @@ SidekickChangeStatus inviteSidekick(Entity &src, Entity &tgt)
 
 void addSidekick(Entity &tgt, Entity &src)
 {
-    QString     msg;
+    String     msg;
     Sidekick    &src_sk = src.m_char->m_char_data.m_sidekick;
     Sidekick    &tgt_sk = tgt.m_char->m_char_data.m_sidekick;
     uint32_t    src_lvl = getLevel(*src.m_char);
@@ -325,8 +325,8 @@ void addSidekick(Entity &tgt, Entity &src)
     setCombatLevel(*tgt.m_char, src_lvl - 1);
     // TODO: Implement 225 feet "leash" for sidekicks.
 
-    msg = QString("%1 is now Mentoring %2.").arg(src.name(),tgt.name());
-    qCDebug(logTeams).noquote() << msg;
+    msg = String(String::CtorSprintf(),"%s is now Mentoring %s.",src.name().c_str(),tgt.name().c_str());
+    sCDebug(logTeams) << msg;
 }
 
 /**
@@ -343,19 +343,19 @@ uint32_t getSidekickId(const Character &src)
 SidekickChangeStatus removeSidekick(Entity &src, uint32_t /*sidekick_id*/)
 {
     //TODO: this function should actually post messages related to de-sidekicking to our target entity.
-    QString     msg = "Unable to remove sidekick.";
+    String     msg = "Unable to remove sidekick.";
     Sidekick    &src_sk = src.m_char->m_char_data.m_sidekick;
 
     if(!src_sk.m_has_sidekick || src_sk.m_db_id == 0)
         return SidekickChangeStatus::GENERIC_FAILURE;
 
     //TODO: just send a message to the SidekickHandler about this removal.
-    qWarning() << "Sidekick needs to send a message to the SidekickHandler about this removal";
+    sWarning() << "Sidekick needs to send a message to the SidekickHandler about this removal";
     Entity *tgt = nullptr; //getEntityByDBID(src.m_client, sidekick_id);
     if(tgt == nullptr)
     {
         msg = "Your sidekick is not currently online.";
-        qCDebug(logTeams).noquote() << msg;
+        sCDebug(logTeams) << msg;
 
         // reset src Sidekick relationship
         src_sk.m_has_sidekick = false;
@@ -389,8 +389,8 @@ SidekickChangeStatus removeSidekick(Entity &src, uint32_t /*sidekick_id*/)
     tgt_sk.m_db_id        = 0;
     setCombatLevel(*tgt->m_char,getLevel(*tgt->m_char)); // reset CombatLevel
 
-    msg = QString("%1 and %2 are no longer sidekicked.").arg(src.name(),tgt->name());
-    qCDebug(logTeams).noquote() << msg;
+    msg = String(String::CtorSprintf(),"%s and %s are no longer sidekicked.",src.name().c_str(),tgt->name().c_str());
+    sCDebug(logTeams) << msg;
 
     return SidekickChangeStatus::SUCCESS;
 }

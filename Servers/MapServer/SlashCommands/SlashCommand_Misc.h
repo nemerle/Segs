@@ -7,19 +7,20 @@
 
 #pragma once
 
-#include <QtCore/QString>
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 
 struct MapClientSession;
 
 // Misc. Slash Commands
 
 // Access Level 2[GM] Commands
-uint cmdHandler_AddNPC(const QStringList &params, MapClientSession &sess);
+void cmdHandler_AddNPC(const Vector<String> &params, MapClientSession &sess);
 
 // Access Level 1 Commands
-void cmdHandler_WhoAll(const QStringList &params, MapClientSession &sess);
-void cmdHandler_MOTD(const QStringList &params, MapClientSession &sess);
-void cmdHandler_Tailor(const QStringList &params, MapClientSession &sess);
-void cmdHandler_CostumeChange(const QStringList &params, MapClientSession &sess);
-void cmdHandler_Train(const QStringList &params, MapClientSession &sess);
-void cmdHandler_Kiosk(const QStringList &params, MapClientSession &sess);
+void cmdHandler_WhoAll(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_MOTD(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_Tailor(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_CostumeChange(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_Train(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_Kiosk(const Vector<String> &params, MapClientSession &sess);

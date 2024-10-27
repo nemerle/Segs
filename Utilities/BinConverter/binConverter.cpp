@@ -147,7 +147,7 @@ T * doLoadRef(BinStore *bs) {
 }
 
 template<class T>
-bool doConvert(T *src_struct,const QString &fname,bool text_format=false)
+bool doConvert(T *src_struct,const String &fname,bool text_format=false)
 {
     saveTo(*src_struct,fname,text_format);
     delete src_struct;
@@ -195,7 +195,7 @@ void convertEntitySequencerData(const QString &file_name,EntitySequencerData &tg
         if(line.isEmpty())
             continue;
         line = line.replace(QRegularExpression("\\s+")," ");
-        QStringRef lineref = line.midRef(0,line.indexOf('#')).trimmed();
+        QStringView lineref = QStringView(line).mid(0,line.indexOf('#')).trimmed();
         lineref = lineref.mid(0,line.indexOf("//")).trimmed();
         if(lineref.isEmpty())
             continue;
@@ -207,8 +207,8 @@ void convertEntitySequencerData(const QString &file_name,EntitySequencerData &tg
         }
         if(lineref.compare(QStringLiteral("End"))==0)
             break;
-        QVector<QStringRef> parts=lineref.split(" ",QString::SkipEmptyParts);
-        QStringRef fieldname = parts.takeFirst();
+        QVector<QStringView> parts=lineref.split(' ',Qt::SkipEmptyParts);
+        QStringView fieldname = parts.takeFirst();
         if(QString("Sequencer").compare(fieldname,Qt::CaseInsensitive)==0)
         {
             tgt.m_sequencer_name = parts[0].toLatin1();
@@ -452,9 +452,9 @@ void convertAllEntitySeqDescriptors(const QString &data_directory)
         QString base_name = QDir(data_directory).relativeFilePath(next);
         EntitySequencerData entry;
         entry.m_name = base_name.mid(0,base_name.lastIndexOf('.')).toLatin1();
-        assert(seq_data_store.find(entry.m_name.toLower())==seq_data_store.end());
+        assert(seq_data_store.find(entry.m_name.to_lower())==seq_data_store.end());
         convertEntitySequencerData(next,entry);
-        seq_data_store[entry.m_name.toLower()] = entry;
+        seq_data_store[entry.m_name.to_lower()] = entry;
     }
     QDir curr(QDir::current());
     curr.mkpath("data/converted");
@@ -481,10 +481,9 @@ int main(int argc,char **argv)
         showSupportedBinTypes();
         return -1;
     }
-    QFSWrapper wrap;
     BinStore binfile;
-    binfile.open(wrap,argv[1],0);
-    QString target_basename=QFileInfo(argv[1]).baseName();
+    binfile.open(argv[1],0);
+    String target_basename=qPrintable(QFileInfo(argv[1]).baseName());
     bool json_output=true;
 
     try // handle possible cereal::RapidJSONException
@@ -519,11 +518,11 @@ int main(int argc,char **argv)
             auto data = doLoadRef<AllNpcs_Data>(&binfile);
             if(qApp->arguments().size() > 2)
             {
-                QString name_to_find = app.arguments()[2];
+                String name_to_find = app.arguments()[2].toLatin1().data();
                 std::sort(data->begin(), data->end(), [](const Parse_NPC &a, const Parse_NPC &b) -> bool {
-                    return QString(a.m_Name).compare(QString(b.m_Name), Qt::CaseInsensitive) < 0;
+                    return String(a.m_Name).comparei(String(b.m_Name)) < 0;
                 });
-                auto iter = std::find_if(data->begin(), data->end(), [name_to_find](const Parse_NPC &n) -> bool {
+                auto iter = eastl::find_if(data->begin(), data->end(), [name_to_find](const Parse_NPC &n) -> bool {
                     if(n.m_Name == name_to_find)
                         return true;
                     return false;

@@ -268,7 +268,11 @@ namespace eastl
         bool      empty() const EA_NOEXCEPT;
         size_type size() const EA_NOEXCEPT;
         size_type capacity() const EA_NOEXCEPT;
-
+#ifdef EASTL_SEGS_EXTENSIONS
+		size_type max_size() const EA_NOEXCEPT {
+			return VectorBase<T,Allocator>::kMaxSize/sizeof(value_type);
+		}
+#endif
         void resize(size_type n, const value_type& value);
         void resize(size_type n);
         void reserve(size_type n);

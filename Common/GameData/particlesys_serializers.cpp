@@ -5,13 +5,13 @@
 #include "particle_definitions.h"
 #include "DataStorage.h"
 
-#include <cereal/types/array.hpp>
-#include <cereal/types/vector.hpp>
-#include <QtCore/QDebug>
+#include <cereal/eastl/array.hpp>
+#include <cereal/eastl/vector.hpp>
+
 namespace
 {
-std::vector<glm::vec3> convertToVec3Vector(const std::vector<float>& src) {
-    std::vector<glm::vec3> res;
+Vector<glm::vec3> convertToVec3Vector(const Vector<float>& src) {
+    Vector<glm::vec3> res;
     assert((src.size() % 3) == 0);
     res.reserve(src.size()/3);
     for(size_t i=0; i<src.size(); i+=3) {
@@ -35,7 +35,7 @@ bool loadFrom(BinStore * s, ParticleSystemInfo * target)
     ok &= s->read(target->m_BurbleThreshold);
     ok &= s->read(target->m_MoveScale);
     ok &= s->read(target->m_EmissionType);
-    std::vector<float> val;
+    Vector<float> val;
     ok &= s->read(val);
     target->m_EmissionStartJitter = convertToVec3Vector(val);
     val.clear();
@@ -192,10 +192,10 @@ static void load(Archive & archive, Parse_AllPSystems & m)
     archive(m.m_Systems);
     for(size_t idx = 0,total=m.m_Systems.size(); idx<total; ++idx)
     {
-        QString name_helper = m.m_Systems[idx].m_Name.toLower();
+        String name_helper = m.m_Systems[idx].m_Name.to_lower();
 
         if(m.m_NameToIdx.contains(name_helper)) {
-            qWarning() << "Duplicate Particle system named" << name_helper;
+            sWarning() << "Duplicate Particle system named" << name_helper;
         }
         m.m_NameToIdx[name_helper] = idx;
     }
@@ -208,7 +208,7 @@ bool loadFrom(BinStore * s, Parse_AllPSystems * target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -217,10 +217,10 @@ bool loadFrom(BinStore * s, Parse_AllPSystems * target)
             ParticleSystemInfo nt;
             ok &= loadFrom(s,&nt);
             cleanupPSystemName(nt.m_Name); // normalize the name by removing the leading /FX/ path spec
-            if(target->m_NameToIdx.contains(nt.m_Name.toLower())) {
-                qWarning() << "Duplicate Particle system named" << nt.m_Name;
+            if(target->m_NameToIdx.contains(nt.m_Name.to_lower())) {
+                sWarning() << "Duplicate Particle system named" << nt.m_Name;
             }
-            target->m_NameToIdx[nt.m_Name.toLower()] = target->m_Systems.size();
+            target->m_NameToIdx[nt.m_Name.to_lower()] = target->m_Systems.size();
             target->m_Systems.push_back(nt);
         } else
             assert(!"unknown field referenced.");
@@ -231,7 +231,7 @@ bool loadFrom(BinStore * s, Parse_AllPSystems * target)
 
 }
 
-void saveTo(const Parse_AllPSystems & target, const QString & baseName, bool text_format)
+void saveTo(const Parse_AllPSystems & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"ParticleSystems",baseName,text_format);
+    SEGS::commonSaveTo(target,"ParticleSystems",baseName,text_format);
 }

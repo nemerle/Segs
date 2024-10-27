@@ -23,7 +23,7 @@ void serialize(Archive &archive, GUISettings &gui, uint32_t const version)
 {
     if(version != GUISettings::class_version)
     {
-        qCritical() << "Failed to serialize GUISettings, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize GUISettings, incompatible serialization format version " << version;
         return;
     }
 
@@ -39,29 +39,29 @@ void serialize(Archive &archive, GUISettings &gui, uint32_t const version)
     archive(cereal::make_nvp("Windows",gui.m_wnds));
 }
 
-void saveTo(const GUISettings &target, const QString &baseName, bool text_format)
+void saveTo(const GUISettings &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"GUISettings",baseName,text_format);
+    SEGS::commonSaveTo(target,"GUISettings",baseName,text_format);
 }
 
 SPECIALIZE_VERSIONED_SERIALIZATIONS(GUISettings)
 
-void serializeToDb(const GUISettings &data, QString &tgt)
+void serializeToDb(const GUISettings &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    tgt = String(ostr.str().c_str());
 }
 
-void serializeFromDb(GUISettings &data,const QString &src)
+void serializeFromDb(GUISettings &data,const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(std::string(src.c_str()));
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

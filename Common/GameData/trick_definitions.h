@@ -12,9 +12,9 @@
 
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <vector>
+#include "Common/Containers/String.h"
+#include <Common/Containers/HashMap.h>
+#include <Common/Containers/StringView.h>
 
 
 struct TextureAnim_Data;
@@ -58,17 +58,17 @@ enum TrickFlags  : uint32_t
 
 struct TextureModifiers
 {
-    QByteArray   src_file;
-    QByteArray   name;
-    QByteArray   Blend;
-    QByteArray   BumpMap;
+    String   src_file;
+    String   name;
+    String   Blend;
+    String   BumpMap;
     glm::vec2 Fade{0, 0};
     glm::vec2 ScaleST0{0, 0};
     glm::vec2 ScaleST1{0, 0};
     uint32_t  Flags;
     uint32_t  BlendType;
     int       surfaceBitIdx;
-    QByteArray  Surface; // Name of this surface  WOOD METAL etc.
+    String  Surface; // Name of this surface  WOOD METAL etc.
     float     Gloss;
 };
 
@@ -117,8 +117,8 @@ enum GroupFlags : uint32_t
 
 struct GeometryModifiers
 {
-    QByteArray                    src_name;
-    QByteArray                    name;
+    String                        src_name;
+    String                        name;
     ModelModifiers                node;
     int                           GfxFlags;
     uint32_t                      ObjFlags;
@@ -128,7 +128,7 @@ struct GeometryModifiers
     float                         LodFar;
     float                         LodNearFade;
     float                         LodFarFade;
-    std::vector<TextureAnim_Data> StAnim;
+    Vector<TextureAnim_Data>      StAnim;
     glm::vec2                     FogDist;
     float                         ShadowDist;
     float                         AlphaRef;
@@ -144,16 +144,25 @@ enum TexOpt : uint32_t
 {
     FADE        = 0x0001,
     DUAL        = 0x0010,
+    TRUECOLOR   = 0x0002,
+    TRILINEAR   = 0x0004,
+    CLAMP_U     = 0x0040,
+    CLAMP_V     = 0x0080,
+    MIRROR_U    = 0x0200,
+    MIRROR_V    = 0x0400,
     REPLACEABLE = 0x0800,
     BUMPMAP     = 0x1000,
+    REPEAT_U    = 0x2000,
+    REPEAT_V    = 0x4000,
+    CUBEMAP     = 0x8000,
 };
 
 struct SceneModifiers
 {
-    std::vector<TextureModifiers>  texture_mods;
-    std::vector<GeometryModifiers> geometry_mods;
+    Vector<TextureModifiers>  texture_mods;
+    Vector<GeometryModifiers> geometry_mods;
     // for every directory in the texture's path we can have a modifier.
-    QHash<QString,TextureModifiers *> m_texture_path_to_mod;
-    QHash<QString,GeometryModifiers *> g_tricks_string_hash_tab;
+    HashMap<String,TextureModifiers *> m_texture_path_to_mod;
+    HashMap<String,GeometryModifiers *> g_tricks_string_hash_tab;
 };
-GeometryModifiers *findGeomModifier(SceneModifiers &tricks,const QString &modelname, const QString &trick_path);
+GeometryModifiers *findGeomModifier(SceneModifiers &tricks,StringView modelname, StringView trick_path);

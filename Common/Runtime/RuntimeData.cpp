@@ -3,13 +3,11 @@
 #include "Prefab.h"
 #include "Texture.h"
 #include "Components/Logging.h"
-#include "GameData/trick_definitions.h"
-#include "GameData/trick_serializers.h"
-#include "GameData/DataStorage.h"
+#include "Common/GameData/trick_definitions.h"
+#include "Common/GameData/trick_serializers.h"
+#include "Common/GameData/DataStorage.h"
 #include "Components/serialization_common.h"
 
-#include <QDirIterator>
-#include <QString>
 
 using namespace SEGS;
 namespace {
@@ -25,21 +23,24 @@ static void setupTexOpt(SceneModifiers *mods,TextureModifiers *tmod)
         tmod->ScaleST1.y = 1.0f;
     if(tmod->Fade.x != 0.0f || tmod->Fade.y != 0.0f)
         tmod->Flags |= uint32_t(TexOpt::FADE);
-    if(!tmod->Blend.isEmpty())
+    if(!tmod->Blend.empty())
         tmod->Flags |= uint32_t(TexOpt::DUAL);
-    if(!tmod->Surface.isEmpty())
+    if(!tmod->Surface.empty())
     {
-        //qCDebug(logSceneGraph) << "Has surface" << tex->Surface;
+        //sCDebug(logSceneGraph) << "Has surface" << tex->Surface;
     }
 
-    tmod->name = tmod->name.mid(0,tmod->name.lastIndexOf('.')); // cut last extension part
-    if(tmod->name.startsWith('/'))
-        tmod->name.remove(0,1);
-    QString lower_name = tmod->name.toLower();
+    tmod->name = tmod->name.substr(0,tmod->name.rfind('.')); // cut last extension part
+    if(tmod->name.starts_with('/'))
+        tmod->name.erase(0,1);
+    if(tmod->name.ends_with('/'))
+        tmod->name.pop_back();
+
+    String lower_name = tmod->name.to_lower();
     auto iter = mods->m_texture_path_to_mod.find(lower_name);
     if(iter!=mods->m_texture_path_to_mod.end())
     {
-        qCDebug(logSceneGraph) << "Duplicate texture info: " << tmod->name;
+        sCDebug(logSceneGraph) << "Duplicate texture info: " << tmod->name;
         return;
     }
     mods->m_texture_path_to_mod[lower_name] = tmod;
@@ -72,13 +73,13 @@ static void setupTrick(SceneModifiers *mods,GeometryModifiers *gmod)
     }
     if(gmod->GroupFlags & VisTray)
         gmod->ObjFlags |= 0x400;
-    if(gmod->name.isEmpty())
-        qCDebug(logSceneGraph) << "No name in trick";
-    QString lower_name = gmod->name.toLower();
+    if(gmod->name.empty())
+        sCDebug(logSceneGraph) << "No name in trick";
+    String lower_name = gmod->name.to_lower();
     auto iter = mods->g_tricks_string_hash_tab.find(lower_name);
     if(iter!=mods->g_tricks_string_hash_tab.end())
     {
-        qCDebug(logSceneGraph) << "duplicate model trick!";
+        sCDebug(logSceneGraph) << "duplicate model trick!";
         return;
     }
     mods->g_tricks_string_hash_tab[lower_name]=gmod;
@@ -95,16 +96,16 @@ static void trickLoadPostProcess(SceneModifiers *mods)
 }
 
 template<class TARGET,unsigned int CRC>
-bool read_data_to(FSWrapper &fs, const QString &directory_path, const QString &storage, TARGET &target)
+bool read_data_to(IFilesystem *fs, const String &directory_path, const String &storage, TARGET &target)
 {
-    QDebug deb = qDebug().noquote().nospace();
+    auto deb = sDebug(); //.noquote().nospace()
     deb << "Reading " << directory_path << storage << " ... ";
     BinStore bin_store;
-    if(!bin_store.open(fs,directory_path+storage,CRC))
+    if(!bin_store.open(directory_path+storage,CRC))
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << storage << "from" << directory_path;
-        qWarning().noquote() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/";
+        sWarning() << "Couldn't load" << storage << "from" << directory_path;
+        sWarning() << "Using piggtool, ensure that bin.pigg has been extracted to ./data/";
         return false;
     }
 
@@ -114,7 +115,7 @@ bool read_data_to(FSWrapper &fs, const QString &directory_path, const QString &s
     else
     {
         deb << "failure";
-        qWarning().noquote() << "Couldn't load" << directory_path<<storage<<": wrong file format?";
+        sWarning() << "Couldn't load" << directory_path<<storage<<": wrong file format?";
     }
 
     return res;
@@ -126,39 +127,56 @@ bool read_data_to(FSWrapper &fs, const QString &directory_path, const QString &s
 namespace SEGS
 {
 
-void preloadTextureNames(FSWrapper *fs,const QByteArray &basepath)
+void preloadTextureNames(IFilesystem *fs,const String &basepath)
 {
     RuntimeData &rd(getRuntimeData());
+    String textures_path = basepath + "texture_library";
+    int tex_count=0;
     //TODO: store texture headers into an array, and only rescan directories when forced ?
-    QDirIterator iter(basepath + "texture_library", QDir::Files, QDirIterator::Subdirectories);
-    while(iter.hasNext())
-    {
-        QByteArray fpath = iter.next().toUtf8();
-        QByteArray texture_key = iter.fileInfo().baseName().toLower().toUtf8();
-        rd.m_texture_paths[texture_key] = fpath;
-        loadTexHeader(fs,fpath);
+    fs->visitEntries(textures_path,
+        [&](StringView fpath,bool is_dir)->SEGS::IFilesystem::VisitResult {
+            if(is_dir) {
+                return SEGS::IFilesystem::VisitSubdirectory;
     }
+            StringView path_str = fpath;
+            if(!path_str.ends_with(".texture")) {
+                return SEGS::IFilesystem::VisitNext;
+            }
+            String texture_key = String(PathUtils::get_basename(PathUtils::get_file(path_str))).to_lower();
+            rd.m_texture_paths[texture_key] = path_str;
+            loadTexHeader(fs,fpath);
+            return SEGS::IFilesystem::VisitNext;
+        });
+    sInfo()<<"Loaded " << StringUtils::num_int64(tex_count);
 }
 
 } //end of SEGS namespace
 
-bool RuntimeData::read_model_modifiers(const QByteArray &directory_path)
+bool RuntimeData::read_model_modifiers(const String &directory_path)
 {
     if(m_modifiers)
         return true;
     SceneModifiers tricks_store;
     assert(m_wrapper);
-    if(!read_data_to<SceneModifiers,tricks_i0_requiredCrc>(*m_wrapper,directory_path,"bin/tricks.bin", tricks_store))
+    if(!read_data_to<SceneModifiers,tricks_i0_requiredCrc>(m_wrapper,directory_path,"bin/tricks.bin", tricks_store))
     {
         return false;
     }
     m_modifiers = new SceneModifiers;
-    *m_modifiers = std::move(tricks_store);
+    *m_modifiers = eastl::move(tricks_store);
     trickLoadPostProcess(m_modifiers);
     return true;
 }
 
-bool RuntimeData::prepare(FSWrapper* fs, const QByteArray &directory_path)
+RuntimeData::RuntimeData()
+{
+}
+
+RuntimeData::~RuntimeData()
+{
+}
+
+bool RuntimeData::prepare(IFilesystem* fs, const String &directory_path)
 {
     m_wrapper = fs;
     m_ready = false;
@@ -171,7 +189,7 @@ bool RuntimeData::prepare(FSWrapper* fs, const QByteArray &directory_path)
     return true;
 }
 
-bool RuntimeData::read_prefab_definitions(const QByteArray &directory_path)
+bool RuntimeData::read_prefab_definitions(const String &directory_path)
 {
     if(!m_prefab_mapping)
         m_prefab_mapping = new SEGS::PrefabStore(m_wrapper,directory_path);
@@ -183,4 +201,13 @@ RuntimeData &getRuntimeData()
 {
     static RuntimeData instance;
     return instance;
+}
+
+void destroyRuntimeData() {
+    RuntimeData &rd(getRuntimeData());
+    delete rd.m_prefab_mapping;
+    delete rd.m_modifiers;
+    rd.m_loaded_textures.clear();
+    rd.m_prefab_mapping = nullptr;
+    rd.m_modifiers = nullptr;
 }

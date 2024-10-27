@@ -19,9 +19,6 @@
 #include <ace/Event_Handler.h>
 #include <ace/Svc_Handler.h>
 
-#include <QDebug>
-#include <set>
-
 using namespace SEGSEvents;
 using namespace std::chrono;
 // CRUD link receives messages from ServerEndpoint,
@@ -29,7 +26,7 @@ using namespace std::chrono;
 
 // ServerEndpoint gets new input -> Bytes -> CRUDP_Protocol -> pushq(PacketEvent)
 // ACE_Reactor knows to wake CRUDLink up, whenever there are new events
-std::set<CRUDLink *> all_links;
+Set<CRUDLink *> all_links;
 CRUDLink::CRUDLink() :  m_notifier(nullptr, nullptr, ACE_Event_Handler::WRITE_MASK),m_net_layer(nullptr),m_target(nullptr)
 {
     m_notifier.event_handler(this);
@@ -62,7 +59,7 @@ void CRUDLink::event_for_packet(Packet * pak_ev)
     target()->putq(res);
     if(pak->GetStream()->GetReadableBits()>1)
     {
-        qDebug() << res->info() << "left" << pak->GetStream()->GetReadableBits() <<"bits";
+        sDebug() << res->info() << "left" << pak->GetStream()->GetReadableBits() <<"bits";
     }
 }
 
@@ -87,9 +84,9 @@ void CRUDLink::packets_for_event(Event *ev)
         return;
     }
     // wrap all packets as PacketEvents and put them on link queue
-    for (std::unique_ptr<CrudP_Packet> &pkt : packets_to_send)
+    for (eastl::unique_ptr<CrudP_Packet> &pkt : packets_to_send)
     {
-        net_layer()->putq(new Packet(this, std::move(pkt), peer_addr()));
+        net_layer()->putq(new Packet(this, eastl::move(pkt), peer_addr()));
     }
     packets_to_send.clear();
     connection_sent_packet(); // data was sent, update
@@ -171,8 +168,8 @@ void CRUDLink::received_block( BitStream &bytes )
     CrudP_Packet *pkt = m_protocol.RecvPacket();
     while(pkt)
     {
-        std::unique_ptr<CrudP_Packet> own_it(pkt);
-        putq(new Packet(net_layer(),std::move(own_it),peer_addr()));
+        eastl::unique_ptr<CrudP_Packet> own_it(pkt);
+        putq(new Packet(net_layer(),eastl::move(own_it),peer_addr()));
         ++recv_count;
         pkt=m_protocol.RecvPacket();
     }

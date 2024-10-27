@@ -7,69 +7,72 @@
 
 #pragma once
 
-#include <glm/mat4x4.hpp>
-#include <QtCore/QString>
-#include <QtCore/QHash>
-#include <vector>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
+#include "Common/Containers/StringView.h"
+
+#include <glm/vec3.hpp>
 
 // Move SpawnerNode to MapSceneGraph and remove spawn_definitions.cpp/.h?
 // CritterGenerator.cpp/.h now also obselete?
 class SpawnerNode
 {
     public:
-    QString                     m_name;         // Nodes name
-    std::vector<SpawnerNode>    m_markers;      // Children nodes, typically spawn markers
-    glm::vec3                   m_position;     // definite world position
-    glm::vec3                   m_rotation;     // definite rotation
+    String              m_name;         // Nodes name
+    Vector<SpawnerNode> m_markers;      // Children nodes, typically spawn markers
+    glm::vec3           m_position;     // definite world position
+    glm::vec3           m_rotation;     // definite rotation
+    bool operator==(const SpawnerNode &) const = default;
 };
 
 // Everything below this point obselete?
 class CritterSpawnPoint
 {
 public:
-    QString         m_name;
+    String          m_name;
     bool            m_is_victim;
     glm::vec3       m_relative_position;
     glm::vec3       m_rotation;
 
-    std::string getName() const { return m_name.toStdString();}
+    StringView getName() const { return m_name;}
     void setName(const char *n) { m_name = n; }
 };
 
 class CritterSpawnLocations
 {
 public:
-    QString                                     m_node_name;
-    std::vector<CritterSpawnPoint>              m_all_spawn_points;
+    String                                      m_node_name;
+    Vector<CritterSpawnPoint>              m_all_spawn_points;
     uint8_t                                     m_spawn_probability;
     uint8_t                                     m_villain_radius; // Aggro range?
 
-    std::string getNodeName() const { return m_node_name.toStdString();}
+    StringView getNodeName() const { return m_node_name;}
     void setNodeName(const char *n) { m_node_name = n; }
 };
 
 struct CritterDefinition
 {
-    QString     m_model;
-    QString     m_name;
-    QString     m_faction_name;
+    String      m_model;
+    String      m_name;
+    String      m_faction_name;
     bool        m_spawn_all;
 };
 
 struct CritterSpawnDef
 {
-   QString                              m_spawn_group;
-   std::vector<CritterDefinition>       m_possible_critters;
+   String                          m_spawn_group;
+   Vector<CritterDefinition>       m_possible_critters;
 };
 
 class SpawnDefinitions
 {
-    std::vector<CritterSpawnDef>        m_critter_spawn_list;
 public:
 
     SpawnDefinitions()                  { buildList();}
-    CritterSpawnDef                     getSpawnGroup(const QString &spawn_group_name);
-    std::vector<CritterSpawnDef>        getCritterSpawnDefinitions();
+    CritterSpawnDef         getSpawnGroup(const String &spawn_group_name);
+    Vector<CritterSpawnDef> getCritterSpawnDefinitions();
     void                                buildList();
 
+private:
+    Vector<CritterSpawnDef> m_critter_spawn_list;
 };

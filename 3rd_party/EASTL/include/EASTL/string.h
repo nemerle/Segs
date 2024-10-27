@@ -727,17 +727,16 @@ namespace eastl
         this_type substr(size_type position = 0, size_type n = npos) const;
 
         // Comparison operations
-        int        compare(const this_type& x) const EA_NOEXCEPT;
         int        compare(size_type pos1, size_type n1, const this_type& x) const;
         int        compare(size_type pos1, size_type n1, const this_type& x, size_type pos2, size_type n2) const;
-        int        compare(const value_type* p) const;
+		int        compare(view_type p) const EA_NOEXCEPT;
         int        compare(size_type pos1, size_type n1, const value_type* p) const;
         int        compare(size_type pos1, size_type n1, const value_type* p, size_type n2) const;
         static int compare(const value_type* pBegin1, const value_type* pEnd1, const value_type* pBegin2, const value_type* pEnd2);
 
         // Case-insensitive comparison functions. Not part of C++ this_type. Only ASCII-level locale functionality is supported. Thus this is not suitable for localization purposes.
         int        comparei(const this_type& x) const EA_NOEXCEPT;
-        int        comparei(const value_type* p) const;
+        int        comparei(const view_type p) const;
         static int comparei(const value_type* pBegin1, const value_type* pEnd1, const value_type* pBegin2, const value_type* pEnd2);
 
         // Misc functionality, not part of C++ this_type.
@@ -911,12 +910,12 @@ namespace eastl
             if (substring == nullptr)
                 return false;
 
-            return ends_with(view_type(substring, strlen(substring)));
+            return ends_with(view_type(substring, strlen(substring)),caseSensitive);
         }
 
         bool ends_with(const this_type& substring, bool caseSensitive=true) const
         {
-            return ends_with(view_type(substring));
+            return ends_with(view_type(substring), caseSensitive);
         }
 
         bool ends_with(const view_type& substring, bool caseSensitive=true) const
@@ -3245,14 +3244,6 @@ namespace eastl
                     eastl::min_alt(n, internalLayout().GetSize() - position), get_allocator());
     }
 
-
-    template <typename T, typename Allocator>
-    inline int basic_string<T, Allocator>::compare(const this_type& x) const EA_NOEXCEPT
-    {
-        return compare(internalLayout().BeginPtr(), internalLayout().EndPtr(), x.internalLayout().BeginPtr(), x.internalLayout().EndPtr());
-    }
-
-
     template <typename T, typename Allocator>
     inline int basic_string<T, Allocator>::compare(size_type pos1, size_type n1, const this_type& x) const
     {
@@ -3285,9 +3276,9 @@ namespace eastl
 
 
     template <typename T, typename Allocator>
-    inline int basic_string<T, Allocator>::compare(const value_type* p) const
+	inline int basic_string<T, Allocator>::compare(view_type p) const EA_NOEXCEPT
     {
-        return compare(internalLayout().BeginPtr(), internalLayout().EndPtr(), p, p + CharStrlen(p));
+        return compare(internalLayout().BeginPtr(), internalLayout().EndPtr(), p.begin(), p.end());
     }
 
 
@@ -3466,12 +3457,11 @@ namespace eastl
     }
 
 
-    template <typename T, typename Allocator>
-    inline int basic_string<T, Allocator>::comparei(const value_type* p) const
-    {
-        return comparei(internalLayout().BeginPtr(), internalLayout().EndPtr(), p, p + CharStrlen(p));
-    }
-
+	template <typename T, typename Allocator>
+	inline int basic_string<T, Allocator>::comparei(const view_type p) const
+	{
+		return comparei(internalLayout().BeginPtr(), internalLayout().EndPtr(), p.begin(), p.end());
+	}
 
     template <typename T, typename Allocator>
     typename basic_string<T, Allocator>::iterator
@@ -4137,7 +4127,7 @@ namespace eastl
 
 	/// string / wstring
 	typedef basic_string<char>    string;
-	//typedef basic_string<wchar_t> wstring;
+	typedef basic_string<wchar_t> wstring;
 
 	/// custom string8 / string16 / string32
 	// typedef basic_string<char>     string8;
@@ -4214,20 +4204,20 @@ namespace eastl
 	// 	}
 	// };
 
-	// #if defined(EA_WCHAR_UNIQUE) && EA_WCHAR_UNIQUE
-	// 	template <>
-	// 	struct hash<wstring>
-	// 	{
-	// 		size_t operator()(const wstring& x) const
-	// 		{
-	// 			const wchar_t* p = x.c_str();
-	// 			unsigned int c, result = 2166136261U;
-	// 			while((c = (unsigned int)*p++) != 0)
-	// 				result = (result * 16777619) ^ c;
-	// 			return (size_t)result;
-	// 		}
-	// 	};
-	// #endif
+	#if defined(EA_WCHAR_UNIQUE) && EA_WCHAR_UNIQUE
+		template <>
+		struct hash<wstring>
+		{
+			size_t operator()(const wstring& x) const
+			{
+				const wchar_t* p = x.c_str();
+				unsigned int c, result = 2166136261U;
+				while((c = (unsigned int)*p++) != 0)
+					result = (result * 16777619) ^ c;
+				return (size_t)result;
+			}
+		};
+	#endif
 
 
     /// to_string
@@ -4238,14 +4228,24 @@ namespace eastl
     ///
     /// http://en.cppreference.com/w/cpp/string/basic_string/to_string
     ///
-    inline string to_string(int value)
-        { return string(string::CtorSprintf(), "%d", value); }
+    inline string to_string(int value,uint8_t base=10)
+        {
+            const char *fmt="%d";
+            if(base==16)
+                fmt="%x";
+            return string(string::CtorSprintf(), fmt, value);
+        }
     inline string to_string(long value)
         { return string(string::CtorSprintf(), "%ld", value); }
     inline string to_string(long long value)
         { return string(string::CtorSprintf(), "%lld", value); }
-    inline string to_string(unsigned value)
-        { return string(string::CtorSprintf(), "%u", value); }
+    inline string to_string(unsigned value,uint8_t base=10)
+        {
+            const char *fmt="%u";
+            if(base==16)
+                fmt="%x";
+            return string(string::CtorSprintf(), fmt, value);
+        }
     inline string to_string(unsigned long value)
         { return string(string::CtorSprintf(), "%lu", value); }
     inline string to_string(unsigned long long value)
@@ -4266,24 +4266,24 @@ namespace eastl
     ///
     /// http://en.cppreference.com/w/cpp/string/basic_string/to_wstring
     ///
-    // inline wstring to_wstring(int value)
-    //     { return wstring(wstring::CtorSprintf(), L"%d", value); }
-    // inline wstring to_wstring(long value)
-    //     { return wstring(wstring::CtorSprintf(), L"%ld", value); }
-    // inline wstring to_wstring(long long value)
-    //     { return wstring(wstring::CtorSprintf(), L"%lld", value); }
-    // inline wstring to_wstring(unsigned value)
-    //     { return wstring(wstring::CtorSprintf(), L"%u", value); }
-    // inline wstring to_wstring(unsigned long value)
-    //     { return wstring(wstring::CtorSprintf(), L"%lu", value); }
-    // inline wstring to_wstring(unsigned long long value)
-    //     { return wstring(wstring::CtorSprintf(), L"%llu", value); }
-    // inline wstring to_wstring(float value)
-    //     { return wstring(wstring::CtorSprintf(), L"%f", value); }
-    // inline wstring to_wstring(double value)
-    //     { return wstring(wstring::CtorSprintf(), L"%f", value); }
-    // inline wstring to_wstring(long double value)
-    //     { return wstring(wstring::CtorSprintf(), L"%Lf", value); }
+    inline wstring to_wstring(int value)
+        { return wstring(wstring::CtorSprintf(), L"%d", value); }
+    inline wstring to_wstring(long value)
+        { return wstring(wstring::CtorSprintf(), L"%ld", value); }
+    inline wstring to_wstring(long long value)
+        { return wstring(wstring::CtorSprintf(), L"%lld", value); }
+    inline wstring to_wstring(unsigned value)
+        { return wstring(wstring::CtorSprintf(), L"%u", value); }
+    inline wstring to_wstring(unsigned long value)
+        { return wstring(wstring::CtorSprintf(), L"%lu", value); }
+    inline wstring to_wstring(unsigned long long value)
+        { return wstring(wstring::CtorSprintf(), L"%llu", value); }
+    inline wstring to_wstring(float value)
+        { return wstring(wstring::CtorSprintf(), L"%f", value); }
+    inline wstring to_wstring(double value)
+        { return wstring(wstring::CtorSprintf(), L"%f", value); }
+    inline wstring to_wstring(long double value)
+        { return wstring(wstring::CtorSprintf(), L"%Lf", value); }
 
 
     /// user defined literals

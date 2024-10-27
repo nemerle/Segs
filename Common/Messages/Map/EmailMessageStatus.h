@@ -10,8 +10,6 @@
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 // [[ev_def:type]]
@@ -19,7 +17,7 @@ class EmailMessageStatus final : public GameCommandEvent
 {
 public:
     explicit EmailMessageStatus() : GameCommandEvent(evEmailMessageStatus) {}
-    EmailMessageStatus(const int status, const QString recipient) : GameCommandEvent(evEmailMessageStatus),
+    EmailMessageStatus(const int status, const String &recipient) : GameCommandEvent(evEmailMessageStatus),
         m_status(status),
         m_recipient(recipient)
     {
@@ -36,7 +34,7 @@ public:
     // [[ev_def:field]]
     int m_status;
     // [[ev_def:field]]
-    QString m_recipient;
+    String m_recipient;
 
     EVENT_IMPL(EmailMessageStatus)
 };

@@ -6,8 +6,10 @@
  */
 
 #pragma once
-#include <memory>
-#include <array>
+
+#include "Common/Containers/String.h"
+#include "EASTL/array.h"
+#include "EASTL/unique_ptr.h"
 
 class QSqlDatabase;
 class QSqlQuery;
@@ -29,18 +31,18 @@ struct ValidatePasswordResponseData;
 class AuthDbSyncContext
 {
 public:
-	enum QueryId {
-		ID_FETCH_DB_VERSION_QUERY=0,
-		ID_ADD_ACCOUNT_QUERY,
-		ID_SELECT_ACCOUNT_BY_USERNAME_QUERY,
-		ID_SELECT_ACCOUNT_BY_ID_QUERY,
-		ID_SELECT_ACCOUNT_PASSWORD_QUERY,
-		QUERY_COUNT
-	};
+    enum QueryId {
+        ID_FETCH_DB_VERSION_QUERY=0,
+        ID_ADD_ACCOUNT_QUERY,
+        ID_SELECT_ACCOUNT_BY_USERNAME_QUERY,
+        ID_SELECT_ACCOUNT_BY_ID_QUERY,
+        ID_SELECT_ACCOUNT_PASSWORD_QUERY,
+        QUERY_COUNT
+    };
 private:
-	std::array<std::unique_ptr<QSqlQuery>,QUERY_COUNT> m_query_mapping;
-	std::unique_ptr<QSqlDatabase> m_db;
-	std::unique_ptr<QSqlError> last_error;
+    eastl::array<eastl::unique_ptr<QSqlQuery>,QUERY_COUNT> m_query_mapping;
+    eastl::unique_ptr<QSqlDatabase> m_db;
+    eastl::unique_ptr<QSqlError> last_error;
     bool m_setup_complete = false;
 
 public:
@@ -53,5 +55,5 @@ public:
 //    bool retrieveAccount(const RetrieveAccountRequestData &data, RetrieveAccountResponseData &result);
     bool getPasswordValidity(const SEGSEvents::ValidatePasswordRequestData &data, SEGSEvents::ValidatePasswordResponseData &result);
 protected:
-    bool checkPassword(const QString &login, const QString &password);
+    bool checkPassword(const String &login, const String &password);
 };

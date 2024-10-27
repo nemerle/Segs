@@ -7,12 +7,11 @@
 
 #pragma once
 #include "Components/CompiletimeHash.h"
+#include "Common/Containers/Vector.h"
 
-#include "cereal/archives/memory_binary.hpp"
 #include <ace/Time_Value.h>
 #include <atomic>
 #include <cassert>
-#include <typeinfo>
 
 class EventSrc;
 namespace SEGSEvents
@@ -69,32 +68,10 @@ virtual const char *    info();
 
 protected:
 // Note those are friend functions that will store/restore this message in the std::stream.
-friend Event *          from_storage(const std::vector<uint8_t> &istr);
-friend void             to_storage(std::vector<uint8_t> &ostr,Event *ev);
+friend Event *          from_storage(const Vector<uint8_t> &istr);
+friend void             to_storage(Vector<uint8_t> &ostr,Event *ev);
 
-virtual void            do_serialize(std::vector<uint8_t> &os)  = 0;
-virtual void            serialize_from(const std::vector<uint8_t> &os)  = 0;
-};
-#define EVENT_IMPL(name)\
-    template<class Archive>\
-    void serialize(Archive & archive); \
-    void do_serialize(std::vector<uint8_t> &os) override {\
-        cereal::VectorOutputArchive oarchive(os);\
-        oarchive(*this);\
-    }\
-    void serialize_from(const std::vector<uint8_t> &os) override {\
-        cereal::VectorInputArchive iarchive(os);\
-        iarchive(*this);\
-    }\
-    ~name() override = default;
-
-
-// [[ev_def:type]]
-struct Finish final: public Event
-{
-public:
-                    Finish(EventSrc *source=nullptr) : Event(evFinish,source) {}
-static  Finish *    s_instance;
-        EVENT_IMPL(Finish)
+virtual void            do_serialize(Vector<uint8_t> &os)  = 0;
+virtual void            serialize_from(const Vector<uint8_t> &os)  = 0;
 };
 } // end of SEGSEventsNamespace

@@ -6,8 +6,6 @@
 #include <EASTL/internal/fixed_pool.h>
 #include <EASTL/fixed_allocator.h>
 
-
-
 namespace eastl
 {
 

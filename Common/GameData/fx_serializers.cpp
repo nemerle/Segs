@@ -4,7 +4,7 @@
 #include "DataStorage.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
-#include <cereal/types/utility.hpp>
+#include <cereal/eastl/utility.hpp>
 
 namespace {
 bool loadFrom(BinStore * s, FxBehavior & target)
@@ -68,7 +68,7 @@ bool loadFrom(BinStore * s, FxBehavior & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -135,36 +135,36 @@ bool loadFrom(BinStore * s, FxGeoEntry_Event & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
         if("Geom"==_name) {
             target.m_Geom.emplace_back();
             ok &= s->read(target.m_Geom.back());
-        } else if(_name.startsWith("Part")) {
+        } else if(_name.starts_with("Part")) {
             target.m_Part.emplace_back();
             ok &= s->read(target.m_Part.back());
-        } else if(_name.startsWith("Splat")) {
+        } else if(_name.starts_with("Splat")) {
             target.m_Splats.emplace_back();
             ok &= loadFrom(s,target.m_Splats.back());
-        } else if(_name.startsWith("Sound")) {
-            std::vector<QByteArray> snd_entry;
+        } else if(_name.starts_with("Sound")) {
+            Vector<String> snd_entry;
             ok &= s->read(snd_entry);
             ok &= snd_entry.size()>1;
             FxSoundData true_data;
             true_data.m_Name = snd_entry[0];
             if(snd_entry.size()>1)
-                true_data.m_Radius = snd_entry[1].toFloat();
+                true_data.m_Radius = StringUtils::to_float(snd_entry[1]);
             if(snd_entry.size()>2)
-                true_data.m_Fade = snd_entry[2].toFloat();
+                true_data.m_Fade = StringUtils::to_float(snd_entry[2]);
             if(snd_entry.size()>3)
-                true_data.m_Volume = snd_entry[3].toFloat();
+                true_data.m_Volume = StringUtils::to_float(snd_entry[3]);
             target.m_Sounds.emplace_back(std::move(true_data));
-        } else if(_name.startsWith("While")) {
+        } else if(_name.starts_with("While")) {
             target.m_While.emplace_back();
             ok &= s->read(target.m_While.back());
-        } else if(_name.startsWith("Until")) {
+        } else if(_name.starts_with("Until")) {
             target.m_Until.emplace_back();
             ok &= s->read(target.m_Until.back());
         } else
@@ -189,7 +189,7 @@ bool loadFrom(BinStore * s, FxInfo_Condition & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -221,7 +221,7 @@ bool loadFrom(BinStore * s, FxInfo & target)
     target.m_Flags = FxInfo_Flags(flags);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -248,7 +248,7 @@ bool loadFrom(BinStore * s, Fx_AllInfos & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -333,37 +333,35 @@ static void serialize(Archive & archive, FxInfo_Input & m)
 {
     archive(cereal::make_nvp("InpName",m.m_InpName));
 }
-void saveTo(const Fx_AllInfos &target, const QString &baseName, bool text_format)
+void saveTo(const Fx_AllInfos &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"AllFxInfos_Data",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllFxInfos_Data",baseName,text_format);
 }
-bool loadFrom(const QString &filepath, Fx_AllInfos &target)
+bool loadFrom(const String &filepath, Fx_AllInfos &target)
 {
-    QFSWrapper wrap;
-    return commonReadFrom(wrap,filepath,"AllFxInfos_Data",target);
+    return SEGS::commonReadFrom(filepath,"AllFxInfos_Data",target);
 }
-bool LoadFxInfoData(const QString &fname, Fx_AllInfos &infos)
+bool LoadFxInfoData(const String &fname, Fx_AllInfos &infos)
 {
-    QFSWrapper wrap;
     BinStore binfile;
 
     if(fname.contains(".crl"))
     {
         if(!loadFrom(fname, infos))
         {
-            qCritical() << "Failed to serialize data from crl:" << fname;
+            sCritical() << "Failed to serialize data from crl:" << fname;
             return false;
         }
         return true;
     }
-    if(!binfile.open(wrap,fname, fxbehaviors_i0_requiredCrc))
+    if(!binfile.open(fname, fxbehaviors_i0_requiredCrc))
     {
-        qCritical() << "Failed to open original bin:" << fname;
+        sCritical() << "Failed to open original bin:" << fname;
         return false;
     }
     if(!loadFrom(&binfile, infos))
     {
-        qCritical() << "Failed to load data from original bin:" << fname;
+        sCritical() << "Failed to load data from original bin:" << fname;
         return false;
     }
     return true;
@@ -377,7 +375,7 @@ bool loadFrom(BinStore * s, Fx_AllBehaviors & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -438,37 +436,35 @@ static void serialize(Archive & archive, FxBehavior & m)
     archive(cereal::make_nvp("StAnim",m.m_stAnim));
 }
 
-void saveTo(const Fx_AllBehaviors &target, const QString &baseName, bool text_format)
+void saveTo(const Fx_AllBehaviors &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"Fx_AllBehaviors",baseName,text_format);
+    SEGS::commonSaveTo(target,"Fx_AllBehaviors",baseName,text_format);
 }
-bool loadFrom(const QString &filepath, Fx_AllBehaviors &target)
+bool loadFrom(const String &filepath, Fx_AllBehaviors &target)
 {
-    QFSWrapper wrap;
-    return commonReadFrom(wrap,filepath,"Fx_AllBehaviors",target);
+    return SEGS::commonReadFrom(filepath,"Fx_AllBehaviors",target);
 }
-bool LoadFxBehaviorData(const QString &fname, Fx_AllBehaviors &behaviors)
+bool LoadFxBehaviorData(const String &fname, Fx_AllBehaviors &behaviors)
 {
-    QFSWrapper wrap;
     BinStore binfile;
 
     if(fname.contains(".crl"))
     {
         if(!loadFrom(fname, behaviors))
         {
-            qCritical() << "Failed to serialize data from crl:" << fname;
+            sCritical() << "Failed to serialize data from crl:" << fname;
             return false;
         }
         return true;
     }
-    if(!binfile.open(wrap,fname, fxbehaviors_i0_requiredCrc))
+    if(!binfile.open(fname, fxbehaviors_i0_requiredCrc))
     {
-        qCritical() << "Failed to open original bin:" << fname;
+        sCritical() << "Failed to open original bin:" << fname;
         return false;
     }
     if(!loadFrom(&binfile, behaviors))
     {
-        qCritical() << "Failed to load data from original bin:" << fname;
+        sCritical() << "Failed to load data from original bin:" << fname;
         return false;
     }
     return true;

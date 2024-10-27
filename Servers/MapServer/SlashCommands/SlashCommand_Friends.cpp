@@ -19,17 +19,14 @@
 #include "MessageHelpers.h"
 #include "Components/Settings.h"
 
-#include <QtCore/QString>
-#include <QtCore/QDebug>
-
 using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 9 Commands (GMs)
-void cmdHandler_FriendsListDebug(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_FriendsListDebug(const Vector<String> &/*params*/, MapClientSession &sess)
 {
-    QString msg = "Sending FriendsList dump to console output.";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Sending FriendsList dump to console output.";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     dumpFriends(*sess.m_ent); // Send FriendsList dump
@@ -38,34 +35,34 @@ void cmdHandler_FriendsListDebug(const QStringList &/*params*/, MapClientSession
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 1 Commands
-void cmdHandler_Friend(const QStringList &params, MapClientSession &sess)
+void cmdHandler_Friend(const Vector<String> &params, MapClientSession &sess)
 {
-    Entity* tgt = getEntity(&sess, params.join(" "));
+    Entity *tgt = getEntity(&sess, String::joined(params," "));
     if(tgt == nullptr || sess.m_ent->m_char->isEmpty() || tgt->m_char->isEmpty())
         return;
 
     FriendListChangeStatus status = addFriend(*sess.m_ent, *tgt,getEntityDisplayMapName(tgt->m_entity_data));
     if(status==FriendListChangeStatus::MAX_FRIENDS_REACHED)
     {
-        QString msg = "You cannot have more than " + QString::number(g_max_friends) + " friends.";
-        qCDebug(logFriends).noquote() << msg;
+        String msg = "You cannot have more than " + eastl::to_string(g_max_friends) + " friends.";
+        sCDebug(logFriends) << msg;
         sendInfoMessage(MessageChannel::USER_ERROR, msg, sess);
     }
     else
     {
-        QString msg = "Adding " + tgt->name() + " to your friendlist.";
-        qCDebug(logFriends).noquote() << msg;
+        String msg = "Adding " + tgt->name() + " to your friendlist.";
+        sCDebug(logFriends) << msg;
         sendInfoMessage(MessageChannel::FRIENDS, msg, sess);
         // Send FriendsListUpdate
         sendFriendsListUpdate(sess, sess.m_ent->m_char->m_char_data.m_friendlist);
     }
 }
 
-void cmdHandler_Unfriend(const QStringList &params, MapClientSession &sess)
+void cmdHandler_Unfriend(const Vector<String> &params, MapClientSession &sess)
 {
     // Cannot use getEntityFromCommand as we need to be able to unfriend logged out characters.
-    QString name = params.join(" ");
-    if(name.isEmpty())
+    String name = String::joined(params, " ");
+    if(name.empty())
     {
         const Entity* const tgt = getTargetEntity(sess);
         if(tgt == nullptr)
@@ -77,7 +74,7 @@ void cmdHandler_Unfriend(const QStringList &params, MapClientSession &sess)
     FriendListChangeStatus status =  removeFriend(*sess.m_ent, name);
     if(status==FriendListChangeStatus::FRIEND_REMOVED)
     {
-        QString msg = "Removing " + name + " from your friends list.";
+        String msg = "Removing " + name + " from your friends list.";
         sendInfoMessage(MessageChannel::FRIENDS, msg, sess);
 
         // Send FriendsListUpdate
@@ -85,12 +82,12 @@ void cmdHandler_Unfriend(const QStringList &params, MapClientSession &sess)
     }
     else
     {
-        QString msg = name + " is not on your friends list.";
+        String msg = name + " is not on your friends list.";
         sendInfoMessage(MessageChannel::USER_ERROR, msg, sess);
     }
 }
 
-void cmdHandler_FriendList(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_FriendList(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     if(sess.m_ent->m_char->isEmpty())
         return;

@@ -10,20 +10,16 @@
     @brief provides animation control ( triggers/transitions ) and sequencing (ordering/merging) functionality
 */
 
-#include "GameData/anim_definitions.h"
-#include "GameData/seq_definitions.h"
-#include "Runtime/Animation.h"
-#include "Runtime/HandleBasedStorage.h"
+#include "Common/GameData/anim_definitions.h"
+#include "Common/GameData/seq_definitions.h"
+#include "Common/Runtime/Animation.h"
+#include "Common/Runtime/HandleBasedStorage.h"
+#include "Common/Containers/HashSet.h"
+#include <Common/Utils/IServiceLocator.h>
 #include "glm/mat4x3.hpp"
 #include "glm/vec4.hpp"
-#include <array>
-#include <unordered_map>
-#include <unordered_set>
 
 
-#include "GameData/anim_definitions.h"
-#include "GameData/anim_definitions.h"
-class QByteArray;
 struct SequencerData;
 
 namespace SEGS
@@ -86,7 +82,7 @@ struct SequencerInstance
     SequencerData *             m_template;
     uint8_t                     m_next_move_idx = 0;
     struct SceneTreeNode *      m_node          = nullptr; // root of the node hierarchy this sequencer is controlling.
-    std::vector<ModelPartColor> m_part_colors;
+    Vector<ModelPartColor>      m_part_colors;
     glm::vec3                   m_current_geom_scale;
     float                       m_current_animation_scale;
     SeqBitSet                   m_current_state_bits;
@@ -103,8 +99,8 @@ struct SequencerInstance
     ModelPartColor                  m_bone_colors[70];
     HandleT<20, 12, TextureWrapper> m_bone_textures_1[70];
     HandleT<20, 12, TextureWrapper> m_bone_textures_2[70];
-    std::array<uint8_t, 70>         m_interpolation_state;
-    QByteArray                      m_bone_geometry_names[70];
+    eastl::array<uint8_t, 70>       m_interpolation_state;
+    String                          m_bone_geometry_names[70];
     RenderingData                   m_rendering_data;
     SeqAnimation                    m_animation;
     int                             m_curr_interpolated_frame = 0;
@@ -114,7 +110,7 @@ struct SequencerInstance
 struct SequencerInstanceStorage : public HandleBasedStorage<SequencerInstance>
 {
     using Type = SequencerInstance;
-    std::unordered_set<SequencerData *> m_active_instances;
+    HashSet<SequencerData *> m_active_instances;
     static SequencerInstanceStorage &   instance()
     {
         static SequencerInstanceStorage s_instance;
@@ -123,9 +119,9 @@ struct SequencerInstanceStorage : public HandleBasedStorage<SequencerInstance>
 };
 using HSequencerInstance = SingularStoreHandleT<20, 12, SequencerInstance>;
 
-SequencerData * getInitializedSequencerData(const QByteArray &name);
-void            seqResetSeqType(HSequencerInstance seq_handle, FSWrapper &fs, const char *entType_filename, int seed);
-SeqTypeDefData *getSeqTypedefByName(SequencerData *data, const QByteArray &name);
+SequencerData * getInitializedSequencerData(const String &name);
+void            seqResetSeqType(HSequencerInstance seq_handle, SEGS::IFilesystem &fs, const char *entType_filename, int seed);
+SeqTypeDefData *getSeqTypedefByName(SequencerData *data, const String &name);
 bool            changeSequencerScale(HSequencerInstance seq, const glm::vec3 &scale);
 void            changeBoneScale(HSequencerInstance seq, float newbonescale);
 } // namespace SEGS

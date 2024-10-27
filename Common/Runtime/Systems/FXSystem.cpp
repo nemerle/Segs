@@ -1,10 +1,9 @@
 #include "FXSystem.h"
 
-#include "Runtime/HandleBasedStorage.h"
-#include "GameData/GameDataStore.h"
-#include "GameData/fx_definitions.h"
-
-#include <QDebug>
+#include "Common/Runtime/HandleBasedStorage.h"
+#include "Common/GameData/GameDataStore.h"
+#include "Common/GameData/fx_definitions.h"
+#include "Components/Logging.h"
 
 namespace FXSystem
 {
@@ -28,7 +27,7 @@ namespace
         //auto inputs = ext_params.inputs;
         //TODO: reset transient creation params (locations/targets etc)
         //
-        for(const QByteArray &input_name : fx->inputs)
+        for(const String &input_name : fx->inputs)
         {
             // select an input_type =>
             //input name in a form : [T_] name [ROOT]
@@ -63,7 +62,7 @@ namespace
 } // end of anonymous namespace
 
 
-Handle create(const QByteArray &name, const CreationParams &params)
+Handle create(const String &name, const CreationParams &params)
 {
     GameDataStore &gd(getGameData());
     Data           val;
@@ -75,7 +74,7 @@ Handle create(const QByteArray &name, const CreationParams &params)
     val.m_name_str_id = gd.getFxNamePackId(name);
     if (!info)
     {
-        qDebug() << "Failed to locate Fx description" << QString(name);
+        sDebug() << "Failed to locate Fx description" << name;
         return Handle(0, 0);
     }
     // TODO: info->m_PerformanceRadius could/should be use to cull effects that are farther than any observer ?
@@ -98,7 +97,7 @@ Data &get(Handle h)
     FXStorage::HType dat(h);
     if(!FXStorage::instance().canAccess(h))
     {
-        qCritical() << "Dead/uninit handle access";
+        sCritical() << "Dead/uninit handle access";
         return dummy;
     }
     return dat.get();
@@ -127,7 +126,7 @@ void setTargetLocation(Handle h, glm::vec3 loc)
     Data &fx(get(h));
     if(fx.m_params.m_loci.empty())
     {
-        qCritical("Possibly a wrong order of operations, initialized FX source locus to {0}");
+        sCritical()<<"Possibly a wrong order of operations, initialized FX source locus target location";
     }
     if(fx.m_params.m_loci.size()<2)
         fx.m_params.m_loci.resize(2);
@@ -141,7 +140,7 @@ void setTargetEntity(Handle h, int entidx)
     Data &fx(get(h));
     if(fx.m_params.m_loci.empty())
     {
-        qCritical("Possibly a wrong order of operations, initialized FX source locus to {0}");
+        sCritical()<<"Possibly a wrong order of operations, initialized FX source locus to {0}";
     }
     if(fx.m_params.m_loci.size()<2)
         fx.m_params.m_loci.resize(2);

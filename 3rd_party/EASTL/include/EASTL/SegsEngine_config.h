@@ -31,6 +31,7 @@
 #define EA_NOEXCEPT_EXPR(expression) noexcept((expression))
 #define EA_COMPILER_CPP11_ENABLED 1
 #define EA_COMPILER_CPP14_ENABLED 1
+#define EASTL_INLINE_VARIABLE_ENABLED 1
 #define EA_CPP14_CONSTEXPR constexpr
 #define EASTL_EASTDC_VSNPRINTF 0
 #define EASTL_DEFAULT_NAME_PREFIX "SegsEngine"
@@ -42,4 +43,3 @@
 #define EASTL_RESET_ENABLED 1
 #define EASTLAddRef AddRef
 #define EASTLRelease ReleaseRef
-

@@ -17,13 +17,13 @@ class VisitLocation
 public:
     enum : uint32_t {class_version       = 1};
 
-    QString         m_location_name;
+    String         m_location_name;
     glm::vec3       m_pos;
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);
     VisitLocation(){}
-    VisitLocation(QString name, glm::vec3 pos)
+    VisitLocation(String name, glm::vec3 pos)
     {
         m_location_name = name;
         m_pos = pos;
@@ -32,4 +32,4 @@ public:
 
 };
 
-using vLocationList = std::vector<VisitLocation >;
+using vLocationList = Vector<VisitLocation >;

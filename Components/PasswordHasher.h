@@ -7,19 +7,18 @@
 
 #pragma once
 
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QCryptographicHash>
+#include "Common/Containers/String.h"
+#include "Containers/Vector.h"
 
 class PasswordHasher
 {
 public:
     PasswordHasher();
-    QByteArray generateSalt();
-    QByteArray hashPassword(const QByteArray &pass, const QByteArray &salt);
+    String          generateSalt();
+    Vector<uint8_t> hashPassword(const String &pass, const String &salt);
 
 protected:
-    QString getRandomString(int length) const;
+    String getRandomString(int length) const;
 
-    QCryptographicHash m_hasher;
+    //QCryptographicHash m_hasher;
 };

@@ -47,7 +47,7 @@ namespace SEGSEvents
     public:
         // [[ev_def:field]
         uint32_t m_npc_idx;
-        QString m_item_name;
+        String m_item_name;
 
         explicit StoreBuyItem() : MapLinkEvent(MapEventTypes::evStoreBuyItem){}
 
@@ -60,7 +60,7 @@ namespace SEGSEvents
         {
             m_npc_idx = bs.GetPackedBits(12);
             bs.GetString(m_item_name);
-            qCDebug(logMapEvents) << "StoreBuyItem Event";
+            sCDebug(logMapEvents) << "StoreBuyItem Event";
         }
         EVENT_IMPL(StoreBuyItem)
     };
@@ -93,10 +93,10 @@ namespace SEGSEvents
             }
             else
             {
-                qCWarning(logMapEvents) << "Trying to sell inspiration!";
+                sCWarning(logMapEvents) << "Trying to sell inspiration!";
                 m_enhancement_idx = bs.GetPackedBits(4);
             }
-            qCDebug(logMapEvents) << "StoreSellItem Event";
+            sCDebug(logMapEvents) << "StoreSellItem Event";
         }
         EVENT_IMPL(StoreSellItem)
     };

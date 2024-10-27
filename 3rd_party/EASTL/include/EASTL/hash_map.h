@@ -589,7 +589,27 @@ namespace eastl
         {
             return base_type::DoInsertKey(false_type(), eastl::move(key));
         }
-
+#ifdef EASTL_SEGS_EXTENSIONS
+		vector<T*,Allocator> values(const key_type &key) const
+        {
+        	auto range =this->equal_range(key);
+			vector<T*, Allocator> res;
+			for (auto iter=range.first; iter !=range.second; ++iter)
+			{
+				res.emplace_back(const_cast<T*>(&iter->second));
+			}
+			return res;
+        }
+		vector<T*, Allocator> values() const
+		{
+			vector<T*, Allocator> res;
+			for (auto iter : *this)
+			{
+				res.emplace_back(const_cast<T*>(&iter.second));
+			}
+			return res;
+		}
+#endif
 
     }; // hash_multimap
 

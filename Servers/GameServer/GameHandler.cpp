@@ -164,7 +164,7 @@ void GameHandler::on_account_data(GameAccountResponse *ev)
 void GameHandler::on_connection_request(ConnectRequest *ev)
 {
     // TODO: disallow connects if server is overloaded
-    qDebug("Client-side CRUDP Level: %d \n\t Tick Count: %d", ev->m_version, ev->m_tickcount);
+    sDebug()<<StringUtils::fmt("Client-side CRUDP Level: %d \n\t Tick Count: %d", ev->m_version, ev->m_tickcount);
     ev->src()->putq(new ConnectResponse);
 }
 
@@ -173,14 +173,14 @@ void GameHandler::on_update_server(UpdateServer *ev)
     if(ev->m_build_date!=supported_version)
     {
         ev->src()->putq(new GameEntryError(this,"We are very sorry but your client version is not supported."));
-        qDebug("GameEntryError: Client version %u not supported!", ev->m_build_date);
+        sDebug() << StringUtils::fmt("GameEntryError: Client version %u not supported!", ev->m_build_date);
         return;
     }
     uint64_t expecting_session_token = m_session_store.connected_client(ev->authCookie);
     if(expecting_session_token==~0U)
     {
         ev->src()->putq(new GameEntryError(this,"Unauthorized !"));
-        qDebug("GameEntryError: Unauthorized!");
+        sDebug()<<"GameEntryError: Unauthorized!";
         return;
     }
     GameSession &session(m_session_store.session_from_token(expecting_session_token));
@@ -235,7 +235,7 @@ void GameHandler::on_check_links()
 
 void GameHandler::report_service_status()
 {
-    postGlobalEvent(new GameServerStatusMessage({m_server->getAddress(),QDateTime::currentDateTime(),
+    postGlobalEvent(new GameServerStatusMessage({m_server->getAddress(),DateTime::now(),
                                                  uint16_t(m_session_store.num_sessions()),
                                                  m_server->getMaxPlayers(),m_server->getId(),true},0));
 }
@@ -365,15 +365,15 @@ void GameHandler::on_map_req(MapServerAddrRequest *ev)
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 
     // will never be empty because we look based on m_map_idx, and integers cannot be null
-    QString map_path = getMapPath(ed.m_map_idx).toLower();
+    String map_path = getMapPath(ed.m_map_idx).to_lower();
 
     if(selected_slot->isEmpty())
         selected_slot = nullptr; // passing a null to map server to indicate a new character is being created.
@@ -390,7 +390,7 @@ void GameHandler::on_map_req(MapServerAddrRequest *ev)
     {
         ACE_ASSERT(selected_slot->m_name == ev->m_char_name || !"Server-Client character synchronizatigon failure!");
     }
-    QString chardata;
+    String chardata;
     if(selected_slot)
         serializeToQString(*selected_slot,chardata);
     ExpectMapClientRequest *expect_client =
@@ -399,8 +399,7 @@ void GameHandler::on_map_req(MapServerAddrRequest *ev)
                                     ev->m_character_index, ev->m_char_name, map_path,
                                     uint16_t(session.m_game_account.m_max_slots)},
                                    lnk->session_token(),this);
-    qInfo("Telling map server to expect a client with character %s, %d\n", qPrintable(ev->m_char_name),
-            ev->m_character_index);
+    sInfo()<<"Telling map server to expect a client with character"<<ev->m_char_name<<","<<ev->m_character_index;
 
     session.m_direction = GameSession::EXITING_TO_MAP;
     map_handler->putq(expect_client);
@@ -408,7 +407,7 @@ void GameHandler::on_map_req(MapServerAddrRequest *ev)
 
 void GameHandler::on_unknown_link_event(UnknownEvent *)
 {
-        qWarning() << "Unknown GameHandler link event";
+    sWarning() << "Unknown GameHandler link event";
 }
 
 void GameHandler::on_expect_client( ExpectClientRequest *ev )

@@ -1,7 +1,7 @@
 /*
  * SEGS - Super Entity Game Server
  * http://www.segs.dev/
- * Copyright (c) 2006 - 2019 SEGS Team (see AUTHORS.md)
+ * Copyright (c) 2006 - 2024 SEGS Team (see AUTHORS.md)
  * This software is licensed under the terms of the 3-clause BSD License. See LICENSE.md for details.
  */
 
@@ -14,12 +14,8 @@
 
 #include <ace/OS_NS_time.h>
 
-#include <QDebug>
 #include <thread>
 #include <mutex>
-#include <memory>
-#include <unordered_map>
-#include <vector>
 #include <cassert>
 #include <cinttypes>
 
@@ -38,7 +34,7 @@ struct  ReapingMetadata
 {
         //! @note This class does not take ownership of the `const char *` memory
         //! the best approach is to pass it '.data' section strings only.
-        std::unordered_map<uint64_t,const char *> m_reaped_link_reason;
+        HashMap<uint64_t,const char *> m_reaped_link_reason;
         void marked_for_reaping(uint64_t token,const char *reason)
         {
             m_reaped_link_reason[token] = reason;
@@ -54,7 +50,8 @@ struct  ReapingMetadata
             const char *reason = "Unregistered reason";
             if(iter!=m_reaped_link_reason.end())
                 reason = iter->second;
-            qFatal("Session failure %s : Reaped because: %s",msg,reason);
+            sCritical()<<"Session failure"<<msg<<": Reaped because:"<<reason;
+            abort();
         }
 
 };
@@ -66,7 +63,8 @@ struct  ReapingMetadata
         [[noreturn]]
         void fatal_failure(const char *msg,uint64_t /*token*/)
         {
-            qFatal("Session failure %s",msg);
+            sCritical()<<"Session failure "<<msg;
+            abort();
         }
 };
 #endif
@@ -77,7 +75,7 @@ class ClientSessionStore
 {
 public:
 using   MTGuard = std::lock_guard<std::mutex>;
-using   vClients = std::vector<SESSION_CLASS *>;
+using   vClients = Vector<SESSION_CLASS *>;
 using   ivClients = typename vClients::iterator;
 using   civClients = typename vClients::const_iterator;
 protected:
@@ -99,17 +97,17 @@ mutable std::mutex m_store_mutex;
             SESSION_CLASS *m_session;
             uint64_t       m_session_token;
         };
-        std::unordered_map<uint64_t,SESSION_CLASS> m_token_to_session;
-        std::unordered_map<uint32_t,uint64_t> m_id_to_token;
-        std::vector<ExpectClientInfo> m_session_expecting_clients;
-        std::vector<WaitingSession> m_session_ready_for_reaping;
+        HashMap<uint64_t,SESSION_CLASS> m_token_to_session;
+        HashMap<uint32_t, uint64_t>      m_id_to_token;
+        Vector<ExpectClientInfo> m_session_expecting_clients;
+        Vector<WaitingSession> m_session_ready_for_reaping;
         ReapingMetadata m_reaping_data;
         vClients m_active_sessions;
         uint32_t create_cookie(const ACE_INET_Addr &from,uint64_t id)
         {
-                uint64_t res = ((from.hash()+id)&0xFFFFFFFF)^(id>>32);
-                qWarning("Create_cookie still needs a good algorithm. 0x%" PRIx64, res);
-                return uint32_t(res);
+            uint64_t res = ((from.hash()+id)&0xFFFFFFFF)^(id>>32);
+            sWarning() << StringUtils::fmt("Create_cookie still needs a good algorithm. 0x%" PRIx64, res);
+            return uint32_t(res);
         }
 
 public:
@@ -217,7 +215,7 @@ public:
         }
         void session_link_lost(uint64_t token,const char *reason)
         {
-            qCDebug(logConnection,"Link lost on session:%lu caused by %s",token,reason);
+            sCDebug(logConnection)<<String(String::CtorSprintf(),"Link lost on session:%lu caused by %s",token,reason);
             SESSION_CLASS &session(session_from_token(token));
             remove_from_active_sessions(&session);
             for (size_t idx = 0, total = m_session_expecting_clients.size(); idx < total; ++idx)
@@ -274,7 +272,7 @@ public:
         }
         bool isActive(SESSION_CLASS *c) const
         {
-            return std::find(m_active_sessions.begin(),m_active_sessions.end(),c)!=m_active_sessions.end();
+            return eastl::find(m_active_sessions.begin(),m_active_sessions.end(),c)!=m_active_sessions.end();
         }
         size_t num_sessions() const
         {
@@ -322,7 +320,7 @@ public:
                 {
                     m_reaping_data.unmarked_for_reaping(waiting_session.m_session_token);
 
-                    qCDebug(logConnection) << name << "Reaping stale link" << intptr_t(waiting_session.m_session);
+                    sCDebug(logConnection) << name << "Reaping stale link" << intptr_t(waiting_session.m_session);
                     reap_callback(waiting_session.m_session_token);
                     if(waiting_session.m_session->link()) // it's a temporary session
                     {
@@ -333,7 +331,7 @@ public:
                     remove_by_token(waiting_session.m_session_token, waiting_session.m_session->auth_id());
                     std::swap(m_session_ready_for_reaping[idx], m_session_ready_for_reaping.back());
                     m_session_ready_for_reaping.pop_back();
-                    total--; // update the total size
+                    --total; // update the total size
                 }
 //                else
 //                {
@@ -352,7 +350,7 @@ public:
             {
                 sess = &iter->second;
                 unmark_session_for_reaping(sess);
-                qCDebug(logConnection) << "Existing client session reused";
+                sCDebug(logConnection) << "Existing client session reused";
                 sess->reset();
             } else
                 sess = &create_session(token);

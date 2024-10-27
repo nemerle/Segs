@@ -115,7 +115,7 @@ class SouvenirDetail final : public GameCommandEvent
         void serializefrom(BitStream &bs) final   // Packet 68
         {
             m_souvenir_idx = bs.GetPackedBits(1);
-            qCDebug(logMapEvents) << "SouvenirDetailRequest Event";
+            sCDebug(logMapEvents) << "SouvenirDetailRequest Event";
         }
 
         EVENT_IMPL(SouvenirDetailRequest)

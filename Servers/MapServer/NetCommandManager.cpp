@@ -13,16 +13,14 @@
 #include "NetCommandManager.h"
 #include "MapClientSession.h"
 
-#include <vector>
-
 static void FillCommands()
 {
     NetCommandManager *cmd_manager = NetCommandManagerSingleton::instance();
     NetCommand::Argument arg1={1,nullptr};
     NetCommand::Argument arg_1float={3,nullptr};
-    std::vector<NetCommand::Argument> args;
+    Vector<NetCommand::Argument> args;
     args.push_back(arg1);
-    std::vector<NetCommand::Argument> fargs;
+    Vector<NetCommand::Argument> fargs;
     fargs.push_back(arg_1float);
 //    cmd_manager->addCommand(new NetCommand(9,"controldebug",args));
 //    cmd_manager->addCommand(new NetCommand(9,"nostrafe",args));
@@ -71,27 +69,27 @@ int NetCommand::serializefrom( BitStream &bs )
                 int res=bs.GetPackedBits(1);
                 if(m_arguments[i].targetvar)
                     *((int *)m_arguments[i].targetvar) = res;
-                qDebug("CommRecv %s:arg%zu : %d", qPrintable(m_name),i,res);
+                sDebug()<<String(String::CtorSprintf(),"CommRecv %s:arg%zu : %d", m_name.c_str(),i,res);
                 break;
             }
             case 2:
             case 4:
             {
-                QString res;
+                String res;
                 bs.GetString(res); // postprocessed
-                qDebug("CommRecv %s:arg%zu : %s", qPrintable(m_name),i,qPrintable(res));
+                sDebug() << String(String::CtorSprintf(), "CommRecv %s:arg%zu : %s", m_name.c_str(), i, res.c_str());
                 break;
             }
             case 3:
             {
                 float res = bs.GetFloat();
-                qDebug("CommRecv %s:arg%zu : %f", qPrintable(m_name),i,res);
+                sDebug() << String(String::CtorSprintf(), "CommRecv %s:arg%zu : %f", m_name.c_str(), i, res);
                 break;
             }
             case 5:
             {
                 float res1 = normalizedCircumferenceToFloat(bs.GetBits(14),14);
-                qDebug("CommRecv %s:arg%zu : %f", qPrintable(m_name),i,res1);
+                sDebug() << String(String::CtorSprintf(), "CommRecv %s:arg%zu : %f", m_name.c_str(), i, res1);
                 break;
             }
             case 6:
@@ -101,7 +99,7 @@ int NetCommand::serializefrom( BitStream &bs )
                 float res1 = bs.GetFloat();
                 float res2 = bs.GetFloat();
                 float res3 = bs.GetFloat();
-                qDebug("CommRecv %s:arg%zu : %f,%f,%f", qPrintable(m_name),i,res1,res2,res3);
+                sDebug() << String(String::CtorSprintf(), "CommRecv %s:arg%zu : %f,%f,%f", m_name.c_str(), i, res1,res2, res3);
                 break;
             }
         }
@@ -116,7 +114,7 @@ void NetCommandManager::addCommand( NetCommand *cmd )
     m_commands_level0.push_back(cmd);
 }
 
-NetCommand * NetCommandManager::getCommandByName( const QString &name )
+NetCommand * NetCommandManager::getCommandByName( const String &name )
 {
     return m_name_to_command[name];
 }
@@ -130,7 +128,7 @@ void NetCommandManager::serializeto(BitStream &tgt, const vNetCommand &commands)
     }
     tgt.StorePackedBits(1,~0u); // end of command list
 }
-void NetCommandManager::UpdateCommandShortcuts(MapClientSession *client, std::vector<QString> &commands)
+void NetCommandManager::UpdateCommandShortcuts(MapClientSession *client, Vector<String> &commands)
 {
     static bool initialized=false;
     if(!initialized)  {

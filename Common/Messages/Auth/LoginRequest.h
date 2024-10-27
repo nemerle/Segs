@@ -7,12 +7,11 @@
 
 #pragma once
 #include "Auth/AuthEvents.h"
-#include <array>
 
 struct LoginRequestData
 {
-    std::array<char,14> login;
-    std::array<char,16> password;
+    eastl::array<char,14> login;
+    eastl::array<char,16> password;
     uint32_t unkval1=0;
     uint16_t unkval2=0;
     template <class Archive>

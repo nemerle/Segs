@@ -13,16 +13,16 @@
 #include "MapClientSession.h"
 #include "Components/Logging.h"
 
-void MapClientSession::addCommandToSendNextUpdate(std::unique_ptr<SEGSEvents::GameCommandEvent> &&v)
+void MapClientSession::addCommandToSendNextUpdate(eastl::unique_ptr<SEGSEvents::GameCommandEvent> &&v)
 {
-    m_contents.emplace_back(std::move(v));
+    m_contents.emplace_back(eastl::move(v));
 }
 
 void MapClientSession::AddShortcut(int index, NetCommand *command)
 {
     if(m_shortcuts.find(index) != m_shortcuts.end())
     {
-        qDebug() << "Replacing command" << index << m_shortcuts[index]->m_name <<
+        sDebug() << "Replacing command" << index << m_shortcuts[index]->m_name <<
                     "->" << command->m_name;
     }
     m_shortcuts[index] = command;

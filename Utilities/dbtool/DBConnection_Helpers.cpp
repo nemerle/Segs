@@ -29,7 +29,7 @@ bool DBConnection::isConnected()
     QString querytext;
     if(m_config.isSqlite())
     {
-        if(!fileExists(m_config.m_db_name))
+        if(!fileExists(qPrintable(m_config.m_db_name)))
             return false;
 
         return true;
@@ -98,7 +98,7 @@ bool DBConnection::runQuery(const QString &q)
         return false;
     }
 
-    qCDebug(logDB).noquote() << "exec:" << m_query->lastQuery();
+    sCDebug(logDB) << "exec:" << qPrintable(m_query->lastQuery());
     return true;
 }
 
@@ -228,7 +228,7 @@ bool DBConnection::getColumnsFromTable(const QString &tablename, std::vector<Col
         c.m_name = m_query->value(1).toString();
         c.m_data_type = m_query->value(2).toString();
         old_cols.push_back(c);
-        qCDebug(logDB) << "Reading column:" << c.m_name << c.m_data_type;
+        sCDebug(logDB) << "Reading column:" << qPrintable(c.m_name) << qPrintable(c.m_data_type);
 
     }
 
@@ -278,7 +278,7 @@ QJsonObject DBConnection::loadBlob(const QString &column_name)
     if(obj.size() < 2) // if single cereal object, remove wrapper
         obj = jdoc.object()["value0"].toObject();
 
-    qCDebug(logMigration).noquote() << "Loading Blob:" << jdoc.toJson();
+    sCDebug(logMigration) << "Loading Blob:" << jdoc.toJson().data();
     return obj;
 }
 

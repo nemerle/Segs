@@ -6,10 +6,10 @@
  */
 #pragma once
 #include "Common/Runtime/HandleBasedStorage.h"
+#include "Common/Containers/String.h"
 
 #include <glm/vec2.hpp>
 
-#include <QByteArray>
 
 namespace SEGS
 {
@@ -21,7 +21,7 @@ struct SoundInfo
         Exclude = 1 //!< If this flag is set, sound 'source' is a 'muffler' that will quite down other close sources
     };
 
-    QByteArray name;
+    String name;
     float radius=0;
     float ramp_feet=0;
     uint16_t flags;

@@ -16,7 +16,6 @@
 
 #include <ace/Thread_Mutex.h>
 #include <ace/Guard_T.h>
-#include <map>
 
 class AuthServer;
 
@@ -80,7 +79,7 @@ class AuthHandler : public EventProcessor
 {
     using SessionStore = ClientSessionStore<AuthSession>;
     using MTGuard = ACE_Guard<ACE_Thread_Mutex>;
-    using ServerMap = std::map<uint8_t,SEGSEvents::GameServerStatusData>;
+    using ServerMap = Map<uint8_t,SEGSEvents::GameServerStatusData>;
 protected:
     IMPL_ID(AuthHandler)
     static uint64_t         s_last_session_id;

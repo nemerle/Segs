@@ -6,14 +6,15 @@
  */
 
 #pragma once
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 
 struct MapClientSession;
-class QStringList;
 
 // Slash Commands related to Emails
 
 // Access Level 0 Commands
-void cmdHandler_EmailHeaders(const QStringList &params, MapClientSession &sess);
-void cmdHandler_EmailRead(const QStringList &params, MapClientSession &sess);
-void cmdHandler_EmailSend(const QStringList &params, MapClientSession &sess);
-void cmdHandler_EmailDelete(const QStringList &params, MapClientSession &sess);
+void cmdHandler_EmailHeaders(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_EmailRead(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_EmailSend(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_EmailDelete(const Vector<String> &params, MapClientSession &sess);

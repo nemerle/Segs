@@ -1,8 +1,7 @@
 #pragma once
 #include "Common/Runtime/HandleBasedStorage.h"
 #include <GameData/anim_definitions.h>
-
-#include <QHash>
+#include "Common/Containers/HashMap.h"
 
 namespace SEGS
 {
@@ -26,7 +25,7 @@ private:
 public:
     static AnimationEngine &get();
 
-    QHash<QByteArray,HAnimationTrack> m_loaded_tracks;
+    HashMap<String,HAnimationTrack> m_loaded_tracks;
 };
 
 } // end of SEGS namespace

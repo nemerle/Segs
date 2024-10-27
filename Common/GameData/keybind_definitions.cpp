@@ -15,20 +15,21 @@
 #include "GameDataStore.h"
 #include "Components/Logging.h"
 
-QString makeKeyString(const KeyName &key, const ModKeys &mods)
+String makeKeyString(const KeyName &key, const ModKeys &mods)
 {
-    QString k = keyNameToEnum.key(key,nullptr);
-    QString m = modNameToEnum.key(mods,nullptr);
-    QString keystring;
+    String nullstr;
+    String k = keyNameToEnum.key(key,nullstr);
+    String m = modNameToEnum.key(mods,nullstr);
+    String keystring;
 
     if(m != nullptr)
-        keystring = QString("%1+%2").arg(m,k);
+        keystring = m+"+"+k;
     else
         keystring = k;
 
     //qCDebug(logKeybinds) << keystring << k << m << key << mods;
 
-    return keystring.toLower();
+    return keystring.to_lower();
 }
 
 KeybindSettings::KeybindSettings()
@@ -36,7 +37,7 @@ KeybindSettings::KeybindSettings()
 //    resetKeybinds();
 }
 
-void KeybindSettings::setKeybindProfile(QString &profile)
+void KeybindSettings::setKeybindProfile(String &profile)
 {
     m_cur_keybind_profile = profile;
 }
@@ -54,7 +55,7 @@ const CurrentKeybinds &KeybindSettings::getCurrentKeybinds() const
             return p.KeybindArr;
     }
 
-    qCDebug(logKeybinds) << "Could not get Current Keybinds. Returning first keybind profile.";
+    sCDebug(logKeybinds) << "Could not get Current Keybinds. Returning first keybind profile.";
     return m_keybind_profiles.front().KeybindArr;
 }
 
@@ -63,25 +64,25 @@ void KeybindSettings::resetKeybinds(const Parse_AllKeyProfiles &default_profiles
     m_keybind_profiles = default_profiles;
 }
 
-void KeybindSettings::setKeybind(QString &profile, KeyName &key, ModKeys &mods, QString &command, bool &is_secondary)
+void KeybindSettings::setKeybind(String &profile, KeyName &key, ModKeys &mods, String &command, bool &is_secondary)
 {
     removeKeybind(profile,key,mods); // remove previous keybinds
 
-    QString keystring = makeKeyString(key,mods); // Construct keystring from mods+key
+    String keystring = makeKeyString(key,mods); // Construct keystring from mods+key
 
     for(auto &p : m_keybind_profiles)
     {
         if(p.Name == profile)
-            p.KeybindArr.push_back({key,mods,keystring.toLatin1(),command.toLatin1(),is_secondary});
+            p.KeybindArr.push_back({key,mods,keystring,command,is_secondary});
     }
 
-    qCDebug(logKeybinds) << "Setting keybind: " << profile << key << mods << keystring << command << is_secondary;
+    sCDebug(logKeybinds) << "Setting keybind: " << profile << key << mods << keystring << command << is_secondary;
 
 }
 
-void KeybindSettings::removeKeybind(QString &profile, KeyName &key, ModKeys &mods)
+void KeybindSettings::removeKeybind(String &profile, KeyName &key, ModKeys &mods)
 {
-    QString keystring = makeKeyString(key,mods); // Construct keystring from mods+key
+    String keystring = makeKeyString(key,mods); // Construct keystring from mods+key
 
     for(auto &p : m_keybind_profiles)
     {
@@ -96,20 +97,20 @@ void KeybindSettings::removeKeybind(QString &profile, KeyName &key, ModKeys &mod
               ++iter;
         }
     }
-    qCDebug(logKeybinds) << "Clearing keybind: " << profile << key << mods << keystring;
+    sCDebug(logKeybinds) << "Clearing keybind: " << profile << key << mods << keystring;
 }
 
 void KeybindSettings::keybindsDump()
 {
-    qDebug().noquote() << "Debugging Keybinds:"
+    sDebug() << "Debugging Keybinds:"
                        << "\n\t" << "Current Profile Name:" << m_cur_keybind_profile;
 
     for(const auto &profile : m_keybind_profiles)
     {
-        qDebug() << profile.DisplayName << profile.Name;
+        sDebug() << profile.DisplayName << profile.Name;
 
         for(const auto &k : profile.KeybindArr)
-            qDebug() << k.KeyString << k.Key << k.Mods << k.Command << k.IsSecondary;
+            sDebug() << k.KeyString << k.Key << k.Mods << k.Command << k.IsSecondary;
     }
 }
 

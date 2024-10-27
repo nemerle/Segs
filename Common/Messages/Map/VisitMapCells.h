@@ -17,7 +17,7 @@ class VisitMapCells : public GameCommandEvent
 {
 public:
     explicit VisitMapCells() : GameCommandEvent(evVisitMapCells) {}
-    VisitMapCells(bool is_opaque, std::vector<bool> visible_map_cells) :
+    VisitMapCells(bool is_opaque, Vector<bool> visible_map_cells) :
         GameCommandEvent(evVisitMapCells),
         m_is_opaque(is_opaque),
         m_visible_map_cells(visible_map_cells)
@@ -34,7 +34,7 @@ public:
         uint32_t num_cells = m_visible_map_cells.size();
         bs.StorePackedBits(1, num_cells);
 
-        std::vector<uint8_t> cells_arr;
+        Vector<uint8_t> cells_arr;
         cells_arr.resize((num_cells + 7) / 8);
         std::fill(std::begin(cells_arr), std::end(cells_arr), 0);
         for (uint16_t i = 0; i < cells_arr.size(); i++)
@@ -56,7 +56,7 @@ protected:
     // [[ev_def:field]]
     bool                m_is_opaque = false;
     // [[ev_def:field]]
-    std::vector<bool>   m_visible_map_cells;
+    Vector<bool>   m_visible_map_cells;
 };
 
 } // end of namespace SEGSEvents

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <vector>
+#include "Common/Containers/Vector.h"
 #include <stdint.h>
 
 class Entity;
@@ -69,8 +69,8 @@ struct TradeInfo
     uint32_t                        m_db_id         = 0;    // Database id of other player.
     bool                            m_accepted      = false;
     uint32_t                        m_influence     = 0;
-    std::vector<uint32_t>           m_enhancements;         // Index into enhancement list of player.
-    std::vector<TradeInspiration>   m_inspirations;         // column, row into inspiration grid of player.
+    Vector<uint32_t>           m_enhancements;         // Index into enhancement list of player.
+    Vector<TradeInspiration>   m_inspirations;         // column, row into inspiration grid of player.
 };
 
 

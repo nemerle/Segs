@@ -31,13 +31,13 @@ namespace SEGSEvents
             //Not sure what the purpose of this packet is.
             //Could be tied to glowies or plagues/location/early badges
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 63
-            qCDebug(logMapEvents) << "SendLocations Event serializeTo. m_locations.size(): " << m_locations.size();
+            sCDebug(logMapEvents) << "SendLocations Event serializeTo. m_locations.size(): " << m_locations.size();
             bs.StorePackedBits(1, m_locations.size());
 
             for(const VisitLocation &location : m_locations)
             {
                bs.StoreString(location.m_location_name);
-               qCDebug(logMapEvents) << "SendLocations Event serializeTo. m_location_name: " << location.m_location_name;
+               sCDebug(logMapEvents) << "SendLocations Event serializeTo. m_location_name: " << location.m_location_name;
             }
         }
 

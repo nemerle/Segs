@@ -10,11 +10,11 @@
 #include "Servers/InternalEvents.h"
 #include "Messages/EmailService/EmailDefinitions.h"
 
-#include <QDateTime>
+//#include <QDateTime>
 namespace SEGSEvents
 {
 
-const QString EMPTY_STRING = "EMPTY"; // Client expects value "EMPTY" in several places
+const StringView EMPTY_STRING = "EMPTY"; // Client expects value "EMPTY" in several places
 
 enum GameDBEventTypes : uint32_t
 {
@@ -71,12 +71,12 @@ enum GameDBEventTypes : uint32_t
 
 struct CharacterUpdateData
 {
-    QString m_char_name;
+    String m_char_name;
     // Cerealized blobs
-    QString m_costume_data;
-    QString m_char_data;
-    QString m_entity_data;
-    QString m_player_data;
+    String m_costume_data;
+    String m_char_data;
+    String m_entity_data;
+    String m_player_data;
     uint32_t m_supergroup_id;
     uint32_t m_id;
     template <class Archive>
@@ -128,11 +128,11 @@ struct GameAccountRequestData
 
 struct GameAccountResponseCharacterData
 {
-    QString m_name;
-    QString m_serialized_costume_data;
-    QString m_serialized_chardata;
-    QString m_serialized_entity_data;
-    QString m_serialized_player_data;
+    String m_name;
+    String m_serialized_costume_data;
+    String m_serialized_chardata;
+    String m_serialized_entity_data;
+    String m_serialized_player_data;
 
     uint32_t m_db_id;
     uint32_t m_account_id;
@@ -146,7 +146,7 @@ struct GameAccountResponseCharacterData
 
     bool isEmpty() const
     {
-        return 0==m_name.compare(EMPTY_STRING, Qt::CaseInsensitive);
+        return 0==m_name.comparei(EMPTY_STRING);
     }
 
     template <class Archive>
@@ -164,7 +164,7 @@ struct GameAccountResponseData
 {
     uint32_t m_game_server_acc_id;
     int m_max_slots;
-    std::vector<GameAccountResponseCharacterData> m_characters;
+    Vector<GameAccountResponseCharacterData> m_characters;
     GameAccountResponseCharacterData &get_character(size_t idx)
     {
         assert(idx<m_characters.size());
@@ -199,7 +199,7 @@ TWO_WAY_MESSAGE(GameDBEventTypes,GameAccount)
 struct CostumeUpdateData
 {
     uint32_t m_id;
-    QString m_costume_data;
+    String m_costume_data;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -212,7 +212,7 @@ ONE_WAY_MESSAGE(GameDBEventTypes,CostumeUpdate)
 struct CreateNewCharacterRequestData
 {
     GameAccountResponseCharacterData m_character;
-    QString m_ent_data;
+    String m_ent_data;
     uint16_t m_slot_idx;
     uint16_t m_max_allowed_slots;
     uint32_t m_client_id;
@@ -251,7 +251,7 @@ struct GetEntityRequestData
 struct GetEntityResponseData
 {
     uint32_t m_supergroup_id;
-    QString m_ent_data;
+    String m_ent_data;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -263,7 +263,7 @@ TWO_WAY_MESSAGE(GameDBEventTypes,GetEntity)
 
 struct GetEntityByNameRequestData
 {
-    QString m_char_name;
+    String m_char_name;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -274,7 +274,7 @@ struct GetEntityByNameRequestData
 struct GetEntityByNameResponseData
 {
     uint32_t m_supergroup_id;
-    QString m_ent_data;
+    String m_ent_data;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -286,7 +286,7 @@ TWO_WAY_MESSAGE(GameDBEventTypes,GetEntityByName)
 
 struct WouldNameDuplicateRequestData
 {
-    QString m_name;
+    String m_name;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -308,7 +308,7 @@ TWO_WAY_MESSAGE(GameDBEventTypes,WouldNameDuplicate)
 
 struct GameDbErrorData
 {
-    QString message;
+    String message;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -321,8 +321,8 @@ ONE_WAY_MESSAGE(GameDBEventTypes,GameDbError)
 struct SetClientOptionsData
 {
     uint32_t m_client_id;
-    QString m_options;
-    QString m_keybinds;
+    String m_options;
+    String m_keybinds;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -335,7 +335,7 @@ ONE_WAY_MESSAGE(GameDBEventTypes,SetClientOptions)
 struct PlayerUpdateData
 {
     uint32_t m_id;
-    QString m_player_data;
+    String m_player_data;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -349,8 +349,8 @@ struct EmailCreateRequestData
 {
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_recipient_name;
-    QString m_email_data; // cerealized email
+    String m_recipient_name;
+    String m_email_data; // cerealized email
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -364,8 +364,8 @@ struct EmailCreateResponseData
     uint32_t m_email_id;
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_recipient_name;
-    QString m_cerealized_email_data; // cerealized email
+    String m_recipient_name;
+    String m_cerealized_email_data; // cerealized email
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -392,7 +392,7 @@ ONE_WAY_MESSAGE(GameDBEventTypes,EmailUpdateOnCharDelete)
 struct EmailMarkAsReadData
 {
     uint32_t m_email_id;
-    QString m_email_data; // because m_is_read is inside the blob
+    String m_email_data; // because m_is_read is inside the blob
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -433,7 +433,7 @@ struct GetEmailResponseData
     uint32_t m_email_id;
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_email_data; // cerealized email
+    String m_email_data; // cerealized email
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -453,7 +453,7 @@ struct GetEmailsRequestData
 
 struct GetEmailsResponseData
 {
-    std::vector<EmailResponseData> m_email_response_datas;
+    Vector<EmailResponseData> m_email_response_datas;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -480,7 +480,7 @@ struct GetEmailBySenderIdResponseData
     uint32_t m_email_id;
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_email_data; // cerealized email
+    String m_email_data; // cerealized email
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -507,7 +507,7 @@ struct GetEmailByRecipientIdResponseData
     uint32_t m_email_id;
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_email_data; // cerealized email
+    String m_email_data; // cerealized email
 
     template <class Archive>
     void serialize(Archive &ar)
@@ -521,10 +521,10 @@ TWO_WAY_MESSAGE(GameDBEventTypes,GetEmailByRecipientId)
 struct FillEmailRecipientIdRequestData
 {
     uint32_t m_sender_id;
-    QString m_sender_name;
-    QString m_recipient_name;
-    QString m_subject;
-    QString m_message;
+    String m_sender_name;
+    String m_recipient_name;
+    String m_subject;
+    String m_message;
     uint32_t m_timestamp;
 
     template <class Archive>
@@ -538,10 +538,10 @@ struct FillEmailRecipientIdResponseData
 {
     uint32_t m_sender_id;
     uint32_t m_recipient_id;    // the point of this is to get recipient_id from recipient_name :)
-    QString m_sender_name;
-    QString m_recipient_name;
-    QString m_subject;
-    QString m_message;
+    String m_sender_name;
+    String m_recipient_name;
+    String m_subject;
+    String m_message;
     uint32_t m_timestamp;
 
     template <class Archive>
@@ -556,7 +556,7 @@ TWO_WAY_MESSAGE(GameDBEventTypes,FillEmailRecipientId)
 struct FillEmailRecipientIdErrorData
 {
     uint32_t m_sender_id;
-    QString m_recipient_name;
+    String m_recipient_name;
 
     template <class Archive>
     void serialize (Archive &ar)

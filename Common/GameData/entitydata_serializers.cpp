@@ -25,7 +25,7 @@ void serialize(Archive & archive, EntityData &ed, uint32_t const version)
 {
     if(version > EntityData::class_version || version < 2)
     {
-        qCritical() << "Failed to serialize EntityData, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize EntityData, incompatible serialization format version " << version;
         return;
     }
 
@@ -39,9 +39,9 @@ void serialize(Archive & archive, EntityData &ed, uint32_t const version)
         archive(cereal::make_nvp("MapIdx",ed.m_map_idx));
 }
 
-void saveTo(const EntityData & target, const QString & baseName, bool text_format)
+void saveTo(const EntityData & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"EntityData",baseName,text_format);
+    SEGS::commonSaveTo(target,"EntityData",baseName,text_format);
 }
 
 template
@@ -49,22 +49,22 @@ void serialize<cereal::JSONOutputArchive>(cereal::JSONOutputArchive & archive, E
 template
 void serialize<cereal::JSONInputArchive>(cereal::JSONInputArchive & archive, EntityData & m, uint32_t const version);
 
-void serializeToDb(const EntityData &data, QString &tgt)
+void serializeToDb(const EntityData &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    tgt = String(ostr.str().c_str());
 }
 
-void serializeFromDb(EntityData &data,const QString &src)
+void serializeFromDb(EntityData &data,const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(src.c_str());
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

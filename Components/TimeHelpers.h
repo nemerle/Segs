@@ -9,6 +9,4 @@
 
 #include <stdint.h>
 
-class QDateTime;
-
 extern int64_t getSecsSince2000Epoch();

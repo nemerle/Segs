@@ -1,4 +1,5 @@
 #include "bodypart_definitions.h"
+#include "Components/Logging.h"
 
 using namespace SEGS;
 
@@ -73,21 +74,21 @@ static const char * s_bone_names[70] ={
     // the rest are unnamed
     nullptr
 };
-static int boneNameToIdx(const QByteArray &name)
+static int boneNameToIdx(const String &name)
 {
-    if ( name.isEmpty() )
+    if ( name.empty() )
         return -1;
 
     int i;
-    QByteArray upcase=name.toUpper();
+    String upcase=name.to_upper();
     for(i=0; s_bone_names[i]!= nullptr; ++i)
     {
-        if(upcase.startsWith(s_bone_names[i]))
+        if(upcase.starts_with(s_bone_names[i]))
             break;
     }
     if ( i == 3 )
     {
-        if ( upcase.startsWith("NECKLINE") )
+        if ( upcase.starts_with("NECKLINE") )
             return 49;
     }
     return i;
@@ -99,7 +100,7 @@ void BodyPartsStorage::postProcess()
     {
         BodyPart_Data &bp(m_parts[i]);
         if ( !bp.m_BoneCount )
-            qFatal("body part %s with no associated bones!", qPrintable(bp.m_Name));
+            sCritical() << StringUtils::fmt("body part %s with no associated bones!", bp.m_Name.c_str());
         bp.part_idx = i;
         if ( bp.m_BoneCount == 2 )
         {
@@ -113,11 +114,11 @@ void BodyPartsStorage::postProcess()
     }
 }
 
-BodyPart_Data *BodyPartsStorage::getBodyPartFromName(const QByteArray &name)
+BodyPart_Data *BodyPartsStorage::getBodyPartFromName(const String &name)
 {
     for (BodyPart_Data &bp : m_parts )
     {
-        if ( 0==bp.m_Name.compare(name,Qt::CaseInsensitive) )
+        if ( 0==StringUtils::compare(bp.m_Name,name,StringUtils::CaseInsensitive) )
             return &bp;
     }
     return nullptr;

@@ -54,7 +54,7 @@ public:
             ent_obj.insert("Orientation", orient_arr);
 
             QString entdoc = db->saveBlob(ent_obj);
-            qCDebug(logMigration).noquote() << entdoc;  // print output for debug
+            sCDebug(logMigration) << qPrintable(entdoc);  // print output for debug
 
             QString querytext = QString("UPDATE characters SET entitydata='%1'")
                     .arg(entdoc);

@@ -7,18 +7,22 @@
 
 #pragma once
 #include <stdint.h>
-#include <vector>
+#include <Common/Containers/String.h>
+
+namespace SEGS
+{
+struct IFilesystem;
+}
 
 class BinStore;
-class QString;
 struct SceneGraph_Data;
 struct FSWrapper;
 
 static constexpr uint32_t scenegraph_i0_2_requiredCrc=0xD3432007;
 bool loadFrom(BinStore *s,SceneGraph_Data &target);
-bool loadFrom(FSWrapper &fs, const QString &filepath, SceneGraph_Data &target);
-void saveTo(const SceneGraph_Data &target,const QString &baseName,bool text_format=false);
+bool loadFrom(const String &filepath, SceneGraph_Data &target);
+void saveTo(const SceneGraph_Data &target,const String &baseName,bool text_format=false);
 //TODO: move getFilepathCaseInsensitive to a saner place
-QString getFilepathCaseInsensitive(FSWrapper &,QString fpath);
+String getFilepathCaseInsensitive(SEGS::IFilesystem *fs, const String &fpath);
 //! Generic loader function will load cereal version, or if that does not exists a bin version
-bool LoadSceneData(FSWrapper &fs, const QString &fname, SceneGraph_Data &scenegraph);
+bool LoadSceneData(const String &fname, SceneGraph_Data &scenegraph);

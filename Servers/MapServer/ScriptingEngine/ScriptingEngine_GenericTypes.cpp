@@ -32,10 +32,6 @@ static void destruction_is_an_error(T &/*v*/)
 
 void ScriptingEngine::register_GenericTypes()
 {
-    m_private->m_lua.new_usertype<QString>( "QString",
-        sol::constructors<QString(), QString(const char*)>()
-    );
-
     m_private->m_lua["include_lua"] = [this](const char *path) -> bool { return m_private->performInclude(path); };
 
     m_private->m_lua.new_usertype<glm::vec3>( "vec3",
@@ -65,20 +61,28 @@ void ScriptingEngine::register_GenericTypes()
     m_private->m_lua.script("function ErrorHandler(msg) return \"Lua call error:\"..msg end");
     m_private->m_lua["printDebug"] = [](const char* msg)
     {
-        qCDebug(logScripts) << msg;
+        sCDebug(logScripts) << msg;
     };
 
     m_private->m_lua["ParseContactButton"] = [this](uint32_t button_id)
       {
-          QString result;
-          result = contactLinkHash.key(button_id);
-          if(result.isEmpty())
+          String result;
+          // scan contactLinkHash for the button_id
+          for(const auto &cl: contactLinkHash)
+          {
+              if(cl.second == button_id)
+              {
+                  result = cl.first;
+                  break;
+              }
+          }
+          if(result.empty())
           {
               result = "Not found";
           }
 
-          qCDebug(logScripts) << "ParseContactButton Result: " << result;
-          return sol::make_object(m_private->m_lua, qPrintable(result));
+          sCDebug(logScripts) << "ParseContactButton Result: " << result;
+          return sol::make_object(m_private->m_lua, result.c_str());
       };
 
 
@@ -89,9 +93,7 @@ void ScriptingEngine::register_GenericTypes()
 
     m_private->m_lua["MapInstance"]["NpcMessage"] = [this](const char* channel, int entityIdx, const char* message)
     {
-        QString msg = QString::fromUtf8(message);
-        QString ch = QString::fromUtf8(channel);
-        npcSendMessage(*mi, ch, entityIdx, msg);
+        npcSendMessage(*mi, channel, entityIdx, message);
     };
 
     m_private->m_lua["MapInstance"]["SetOnTickCallback"] = [this](uint32_t entityIdx, std::function<void(int64_t,int64_t,int64_t)> callback)
@@ -139,7 +141,7 @@ void ScriptingEngine::register_GenericTypes()
 
     m_private->m_lua["MapClientSession"]["Simple_dialog"] = [this](const char *dlgtext)
     {
-        cl->addCommandToSendNextUpdate(std::make_unique<StandardDialogCmd>(dlgtext));
+        cl->addCommandToSendNextUpdate(eastl::make_unique<StandardDialogCmd>(dlgtext));
     };
 
     m_private->m_lua["MapClientSession"]["Browser"] = [this](const char *content)
@@ -147,22 +149,26 @@ void ScriptingEngine::register_GenericTypes()
         cl->addCommand<Browser>(content);
     };
 
-    m_private->m_lua["MapClientSession"]["Contact_dialog"] = [this](const char *message, sol::as_table_t<std::map<std::string, sol::as_table_t<std::vector<std::string>>>> buttons)
+    m_private->m_lua["MapClientSession"]["Contact_dialog"] = [this](const char *message, sol::as_table_t<Map<String, sol::as_table_t<Vector<String>>>> buttons)
     {
-        std::vector<ContactEntry> active_contacts;
+        Vector<ContactEntry> active_contacts;
         const auto& listMap = buttons.value();
 
         for (const auto& kvp : listMap)
         {
-            const std::vector<std::string>& strings = kvp.second.value();
+            const Vector<String>& strings = kvp.second.value();
             int count = 0;
             ContactEntry con;
             for (const auto& s: strings)
             {
                 if(count == 0)
-                    con.m_response_text = QString::fromStdString(s);
+                    con.m_response_text = s;
                 else
-                    con.m_link = static_cast<uint32_t>(contactLinkHash.find(QString::fromStdString(s)).value());
+                {
+
+                    auto it = contactLinkHash.find(s);
+                    con.m_link = static_cast<uint32_t>(it != contactLinkHash.end() ? it->second : 0);
+                }
 
                 count++;
             }
@@ -174,7 +180,7 @@ void ScriptingEngine::register_GenericTypes()
     m_private->m_lua["MapClientSession"]["SendFloatingInfo"] = [this](int message_type)
     {
         FloatingInfoMsgKey f_info_message = static_cast<FloatingInfoMsgKey>(message_type);
-        QString message = FloatingInfoMsg.find(f_info_message).value();
+        String message        = FloatingInfoMsg.find(f_info_message)->second;
         cl->addCommand<FloatingInfo>(cl->m_ent->m_idx, message, FloatingInfo_Attention , 4.0);
     };
 
@@ -185,23 +191,23 @@ void ScriptingEngine::register_GenericTypes()
         {
             forcePosition(*e, loc);
             forceOrientation(*e, ori);
-            QString msg = QString("Setting entiry %1 orientation to x: %2 y: %3 z: %4").arg(entityidx).arg(ori.x).arg(ori.y).arg(ori.z);
-            qCDebug(logScripts) << msg;
+            String msg(String::CtorSprintf(),"Setting entiry %d orientation to x: %f y: %f z: %f",entityidx,ori.x,ori.y,ori.z);
+            sCDebug(logScripts) << msg;
         }
         else
-            qCDebug(logScripts) << "Entity "<< entityidx << " not found";
+            sCDebug(logScripts) << "Entity "<< entityidx << " not found";
     };
 
     m_private->m_lua["MapClientSession"]["SetNpcStore"] = [this](uint32_t entityidx, const char* store_name, int item_count)
     {
         e = getEntity(cl, entityidx);
         e->m_is_store = true;
-        QString stores = store_name;
+        String stores = store_name;
 
         if(stores.contains(','))
         {
-            QStringList parts = stores.split(",");
-            for (const QString &s: parts)
+            auto parts = stores.split(',');
+            for (const String &s: parts)
             {
                 e->m_store_items.push_back(StoreItem(s.trimmed(), item_count));
             }
@@ -212,7 +218,7 @@ void ScriptingEngine::register_GenericTypes()
 
     m_private->m_lua["MapClientSession"]["SendLocation"] = [this](const char* name, glm::vec3 loc){
         VisitLocation location;
-        location.m_location_name = QString::fromUtf8(name);
+        location.m_location_name = name;
         location.m_pos = loc;
         sendLocation(*cl, location);
     };
@@ -228,26 +234,22 @@ void ScriptingEngine::register_GenericTypes()
 
     m_private->m_lua["MapClientSession"]["SendInfoMessage"] = [this](int channel, const char* message)
     {
-        sendInfoMessage(static_cast<MessageChannel>(channel), QString::fromUtf8(message), *cl);
+        sendInfoMessage(static_cast<MessageChannel>(channel), message, *cl);
     };
 
     m_private->m_lua["MapClientSession"]["DeveloperConsoleOutput"] = [this](const char* message)
     {
-        QString msg = QString::fromUtf8(message);
-        sendDeveloperConsoleOutput(*cl, msg);
+        sendDeveloperConsoleOutput(*cl, message);
     };
 
     m_private->m_lua["MapClientSession"]["ClientConsoleOutput"] = [this](const char* message)
     {
-        QString msg = QString::fromUtf8(message);
-        sendClientConsoleOutput(*cl, msg);
+        sendClientConsoleOutput(*cl, message);
     };
 
     m_private->m_lua["MapClientSession"]["NpcMessage"] = [this](const char* channel, int entityIdx, const char* message)
     {
-        QString msg = QString::fromUtf8(message);
-        QString ch = QString::fromUtf8(channel);
-        npcSendMessage(*cl, ch, entityIdx, msg);
+        npcSendMessage(*cl, channel, entityIdx, message);
     };
 
     m_private->m_lua["MapClientSession"]["SetOnTickCallback"] = [this](uint32_t entityIdx, std::function<void(int64_t,int64_t,int64_t)> callback)

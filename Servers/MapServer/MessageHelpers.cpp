@@ -33,26 +33,26 @@
 
 using namespace SEGSEvents;
 
-void sendChatMessage(MessageChannel t, const QString &msg, Entity *e, MapClientSession &tgt)
+void sendChatMessage(MessageChannel t, const String &msg, Entity *e, MapClientSession &tgt)
 {
-    std::unique_ptr<ChatMessage> res = std::make_unique<ChatMessage>(t,msg);
+    eastl::unique_ptr<ChatMessage> res = eastl::make_unique<ChatMessage>(t,msg);
     res->m_source_player_id = getIdx(*e);
     res->m_target_player_id = getIdx(*tgt.m_ent);
 
-    qCDebug(logChat).noquote() << "ChatMessage:"
+    sCDebug(logChat) << "ChatMessage:"
                                << "\n  Channel:" << int(res->m_channel_type)
                                << "\n  Source:" << res->m_source_player_id
                                << "\n  Target:" << res->m_target_player_id
                                << "\n  Message:" << res->m_msg;
 
-    tgt.addCommandToSendNextUpdate(std::move(res));
+    tgt.addCommandToSendNextUpdate(eastl::move(res));
 }
 
-void sendInfoMessage(MessageChannel t, const QString &msg, MapClientSession &tgt)
+void sendInfoMessage(MessageChannel t, StringView msg, MapClientSession &tgt)
 {
     tgt.addCommand<InfoMessageCmd>(t, msg);
 
-    qCDebug(logInfoMsg).noquote() << "InfoMessage:"
+    sCDebug(logInfoMsg) << "InfoMessage:"
              << "\n  Channel:" << static_cast<int>(t)
              << "\n  Message:" << msg;
 }
@@ -92,7 +92,7 @@ void storeServerPhysicsPositions(BitStream &bs,Entity *self)
     if( !self->m_full_update )
         bs.StoreBits(1,self->m_has_control_id);
 
-    qCDebug(logPosition,"Input_Ack: %d",self->m_input_ack);
+    sCFDebug(logPosition,"Input_Ack: %d",self->m_input_ack);
 
     if( self->m_full_update || self->m_has_control_id)
         bs.StoreBits(16,self->m_input_ack); //target->m_input_ack
@@ -103,8 +103,8 @@ void storeServerPhysicsPositions(BitStream &bs,Entity *self)
         for(int i=0; i<3; ++i)
             storeFloatConditional(bs,self->m_motion_state.m_velocity[i]);
 
-        qCDebug(logPosition) << "position" << glm::to_string(self->m_entity_data.m_pos).c_str();
-        qCDebug(logPosition) << "velocity" << glm::to_string(self->m_motion_state.m_velocity).c_str();
+        sCDebug(logPosition) << "position" << glm::to_string(self->m_entity_data.m_pos).c_str();
+        sCDebug(logPosition) << "velocity" << glm::to_string(self->m_motion_state.m_velocity).c_str();
     }
 }
 
@@ -236,17 +236,17 @@ void storeTeamList(BitStream &bs, Entity *self)
 
         if(tm_ent == nullptr)
         {
-            qWarning() << "Could not find Entity with db_id:" << member.tm_idx;
+            sWarning() << "Could not find Entity with db_id:" << member.tm_idx;
             continue; // continue loop
         }
-        if(member.tm_name.isEmpty())
+        if(member.tm_name.empty())
         {
-            qWarning() << "Team member with empty name:" << member.tm_idx;
+            sWarning() << "Team member with empty name:" << member.tm_idx;
             continue; // continue loop
         }
 
-        QString member_name     = member.tm_name;
-        QString member_mapname  = getEntityDisplayMapName(tm_ent->m_entity_data);
+        String member_name     = member.tm_name;
+        String member_mapname  = getEntityDisplayMapName(tm_ent->m_entity_data);
         bool tm_on_same_map     = member.tm_map_idx == self->m_entity_data.m_map_idx;
 
         bs.StoreBits(32, member.tm_idx);
@@ -273,7 +273,7 @@ void sendChatSettings(const GUISettings &gui,BitStream &bs)
 
 static void sendWindow(BitStream &bs,const GUIWindow &wnd)
 {
-    qCDebug(logGUI) << "sendWindow:" << wnd.m_idx;
+    sCDebug(logGUI) << "sendWindow:" << wnd.m_idx;
     if(logGUI().isDebugEnabled())
         wnd.guiWindowDump();
 
@@ -323,7 +323,7 @@ static void sendKeybinds(const KeybindSettings &keybinds,BitStream &bs)
     const CurrentKeybinds &cur_keybinds = keybinds.getCurrentKeybinds();
     int total_keybinds = cur_keybinds.size();
 
-    qCDebug(logKeybinds) << "total keybinds:" << total_keybinds;
+    sCDebug(logKeybinds) << "total keybinds:" << total_keybinds;
 
     bs.StoreString(keybinds.m_cur_keybind_profile); // keybinding profile name
 
@@ -338,20 +338,20 @@ static void sendKeybinds(const KeybindSettings &keybinds,BitStream &bs)
          {
              int32_t sec = (kb.Key | 0xF00);
              bs.StoreBits(32,sec);
-             qCDebug(logKeybinds) << "is secondary:" << sec;
+             sCDebug(logKeybinds) << "is secondary:" << sec;
          }
          else
              bs.StoreBits(32,kb.Key);
 
          bs.StoreBits(32,kb.Mods);
-         qCDebug(logKeybinds) << i << kb.KeyString << kb.Key << kb.Mods << kb.Command << " secondary:" << kb.IsSecondary;
+         sCDebug(logKeybinds) << i << kb.KeyString << kb.Key << kb.Mods << kb.Command << " secondary:" << kb.IsSecondary;
       }
       else
       {
          bs.StoreString("");
          bs.StoreBits(32,0);
          bs.StoreBits(32,0);
-         qCDebug(logKeybinds) << i;
+         sCDebug(logKeybinds) << i;
       }
     }
 }
@@ -491,7 +491,7 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
         storePowerRanges(*cd, bs);
         return;
     }
-    qCDebug(logPowers) << "Powers Updated:" << cd->m_has_updated_powers;
+    sCDebug(logPowers) << "Powers Updated:" << cd->m_has_updated_powers;
 
     // Reset Powersets (the array has changed)
     bs.StoreBits(1, cd->m_reset_powersets);
@@ -505,13 +505,13 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
         uint pow_idx = 0;
         for(const CharacterPower &power : pset.m_powers)
         {
-            qCDebug(logPowers) << "Power:" << power.getPowerTemplate().m_Name << pset.m_index << power.m_index;
+            sCDebug(logPowers) << "Power:" << power.getPowerTemplate().m_Name << pset.m_index << power.m_index;
             storePowerSpec(pset_idx, pow_idx, bs); // must send powers vector idx here
 
             bs.StoreBits(1, !power.m_erase_power);
             if(power.m_erase_power)
             {
-                qCDebug(logPowers) << "  Removing power" << power.getPowerTemplate().m_Name << pset.m_index << power.m_index;
+                sCDebug(logPowers) << "  Removing power" << power.getPowerTemplate().m_Name << pset.m_index << power.m_index;
                 removePower(*cd, power.m_power_info);
                 continue;
             }
@@ -523,14 +523,14 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
             bs.StoreFloat(power.m_usage_time);
             bs.StorePackedBits(24, power.m_activate_period);
 
-            qCDebug(logPowers) << "  NumOfEnhancements:" << power.m_total_eh_slots << "/" << power.m_enhancements.size();
+            sCDebug(logPowers) << "  NumOfEnhancements:" << power.m_total_eh_slots << "/" << power.m_enhancements.size();
             if(power.m_total_eh_slots > power.m_enhancements.size())
-                qCWarning(logPowers) << "storePowerInfoUpdate: Total EH Slots larger than vector!";
+                sCWarning(logPowers) << "storePowerInfoUpdate: Total EH Slots larger than vector!";
 
             bs.StorePackedBits(4, power.m_enhancements.size()); // power.m_total_eh_slots; total owned enhancement slots
             for(const auto & enhancement : power.m_enhancements)
             {
-                qCDebug(logPowers) << "  Enhancement:" << enhancement.m_name
+                sCDebug(logPowers) << "  Enhancement:" << enhancement.m_name
                                    << enhancement.m_slot_idx
                                    << enhancement.m_slot_used;
                 bs.StoreBits(1, enhancement.m_slot_used);        // slot has enhancement
@@ -546,14 +546,14 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
         ++pset_idx;
     }
 
-    qCDebug(logPowers) << "Send State of All Powers";
+    sCDebug(logPowers) << "Send State of All Powers";
     storePowerRanges(*cd, bs); // sending state of all current powers.
 
-    qCDebug(logPowers) << "NumQueuedPowers:" << e->m_queued_powers.size();
+    sCDebug(logPowers) << "NumQueuedPowers:" << e->m_queued_powers.size();
     bs.StorePackedBits(4, uint32_t(e->m_queued_powers.size())); // Count all active powers
     for(auto rpow_idx = e->m_queued_powers.begin(); rpow_idx != e->m_queued_powers.end();)
     {
-        qCDebug(logPowers) << "  QueuedPower:"
+        sCDebug(logPowers) << "  QueuedPower:"
                            << rpow_idx->m_pow_idxs.m_pset_vec_idx
                            << rpow_idx->m_pow_idxs.m_pow_vec_idx;
 
@@ -573,11 +573,11 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
         else
             rpow_idx++;
     }
-    qCDebug(logPowers) << "NumRechargingTimers:" << e->m_recharging_powers.size();
+    sCDebug(logPowers) << "NumRechargingTimers:" << e->m_recharging_powers.size();
     bs.StorePackedBits(1, e->m_recharging_powers.size());
     for(const QueuedPowers &rpow : e->m_recharging_powers)
     {
-        qCDebug(logPowers) << "  RechargeCountdown:" << rpow.m_timer_updated << rpow.m_recharge_time;
+        sCDebug(logPowers) << "  RechargeCountdown:" << rpow.m_timer_updated << rpow.m_recharge_time;
         bs.StoreBits(1, rpow.m_timer_updated);
         if(rpow.m_timer_updated)
         {
@@ -590,14 +590,14 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
     uint32_t max_cols = cd->m_max_insp_cols;
     uint32_t max_rows = cd->m_max_insp_rows;
     uint32_t max_insps = max_cols * max_rows;
-    qCDebug(logPowers) << "Max Insp Slots:" << max_insps;
+    sCDebug(logPowers) << "Max Insp Slots:" << max_insps;
 
     storePackedBitsConditional(bs, 4, max_insps);
     for(uint32_t col = 0; col < max_cols; ++col)
     {
         for(uint32_t row = 0; row < max_rows; ++row)
         {
-            qCDebug(logPowers) << "  Inspiration:" << col << row << cd->m_inspirations.at(col, row).m_has_insp;
+            sCDebug(logPowers) << "  Inspiration:" << col << row << cd->m_inspirations.at(col, row).m_has_insp;
 
             bs.StorePackedBits(3, col); // iCol
             bs.StorePackedBits(3, row); // iRow
@@ -609,20 +609,20 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
     }
 
     // All Owned Enhancements
-    qCDebug(logPowers) << "Enhancement Slots:" << cd->m_enhancements.size();
+    sCDebug(logPowers) << "Enhancement Slots:" << cd->m_enhancements.size();
 
     bs.StorePackedBits(1, cd->m_enhancements.size());
     for(CharacterEnhancement &eh : cd->m_enhancements)
     {
-        if(cd->m_enhancements.empty() || eh.m_name.isEmpty())
+        if(eh.m_name.empty())
         {
-            qCDebug(logPowers) << "  No Enhancement:" << eh.m_slot_idx;
+            sCDebug(logPowers) << "  No Enhancement:" << eh.m_slot_idx;
             bs.StorePackedBits(3, eh.m_slot_idx);
             bs.StoreBits(1, false);
             continue;
         }
 
-        qCDebug(logPowers) << "  Enhancement:" << eh.m_slot_idx
+        sCDebug(logPowers) << "  Enhancement:" << eh.m_slot_idx
                            << eh.m_slot_used;
         bs.StorePackedBits(3, eh.m_slot_idx);
         bs.StoreBits(1, eh.m_slot_used);
@@ -635,7 +635,7 @@ void storePowerInfoUpdate(BitStream &bs,Entity *e)
     }
 
     cd->m_has_updated_powers = false; // set flag false now that we're all updated
-    qCDebug(logPowers) << "  Powers Updated:" << cd->m_has_updated_powers;
+    sCDebug(logPowers) << "  Powers Updated:" << cd->m_has_updated_powers;
 }
 
 } // end of anonymous namespace

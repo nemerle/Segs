@@ -13,12 +13,6 @@
 #include <Lutefisk3D/Container/Ptr.h>
 #include <glm/matrix.hpp>
 
-#include <QString>
-#include <QHash>
-
-#include <vector>
-#include <unordered_map>
-
 inline Urho3D::Vector3 fromGLM(glm::vec3 v)
 {
     return {v.x,v.y,v.z};

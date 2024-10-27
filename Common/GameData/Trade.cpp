@@ -144,21 +144,21 @@ static TradeSystemMessages checkValidTradeResponse(Entity &src, Entity &tgt)
     // If they do, then something is seriously wrong with the client.
     if(src.m_trade == nullptr)
     {
-        qWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
+        sWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
                    << "Source sent no trade offer.";
         return TradeSystemMessages::HAS_SENT_NO_TRADE;
     }
 
     if(tgt.m_trade == nullptr)
     {
-        qWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
+        sWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
                    << "Target has not received a trade offer";
         return TradeSystemMessages::TGT_RECV_NO_TRADE;
     }
 
     if(src.m_trade != tgt.m_trade)
     {
-        qWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
+        sWarning() << "Trade decline from" << src.name() << "to" << tgt.name() << "failed:"
                    << "These are not trading partners.";
         return TradeSystemMessages::SRC_RECV_NO_TRADE;
     }
@@ -256,7 +256,7 @@ TradeSystemMessages requestTrade(Entity& src, Entity& tgt)
     // NOTE: This will be done when moving this code into a "TradeService", similar to "FriendshipService".
     if(src.m_trade != nullptr)
     {
-        qCDebug(logTrades) << "Trade invite from" << src.name() << "to" << tgt.name() << "failed:"
+        sCDebug(logTrades) << "Trade invite from" << src.name() << "to" << tgt.name() << "failed:"
                            << src.m_trade->m_invite_accepted;
         if(src.m_trade->m_invite_accepted)
             return TradeSystemMessages::SRC_ALREADY_IN_TRADE;
@@ -266,7 +266,7 @@ TradeSystemMessages requestTrade(Entity& src, Entity& tgt)
 
     if(tgt.m_trade != nullptr)
     {
-        qCDebug(logTrades) << "Trade invite from" << src.name() << "to" << tgt.name() << "failed:"
+        sCDebug(logTrades) << "Trade invite from" << src.name() << "to" << tgt.name() << "failed:"
                            << tgt.m_trade->m_invite_accepted;
         if(tgt.m_trade->m_invite_accepted)
             return TradeSystemMessages::TGT_ALREADY_IN_TRADE;
@@ -275,10 +275,10 @@ TradeSystemMessages requestTrade(Entity& src, Entity& tgt)
     }
 
     // Initiate a trade offer.
-    src.m_trade = std::make_shared<Trade>(src, tgt);
+    src.m_trade = eastl::make_shared<Trade>(src, tgt);
     tgt.m_trade = src.m_trade;
 
-    qCDebug(logTrades) << src.name() << "sent a trade request to" << tgt.name();
+    sCDebug(logTrades) << src.name() << "sent a trade request to" << tgt.name();
     return TradeSystemMessages::SEND_TRADE_OFFER;
 }
 
@@ -298,7 +298,7 @@ TradeSystemMessages acceptTrade(Entity& src, Entity& tgt)
     // Accept the trade.
     src.m_trade->m_invite_accepted = true;
 
-    qCDebug(logTrades) << src.name() << "accepted a trade invite from" << tgt.name();
+    sCDebug(logTrades) << src.name() << "accepted a trade invite from" << tgt.name();
     return TradeSystemMessages::ACCEPTED_TRADE;
 }
 
@@ -313,7 +313,7 @@ TradeSystemMessages declineTrade(Entity& src, Entity& tgt)
     discardTrade(src);
     discardTrade(tgt);
 
-    qCDebug(logTrades) << src.name() << "declined a trade invite from" << tgt.name();
+    sCDebug(logTrades) << src.name() << "declined a trade invite from" << tgt.name();
     return TradeSystemMessages::DECLINED_TRADE;
 }
 
@@ -321,14 +321,14 @@ TradeSystemMessages updateTrade(Entity &src, Entity &tgt, const TradeInfo &info)
 {
     if(src.m_trade != tgt.m_trade)
     {
-        qWarning() << "Received trade update for entities not trading with each other:"
+        sWarning() << "Received trade update for entities not trading with each other:"
                    << src.name() << "and" << tgt.name();
         return TradeSystemMessages::GENERIC_FAILURE;
     }
 
     if(src.m_trade == nullptr || tgt.m_trade == nullptr)
     {
-        qWarning() << "Received trade update for entities not trading:" << src.name() << "and" << tgt.name();
+        sWarning() << "Received trade update for entities not trading:" << src.name() << "and" << tgt.name();
         return TradeSystemMessages::GENERIC_FAILURE;
     }
 
@@ -354,7 +354,7 @@ TradeSystemMessages updateTrade(Entity &src, Entity &tgt, const TradeInfo &info)
         return result;
     }
 
-    qCDebug(logTrades) << src.name() << "updated a trade with" << tgt.name();
+    sCDebug(logTrades) << src.name() << "updated a trade with" << tgt.name();
     return TradeSystemMessages::SUCCESS; // sendTradeUpdate() in MapInstance
 }
 
@@ -390,7 +390,7 @@ void finishTrade(Entity& src, Entity& tgt)
     discardTrade(src);
     discardTrade(tgt);
 
-    qCDebug(logTrades) << "Trade successful betweeen" << src.name() << "and" << tgt.name();
+    sCDebug(logTrades) << "Trade successful betweeen" << src.name() << "and" << tgt.name();
 }
 
 //! @}

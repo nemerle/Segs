@@ -12,7 +12,7 @@
 
 #include "PacketCodec.h"
 
-#include <QtCore/QtEndian>
+#include <ace/Basic_Types.h>
 
 uint32_t PacketCodecNull::Checksum(const uint8_t *buf,size_t size)
 {
@@ -32,7 +32,7 @@ uint32_t PacketCodecNull::Checksum(const uint8_t *buf,size_t size)
 
     c1 = (uint16_t)sum1;
     c2 = (uint16_t)sum2;
-    return  (((uint32_t)qToBigEndian(c1))<<16)|qToBigEndian (c2) ;
+    return  (((uint32_t)ACE_HTONS(c1))<<16) | ACE_HTONS(c2) ;
     //return MAKELONG(htons(v2), htons(v1));
 }
 

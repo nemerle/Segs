@@ -9,6 +9,8 @@
 
 #include "Colors.h"
 #include "Components/BitStream.h"
+#include "Common/Containers/Map.h"
+#include "Common/Containers/Vector.h"
 
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
@@ -16,18 +18,17 @@
 #include <glm/gtx/quaternion.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/memory_binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/string.hpp>
+#include <cereal/eastl/vector.hpp>
+#include <cereal/eastl/array.hpp>
+#include <cereal/eastl/string.hpp>
 #include <cereal/types/chrono.hpp>
 #include <cereal/cereal.hpp>
 #include <ace/Time_Value.h>
 #include <ace/INET_Addr.h>
 
-#include <QtCore/QString>
-#include <QtCore/QFile>
-#include <QtCore/QDateTime>
-#include <QtCore/QDebug>
+#include "Common/Containers/Map.h"
+#include "Common/Containers/String.h"
+#include "Containers/DateTime.h"
 
 // helper wrapper for serializing default-value fields
 template <typename T>
@@ -39,25 +40,15 @@ struct wrap_optional {
 };
 
 namespace cereal {
-inline void epilogue(VectorOutputArchive &, QString const &) { }
-inline void epilogue(BinaryInputArchive &, QString const &) { }
-inline void epilogue(JSONOutputArchive &, QString const &) { }
-inline void epilogue(JSONInputArchive &, QString const &) { }
+inline void epilogue(VectorOutputArchive &, String const &) { }
+inline void epilogue(BinaryInputArchive &, String const &) { }
+inline void epilogue(JSONOutputArchive &, String const &) { }
+inline void epilogue(JSONInputArchive &, String const &) { }
 
-inline void prologue(JSONOutputArchive &, QString const &) { }
-inline void prologue(JSONInputArchive &, QString const &) { }
-inline void prologue(VectorOutputArchive &, QString const &) { }
-inline void prologue(BinaryInputArchive &, QString const &) { }
-
-inline void epilogue(VectorOutputArchive &, QByteArray const &) { }
-inline void epilogue(BinaryInputArchive &, QByteArray const &) { }
-inline void epilogue(JSONOutputArchive &, QByteArray const &) { }
-inline void epilogue(JSONInputArchive &, QByteArray const &) { }
-
-inline void prologue(JSONOutputArchive &, QByteArray const &) { }
-inline void prologue(JSONInputArchive &, QByteArray const &) { }
-inline void prologue(VectorOutputArchive &, QByteArray const &) { }
-inline void prologue(BinaryInputArchive &, QByteArray const &) { }
+inline void prologue(JSONOutputArchive &, String const &) { }
+inline void prologue(JSONInputArchive &, String const &) { }
+inline void prologue(VectorOutputArchive &, String const &) { }
+inline void prologue(BinaryInputArchive &, String const &) { }
 
 template <typename T>
 inline void prologue(JSONOutputArchive &, wrap_optional<T> const &) { }
@@ -76,50 +67,36 @@ template <typename T>
 inline void epilogue(JSONOutputArchive &, wrap_optional<T> const &) { }
 template <typename T>
 inline void epilogue(JSONInputArchive &, wrap_optional<T> const &) { }
-template<class Archive>
-inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, ::QString const & str)
-{
-    ar( str.toStdString() );
-}
+
 
 template<class Archive>
-inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, ::QByteArray const & str)
+inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, ::String const & str)
 {
-    // make sure we actually have a latin1 string in str, and not something that has strange ascii chars
-    assert(QString(str).toLatin1()==str);
-    ar( str.toStdString() );
+    ar( eastl::string(str.c_str(),str.size()) );
 }
 
-//! Serialization for utf8-like types, if binary data is supported
-template<class Archive>
-inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, ::QString & str)
-{
-    std::string rd;
-    ar( rd );
-    str = QString::fromStdString(rd);
-}
 //! Serialization for latin1 string types, if binary data is supported
 template<class Archive>
-inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, ::QByteArray & str)
+inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, ::String & str)
 {
-    std::string rd;
+    eastl::string rd;
     ar( rd );
-    str = QByteArray::fromStdString(rd);
+    str = String(rd.c_str(),rd.size());
 }
 //! Serialization for std::map<uint32_t,std::vector<bool> >
 template<class Archive, class C, class A,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, std::map<uint32_t, std::vector<bool>, C, A> map) // trying without &
+inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, eastl::map<uint32_t, Vector<bool>, C, A> map) // trying without &
 {
     for (const auto & pair : map)
     {
-        ar(cereal::make_nvp(QVariant(pair.first).toString().toStdString(), pair.second));
+        ar(cereal::make_nvp(eastl::to_string(pair.first).c_str(), pair.second));
     }
 }
 //! Serialization for std::map<uint32_t,std::vector<bool> >
 template<class Archive, class C, class A,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, std::map<uint32_t, std::vector<bool>, C, A> & map)
+inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, eastl::map<uint32_t, Vector<bool>, C, A> & map)
 {
     map.clear();
     auto hint = map.begin();
@@ -132,11 +109,11 @@ inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, std::map<uint32_t, std::vect
         {
             break;
         }
-        
-        uint32_t key = QVariant(node_name_pointer).toUInt();
-        std::vector<bool> values;
+
+        uint32_t key = std::stoul(node_name_pointer);
+        Vector<bool> values;
         ar(values);
-        hint = map.emplace_hint(hint, std::move(key), std::move(values));
+        hint = map.emplace_hint(hint, eastl::move(key), eastl::move(values));
     }
 }
 template<class Archive>
@@ -217,28 +194,32 @@ inline void CEREAL_LOAD_FUNCTION_NAME(Archive & ar, ACE_INET_Addr & addr)
     ar( ipv4 );
     addr = ACE_INET_Addr(port,ipv4);
 }
+
 template<class Archive>
 inline void CEREAL_SAVE_FUNCTION_NAME(Archive & ar, const ACE_INET_Addr & addr)
 {
     ar( addr.get_port_number() );
     ar( addr.get_ip_address() );
 }
+
 template<class Archive>
 void serialize(Archive & archive, RGBA & m)
 {
     archive(cereal::make_nvp("rgba",m.val));
 }
+
 template<class Archive>
-void CEREAL_LOAD_FUNCTION_NAME(Archive & archive, QDateTime & m)
+void CEREAL_LOAD_FUNCTION_NAME(Archive & archive, DateTime & m)
 {
-    qint64 msec_since_epoch;
+    int64_t msec_since_epoch;
     archive(msec_since_epoch);
-    m = QDateTime::fromMSecsSinceEpoch(msec_since_epoch);
+    m = DateTime::fromMSecsSinceEpoch(msec_since_epoch);
 }
+
 template<class Archive>
-void CEREAL_SAVE_FUNCTION_NAME(Archive & archive, const QDateTime & m)
+void CEREAL_SAVE_FUNCTION_NAME(Archive & archive, const DateTime & m)
 {
-    qint64 msec_since_epoch = m.toMSecsSinceEpoch();
+    int64_t msec_since_epoch = m.toMSecsSinceEpoch();
     archive(msec_since_epoch);
 }
 

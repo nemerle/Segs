@@ -11,8 +11,6 @@
 #include "GameData/Contact.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 
@@ -21,12 +19,12 @@ class ContactDialog final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString m_msgbody;
+    String m_msgbody;
     // [[ev_def:field]]
-    std::vector<ContactEntry> m_active_contacts;
+    Vector<ContactEntry> m_active_contacts;
 
     explicit    ContactDialog() : GameCommandEvent(evContactDialog) {}
-                ContactDialog(QString msgbody, std::vector<ContactEntry> active_contacts) : GameCommandEvent(evContactDialog),
+                ContactDialog(const String &msgbody, const Vector<ContactEntry> &active_contacts) : GameCommandEvent(evContactDialog),
                     m_msgbody(msgbody),
                     m_active_contacts(active_contacts)
                 {
@@ -70,10 +68,10 @@ class ContactDialogOk final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString     m_msgbody;
+    String     m_msgbody;
 
     explicit    ContactDialogOk() : GameCommandEvent(evContactDialogOk) {}
-                ContactDialogOk(QString msgbody) : GameCommandEvent(evContactDialogOk),
+                ContactDialogOk(const String &msgbody) : GameCommandEvent(evContactDialogOk),
                     m_msgbody(msgbody)
                 {
                 }
@@ -94,10 +92,10 @@ class ContactDialogYesNo final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString     m_msgbody;
+    String     m_msgbody;
 
     explicit    ContactDialogYesNo() : GameCommandEvent(evContactDialogYesNo) {}
-                ContactDialogYesNo(QString msgbody) : GameCommandEvent(evContactDialogYesNo),
+                ContactDialogYesNo(const String &msgbody) : GameCommandEvent(evContactDialogYesNo),
                     m_msgbody(msgbody)
                 {
                 }

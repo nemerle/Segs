@@ -11,63 +11,66 @@
 #include "Components/Logging.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
+#include "EASTL/algorithm.h"
 #include "cereal/cereal.hpp"
 
-StoreTransactionResult Store::buyItem(Entity *e, QString item_name)
+StoreTransactionResult Store::buyItem(Entity *e, String item_name)
 {
     const GameDataStore &data(getGameData());
     StoreTransactionResult result;
 
-    for(const ShopItemInfo_Data &item_info: data.m_shop_items_data)
-    {
-        if(item_info.m_Name == item_name)
-        {
-            qCDebug(logStores) << "buyItem. Item found";
-            int price = getPrice(e, item_name, false);
-            result.m_inf_amount = price;
-            result.m_is_sell = false;
+    auto found=eastl::find_if(data.m_shop_items_data.begin(),data.m_shop_items_data.end(),[&](const ShopItemInfo_Data &e)->bool {
+        return e.m_Name==item_name;
+    });
 
-            if(item_info.m_Power.m_PowerCategory == "Inspirations")
-            {
-                QString insp_name = item_info.m_Name;
-                QString message = QString("Bought %1 for %2 Influence").arg(insp_name).arg(abs(price));
-
-                result.m_is_insp = true;
-                result.m_item_name = insp_name;
-                result.m_message = message;
-                result.m_is_success = true;
-
-                qCDebug(logStores) << "buyItem. Inspiration: " << insp_name;
-            }
-            else
-            {
-                QVector<QStringRef> parts;
-                int ending_index = item_name.lastIndexOf("_")+1;
-                parts.push_back(item_name.midRef(0,ending_index - 1));
-                parts.push_back(item_name.midRef(ending_index, item_name.length() - ending_index));
-
-                QString name = parts[0].toString();
-                result.m_item_name = name;
-                result.m_enhancement_lvl = parts[1].toInt();
-                result.m_is_success = true;
-                result.m_message = QString("Bought %1 for %2 Influence").arg(name).arg(abs(price));
-
-                qCDebug(logStores) << "buyItem. Enhancement: " << name << " lvl: " << parts[1].toString();
-            }
-            break;
-        }
+    if(found==data.m_shop_items_data.end()) {
+        result.m_is_success=false;
+        result.m_message="No such item";
+        sCDebug(logStores) << "buyItem. Item not found";
+        return result;
     }
+    const ShopItemInfo_Data &item_info = *found;
 
+    sCDebug(logStores) << "buyItem. Item found";
+    int price = getPrice(e, item_name, false);
+    result.m_inf_amount = price;
+    result.m_is_sell = false;
+
+    if(item_info.m_Power.m_PowerCategory == "Inspirations")
+    {
+        String insp_name = item_info.m_Name;
+        String message = String(String::CtorSprintf(),"Bought %s for %2 Influence",insp_name.c_str(),abs(price));
+
+        result.m_is_insp = true;
+        result.m_item_name = insp_name;
+        result.m_message = message;
+        result.m_is_success = true;
+
+        sCDebug(logStores) << "buyItem. Inspiration: " << insp_name;
+    }
+    else
+    {
+        int ending_index = item_name.rfind("_")+1;
+        String name = String(item_name).substr(0,ending_index - 1);
+        String num = String(item_name).substr(ending_index, item_name.length() - ending_index);
+
+        result.m_item_name = name;
+        result.m_enhancement_lvl = std::stoi(num.c_str());
+        result.m_is_success = true;
+        result.m_message = String(String::CtorSprintf(),"Bought %s for %d Influence",name.c_str(),abs(price));
+
+        sCDebug(logStores) << "buyItem. Enhancement: " << name << " lvl: " << num;
+    }
     return result;
 }
 
-StoreTransactionResult Store::sellItem(Entity *e, QString item_name)
+StoreTransactionResult Store::sellItem(Entity *e, String item_name)
 {
     StoreTransactionResult result;
-    qCDebug(logStores) << "sellItem. Item to find." << item_name;
+    sCDebug(logStores) << "sellItem. Item to find." << item_name;
 
     int price = getPrice(e, item_name, true);
-    result.m_message = QString("Sold %1 for %2 influence.").arg(item_name).arg(price);
+    result.m_message = String(String::CtorSprintf(),"Sold %s for %d influence.",item_name.c_str(),price);
     result.m_inf_amount = price;
     result.m_is_success = true;
     result.m_item_name = item_name;
@@ -75,7 +78,7 @@ StoreTransactionResult Store::sellItem(Entity *e, QString item_name)
     return result;
 }
 
-int Store::getPrice(Entity *e, QString item_name, bool is_selling)
+int Store::getPrice(Entity *e, String item_name, bool is_selling)
 {
     const GameDataStore &data(getGameData());
     std::vector<Shop_Data> shop_data; // NPC could have multiple shop_names set
@@ -101,7 +104,7 @@ int Store::getPrice(Entity *e, QString item_name, bool is_selling)
             if(iteminfo.m_Name == item_name)
             {
                 item_info = iteminfo;
-                qCDebug(logStores) << "Item " << item_name << " found";
+                sCDebug(logStores) << "Item " << item_name << " found";
                 break;
             }
         }
@@ -116,10 +119,10 @@ int Store::getPrice(Entity *e, QString item_name, bool is_selling)
                     // Buy and Sell variable names are reversed in bin
                     for (const ShopBuySell_Data &sd: shop.m_Buys)
                     {
-                        qCDebug(logStores) << "Get price to sell. sd.Dept: " <<sd.m_Department << " dept: " << dept;
+                        sCDebug(logStores) << "Get price to sell. sd.Dept: " <<sd.m_Department << " dept: " << dept;
                         if(sd.m_Department == dept)
                         {
-                            qCDebug(logStores) << "Item to sell price: " << item_info.m_Buy * sd.m_Markup;
+                            sCDebug(logStores) << "Item to sell price: " << item_info.m_Buy * sd.m_Markup;
 
                             return item_info.m_Buy * sd.m_Markup;
                         }
@@ -130,10 +133,10 @@ int Store::getPrice(Entity *e, QString item_name, bool is_selling)
                      // Buy and Sell variable names are reversed in bin
                     for (const ShopBuySell_Data &sd: shop.m_Sells)
                     {
-                        qCDebug(logStores) << "Get price to Buy. sd.Dept: " <<sd.m_Department << " dept: " << dept;
+                        sCDebug(logStores) << "Get price to Buy. sd.Dept: " <<sd.m_Department << " dept: " << dept;
                         if(sd.m_Department == dept)
                         {
-                            qCDebug(logStores) << "Item to buy price: " << -(item_info.m_Sell * sd.m_Markup);
+                            sCDebug(logStores) << "Item to buy price: " << -(item_info.m_Sell * sd.m_Markup);
                             // Buy and Sell variable names are reversed in bin
                             return -(item_info.m_Sell * sd.m_Markup);
                         }
@@ -143,7 +146,7 @@ int Store::getPrice(Entity *e, QString item_name, bool is_selling)
         }
     }
 
-    qCDebug(logStores) << "Item not found.";
+    sCDebug(logStores) << "Item not found.";
     return 0; // Not found
 }
 
@@ -153,7 +156,7 @@ void Store::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Store::class_version)
     {
-        qCritical() << "Failed to serialize Store, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Store, incompatible serialization format version " << version;
         return;
     }
 
@@ -169,7 +172,7 @@ void StoreItem::serialize(Archive &archive, uint32_t const version)
 {
     if(version != StoreItem::class_version)
     {
-        qCritical() << "Failed to serialize StoreItem, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize StoreItem, incompatible serialization format version " << version;
         return;
     }
     archive(cereal::make_nvp("itemName",m_store_name));

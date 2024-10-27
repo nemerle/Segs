@@ -140,7 +140,7 @@ void RecvInputState::serializefrom(BitStream &bs)
     m_input_state_change.m_has_target = bs.GetBits(1);
     m_input_state_change.m_target_idx = bs.GetPackedBits(14); // targeted entity server_index
 
-    qCDebug(logTarget, "Has Target? %d | TargetIdx: %d", m_input_state_change.m_has_target, m_input_state_change.m_target_idx);
+    sCFDebug(logTarget, "Has Target? %d | TargetIdx: %d", m_input_state_change.m_has_target, m_input_state_change.m_target_idx);
 
     while(bs.GetBits(1)) // receive control state array entries ?
     {
@@ -177,16 +177,15 @@ void RecvInputState::serializeto(BitStream &) const
 void RecvInputState::recv_client_opts(BitStream &bs)
 {
     ClientOptions opts;
-    ClientOption *entry;
-    glm::vec3 vec;
-    int cmd_idx;
+    glm::vec3     vec;
+    int           cmd_idx;
 
     while((cmd_idx = bs.GetPackedBits(1))!=0)
     {
-        entry=opts.get(cmd_idx-1);
+        ClientOption* entry = opts.get(cmd_idx - 1);
         if(!entry)
         {
-            qWarning() << "recv_client_opts missing opt for cmd index" << cmd_idx-1;
+            sWarning() << "recv_client_opts missing opt for cmd index" << cmd_idx-1;
             continue;
         }
         for(ClientOption::Arg &arg : entry->m_args)
@@ -207,13 +206,13 @@ void RecvInputState::recv_client_opts(BitStream &bs)
                 {
                     float * tgt_angle = (float *)arg.tgt;
                     *tgt_angle = AngleDequantize(bs.GetBits(14),14);
-                    qCDebug(logInput, "Quant angle res:%f", *tgt_angle); //dequantized angle
+                    sCFDebug(logInput, "Quant angle res:%f", *tgt_angle); //dequantized angle
                     break;
                 }
                 case ClientOption::t_string:
                 case ClientOption::t_sentence:
                 {
-                    QString v;
+                    String v;
                     bs.GetString(v);
                     break;
                 }

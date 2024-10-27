@@ -8,12 +8,13 @@
 #pragma once
 
 #include <stdint.h>
-#include <vector>
+#include "Common/Containers/Vector.h"
+#include "Common/Containers/String.h"
 
 class BinStore;
-class QString;
-typedef std::vector<struct CharClass_Data> Parse_AllCharClasses;
+
+typedef Vector<struct CharClass_Data> Parse_AllCharClasses;
 
 constexpr const static uint32_t charclass_i0_requiredCrc = 0xF6D734A6;
 bool loadFrom(BinStore *s,Parse_AllCharClasses &target) ;
-void saveTo(const Parse_AllCharClasses &target,const QString &baseName,bool text_format=false);
+void saveTo(const Parse_AllCharClasses &target,const String &baseName,bool text_format=false);

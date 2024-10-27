@@ -8,13 +8,13 @@
 
 #include <QRegularExpression>
 
-QString makeReadableName(QString &name)
+String makeReadableName(const String &name)
 {
     // remove filepaths and extensions then replace underscores with spaces; handles SG contacts
-    QString tempName = name.remove(QRegularExpression(".*\\\\")).remove(QRegularExpression("\\..*"));
+    QString tempName = QString(name.c_str()).remove(QRegularExpression(".*\\\\")).remove(QRegularExpression("\\..*"));
     if(tempName.contains("SuperGroupContacts"))
         tempName.remove("SuperGroupContacts/");
-    return tempName;
+    return qPrintable(tempName);
 }
 
 void NpcGenerator::generate(MapInstance *map_instance)
@@ -35,9 +35,9 @@ void NpcGenerator::generate(MapInstance *map_instance)
                continue;
         }
 
-        QString npc_costume_name = getCostumeFromName(m_generator_name);
+        String npc_costume_name = getCostumeFromName(m_generator_name);
 
-        const Parse_NPC * npc_def = npc_store.npc_by_name(&npc_costume_name);
+        const Parse_NPC * npc_def = npc_store.npc_by_name(npc_costume_name);
         if(!npc_def)
             continue;
 
@@ -63,8 +63,8 @@ void NpcGenerator::generate(MapInstance *map_instance)
 
 void NpcGeneratorStore::generate(MapInstance *instance)
 {
-    for(NpcGenerator &gen : m_generators)
+    for(eastl::pair<const String,NpcGenerator> &gen : m_generators)
     {
-        gen.generate(instance);
+        gen.second.generate(instance);
     }
 }

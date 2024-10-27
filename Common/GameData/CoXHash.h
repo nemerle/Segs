@@ -7,10 +7,9 @@
 
 #pragma once
 #include <cassert>
-#include <string>
-#include <vector>
 #include <stdint.h>
-#include <QtCore/QString>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 #define mix(a,b,c) \
 { \
     a -= b; a -= c; a ^= (c>>13); \
@@ -86,7 +85,7 @@ protected:
         VALUE stored_val;
         uint32_t entry_flags;
     };
-    std::vector<HashEntry> m_storage;
+    Vector<HashEntry> m_storage;
 
     size_t max_size;
     size_t in_use;
@@ -104,8 +103,8 @@ public:
     {
         uint32_t entry_idx;
         uint32_t prev_val;
-        std::vector<HashEntry> old_entries;
-        std::swap(old_entries,m_storage);
+        Vector<HashEntry> old_entries;
+        eastl::swap(old_entries,m_storage);
         in_use=0;
         m_storage.resize(size_t(this->next_size(new_size)));
         for(size_t idx=0; idx<old_entries.size(); ++idx)
@@ -157,7 +156,7 @@ public:
     }
 };
 template<class VALUE>
-class CoXHashMap : public CoxHashCommon<QString,VALUE>
+class CoXHashMap : public CoxHashCommon<String,VALUE>
 {
     enum{
         HAS_KEY_NAMES = 1,
@@ -165,10 +164,10 @@ class CoXHashMap : public CoxHashCommon<QString,VALUE>
         CHECK_COLLISIONS = 8,
         SINGLE_BYTE = 0x20,
     };
-    typedef CoxHashCommon<QString,VALUE> super;
+    typedef CoxHashCommon<String,VALUE> super;
 public:
     CoXHashMap(){}
-    uint32_t find_index(const QString &key, uint32_t &index_tgt, uint32_t &key_tgt, bool a5) const;
+    uint32_t find_index(const String &key, uint32_t &index_tgt, uint32_t &key_tgt, bool a5) const;
     uint32_t next_size(uint32_t sz)
     {
         if(sz==0)
@@ -230,5 +229,5 @@ public:
     uint32_t find_index(const KEY &needle,uint32_t &entry_idx,uint32_t &prev_val_out,bool a5) const;
 };
 
-typedef CoXHashMap<QString> StringHash;
+typedef CoXHashMap<String> StringHash;
 typedef CoXGenericHashMap<uint32_t,uint32_t,IntCompare> ColorHash;

@@ -20,10 +20,10 @@ public:
     enum : uint32_t {class_version = 2};
 
     int             m_db_id;
-    QString         m_description;
-    QString         m_owner;
-    QString         m_state;
-    QString         m_detail;
+    String          m_description;
+    String          m_owner;
+    String          m_state;
+    String          m_detail;
     bool            m_is_complete = false;
     bool            m_in_progress_maybe = false;
     bool            m_is_abandoned = false;
@@ -43,21 +43,23 @@ public:
     int             m_task_idx;
 
     // for scripting language access
-    std::string getDescription() const { return m_description.toStdString();}
+    const String &getDescription() const { return m_description; }
     void setDescription(const char *n) { m_description = n; }
-    std::string getOwner() const { return m_owner.toStdString();}
+    const String &getOwner() const { return m_owner;}
     void setOwner(const char *n) { m_owner = n; }
-    std::string getState() const { return m_state.toStdString();}
+    const String &getState() const { return m_state;}
     void setState(const char *n) { m_state = n; }
-    std::string getDetail() const { return m_detail.toStdString();}
+    const String &getDetail() const { return m_detail;}
     void setDetail(const char *n) { m_detail = n; }
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);
 
+    bool operator==(const Task &) const = default;
+
 };
 
-using vTaskList = std::vector<Task>;
+using vTaskList = Vector<Task>;
 
 class TaskEntry
 {
@@ -73,11 +75,11 @@ public:
     void serialize(Archive &archive, uint32_t const version);
 };
 
-using vTaskEntryList = std::vector<TaskEntry>;
+using vTaskEntryList = Vector<TaskEntry>;
 
 class TaskObjectiveTimer // Shouldn't serialze to DB?
 {
 public:
-    QString m_message;
+    String m_message;
     float m_mission_time;
 };

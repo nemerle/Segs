@@ -6,48 +6,54 @@
  */
 
 #pragma once
+#include <Common/Utils/IServiceLocator.h>
+#include "Common/Containers/String.h"
+#include "Logging.h"
+#include "Common/Containers/StringView.h"
+#include "Common/Containers/Vector.h"
+
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/memory_binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/deque.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/string.hpp>
+#include <cereal/eastl/vector.hpp>
+#include <cereal/eastl/deque.hpp>
+#include <cereal/eastl/array.hpp>
+#include <cereal/eastl/string.hpp>
 #include <cereal/cereal.hpp>
+#include <EASTL/functional.h>
+#include <EASTL/unique_ptr.h>
 
-#include <QtCore/QString>
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
+#include <cstdio>
+namespace SEGS {
 
- // A simple file access wrapper to allow re-locating/packing files
-struct FSWrapper
+inline Vector<char> IFile_readAll(IFile *self)
 {
-    virtual ~FSWrapper() = default;
+    Vector<char> res;
+    res.resize(self->size());
+    self->read(res.data(),res.size());
+    return res;
+}
 
-    virtual QIODevice* open(const QString &path, bool read_only = true, bool text_only = false)=0;
-    virtual bool exists(const QString& path)=0;
-    virtual QStringList dir_entries(const QString& path) = 0;
-};
+inline Vector<char> IFile_read(IFile *self,int64_t len) {
+    if(self->pos()+len>=self->size())
+        return {};
+    Vector<char> res;
+    res.resize(len);
+    if(self->read(res.data(),len)==len)
+        return res;
+    return {};
+}
 
-struct QFSWrapper : public FSWrapper
-{
-    ~QFSWrapper() override = default;
-
-    QIODevice *open(const QString &path, bool read_only = true, bool text_only = false) override;
-
-    bool exists(const QString &path) override;
-
-    QStringList dir_entries(const QString &path) override;
-};
 
 template<class T>
-void commonSaveTo(const T & target, const char *classname, const QString & baseName, bool text_format)
+void commonSaveTo(const T & target, const char *classname, const String & baseName, bool text_format)
 {
-    QString target_fname;
+    using namespace magic_enum::bitwise_operators;
+    String target_fname;
     if(text_format)
         target_fname = baseName + ".crl.json";
     else
         target_fname = baseName + ".crl.bin";
-    QFile  tgt_fle(target_fname);
+    auto fs=getServiceLocator()->getFS();
     try
     {
         if(text_format) {
@@ -56,49 +62,49 @@ void commonSaveTo(const T & target, const char *classname, const QString & baseN
                 cereal::JSONOutputArchive ar( tgt );
                 ar(cereal::make_nvp(classname,target));
             }
-            if(!tgt_fle.open(QFile::WriteOnly|QFile::Text)) {
-                qCritical() << "Failed to open"<<target_fname<<"in write mode";
+            eastl::unique_ptr<IFile> tgt_fle(
+                fs->open(target_fname, IFile::OpenMode(SEGS::IFile::WriteOnly | SEGS::IFile::Text)));
+            if(!tgt_fle) {
+                sCritical() << "Failed to open"<<target_fname<<"in write mode";
                 return;
             }
-            tgt_fle.write(tgt.str().c_str(),tgt.str().size());
+            tgt_fle->write(tgt.str().c_str(),tgt.str().size());
         }
         else {
-            std::vector<uint8_t> tgt;
+            eastl::unique_ptr<IFile> tgt_fle(fs->open(target_fname,SEGS::IFile::WriteOnly));
+            eastl::vector<uint8_t> tgt;
             cereal::VectorOutputArchive ar( tgt );
             ar(cereal::make_nvp(classname,target));
-            if(!tgt_fle.open(QFile::WriteOnly)) {
-                qCritical() << "Failed to open"<<target_fname<<"in write mode";
+            if(!tgt_fle) {
+                sCritical() << "Failed to open"<<target_fname<<"in write mode";
                 return;
             }
-            tgt_fle.write((const char *)tgt.data(),tgt.size());
+            tgt_fle->write((const char *)tgt.data(),tgt.size());
         }
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 }
-
 template<class T>
-bool commonReadFrom(FSWrapper &fs,const QString &crl_path,const char *classname, T &target)
+bool commonReadFrom(const String &crl_path,const char *classname, T &target)
 {
-    QIODevice *ifl=nullptr;
-    if(crl_path.endsWith("json") || crl_path.endsWith("crl_json"))
+    auto fs=getServiceLocator()->getFS();
+    if(crl_path.ends_with("json") || crl_path.ends_with("crl_json"))
     {
-        ifl = fs.open(crl_path,true,true);
+        eastl::unique_ptr<IFile> ifl(fs->open(crl_path,(IFile::OpenMode)(IFile::ReadOnly|IFile::Text)));
         if(!ifl)
         {
-            qWarning() << "Failed to open" << crl_path;
+            sWarning() << "Failed to open" << crl_path;
             return false;
         }
-
-        std::istringstream istr(ifl->readAll().toStdString());
-        delete ifl;
-
+        auto contents=IFile_readAll(ifl.get());
+        std::istringstream istr(std::string(contents.begin(),contents.end()));
         try
         {
             cereal::JSONInputArchive arc(istr);
@@ -106,26 +112,25 @@ bool commonReadFrom(FSWrapper &fs,const QString &crl_path,const char *classname,
         }
         catch(cereal::RapidJSONException &e)
         {
-            qWarning() << e.what();
+            sWarning() << e.what();
         }
         catch (std::exception &e)
         {
-            qCritical() << e.what();
+            sCritical() << e.what();
         }
     }
-    else if(crl_path.endsWith(".crl.bin"))
+    else if(crl_path.ends_with(".crl.bin"))
     {
-        ifl = fs.open(qPrintable(crl_path), true, false);
+        eastl::unique_ptr<IFile> ifl(fs->open(crl_path,IFile::ReadOnly));
         if(!ifl)
         {
-            qWarning() << "Failed to open" << crl_path;
+            sWarning() << "Failed to open" << crl_path;
             return false;
         }
 
-        std::vector<uint8_t> istr;
+        eastl::vector<uint8_t> istr;
         istr.resize(ifl->size());
         ifl->read((char *)istr.data(),ifl->size());
-        delete ifl;
         try
         {
             cereal::VectorInputArchive arc(istr);
@@ -133,37 +138,43 @@ bool commonReadFrom(FSWrapper &fs,const QString &crl_path,const char *classname,
         }
         catch(cereal::RapidJSONException &e)
         {
-            qWarning() << e.what();
+            sWarning() << e.what();
         }
         catch (std::exception &e)
         {
-            qCritical() << e.what();
+            sCritical() << e.what();
         }
     }
     else {
-        qWarning() << "Invalid serialized data extension in" <<crl_path;
+        sWarning() << "Invalid serialized data extension in" <<crl_path;
     }
     return true;
 }
+}
+
+
+
 
 template<class T>
-void serializeToQString(const T &data, QString &tgt)
+void serializeToQString(const T &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    auto res = ostr.str();
+    tgt = String(res.c_str(),res.size());
 }
 
 template<class T>
-void serializeFromQString(T &data,const QString &src)
+void serializeFromQString(T &data,const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    std::string src_str(src.begin(),src.end());
+    istr.str(src_str);
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

@@ -47,7 +47,7 @@ namespace
         ok &=s->prepare_nested();
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -89,7 +89,7 @@ namespace
         ok &=s->prepare_nested();
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -114,7 +114,7 @@ bool loadFrom(BinStore *s, AllNpcs_Data &target)
     bool ok = s->prepare_nested();
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -176,9 +176,9 @@ static void serialize(Archive & archive, Parse_NPC & m)
     archive(cereal::make_nvp("Costumes",m.m_Costumes));
 }
 
-void saveTo(const AllNpcs_Data &target, const QString &baseName, bool text_format)
+void saveTo(const AllNpcs_Data &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"AllNpcs",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllNpcs",baseName,text_format);
 }
 
 //! @}

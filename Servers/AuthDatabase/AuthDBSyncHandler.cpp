@@ -70,7 +70,7 @@ void AuthDBSyncHandler::on_create_account(CreateAccountMessage *msg)
     if(!db_ctx.addAccount(msg->m_data))
     {
         if(msg->src() != nullptr)
-            msg->src()->putq(new AuthDbStatusMessage({db_ctx.getLastError()->text()},msg->session_token()));
+            msg->src()->putq(new AuthDbStatusMessage({qPrintable(db_ctx.getLastError()->text())},msg->session_token()));
     }
     else
     {
@@ -90,7 +90,7 @@ void AuthDBSyncHandler::on_retrieve_account(RetrieveAccountRequest *msg)
     }
 
     if(db_ctx.getLastError())
-        msg->src()->putq(new AuthDbStatusMessage({db_ctx.getLastError()->text()},msg->session_token()));
+        msg->src()->putq(new AuthDbStatusMessage({qPrintable(db_ctx.getLastError()->text())},msg->session_token()));
     else
         msg->src()->putq(new RetrieveAccountResponse(std::move(resp), msg->session_token()));
 }
@@ -103,7 +103,7 @@ void AuthDBSyncHandler::on_validate_password(ValidatePasswordRequest *msg)
     {
         msg->src()->putq(new ValidatePasswordResponse(std::move(res),msg->session_token()));
     }
-    msg->src()->putq(new AuthDbStatusMessage({db_ctx.getLastError()->text()},msg->session_token()));
+    msg->src()->putq(new AuthDbStatusMessage({qPrintable(db_ctx.getLastError()->text())},msg->session_token()));
 }
 
 AuthDBSyncHandler::AuthDBSyncHandler()

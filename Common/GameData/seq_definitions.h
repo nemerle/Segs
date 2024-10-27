@@ -11,25 +11,12 @@
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
 
-#include <vector>
-#include <bitset>
 #include <stdint.h>
-#include <unordered_map>
-
-#include <QMap>
-#include <qobjectdefs.h>
-
-// Qt 5.14 has built-in specialization for std hash on some of their types
-#ifndef QT_SPECIALIZE_STD_HASH_TO_CALL_QHASH_BY_CREF
-namespace std
-{
-template <>
-struct hash<QByteArray>
-{
-    size_t operator()(const QByteArray &x) const { return qHash(x); }
-};
-} // namespace std
-#endif
+#include <Common/Containers/Map.h>
+#include <Common/Containers/HashMap.h>
+#include <EASTL/bitset.h>
+#include <Common/Containers/String.h>
+#include <Common/Containers/Vector.h>
 
 // WHY, WINDOWS, WHY ?
 #ifdef FAR
@@ -48,7 +35,6 @@ struct AnimTrack;
 }
 namespace SEGS_Enums
 {
-Q_NAMESPACE
 enum class SeqBitNames : uint32_t
 {
     INVALID_BIT           = 0,
@@ -407,7 +393,7 @@ enum class SeqBitNames : uint32_t
 
     NON_EXISTING = ~0U
 };
-Q_ENUM_NS(SeqBitNames)
+//Q_ENUM_NS(SeqBitNames)
 } // end of SEGS_Enums namespace
 using namespace SEGS_Enums;
 
@@ -415,9 +401,9 @@ struct SeqBitSet
 {
     // Older combinations of Qt/moc/CMake require Q_GADGET macro and granting public access
     // to members. Otherwise, moc files are not generated properly under certain conditions.
-    Q_GADGET
+    //Q_GADGET
 public:
-    std::bitset<416> bits;
+    eastl::bitset<416> bits;
     bool isSet(SeqBitNames v) const { return bits[uint32_t(v)]; }
     void set(SeqBitNames bit) { bits[uint32_t(bit)] = true;}
     void setVal(SeqBitNames bit, bool v) { bits[uint32_t(bit)] = v; }
@@ -425,23 +411,23 @@ public:
 
 struct SeqMoveDataTypeAnim
 {
-    QByteArray name;
+    String name;
     int firstFrame; // first frame ticks
     int lastFrame; // last frame tick ?
 };
 
 struct SeqPlayFxData
 {
-    QByteArray name;
+    String name;
     uint32_t delay;
     uint32_t flags;
 };
 
 struct SeqMoveTypeData
 {
-    QByteArray                         name;
-    std::vector<SeqMoveDataTypeAnim>   m_Anim;
-    std::vector<SeqPlayFxData>         m_PlayFx;
+    String                          name;
+    Vector<SeqMoveDataTypeAnim>     m_Anim;
+    Vector<SeqPlayFxData>      m_PlayFx;
     float                              Scale;
     float                              MoveRate;
     float                              PitchAngle;
@@ -455,12 +441,12 @@ struct SeqMoveTypeData
 
 struct SeqNextMoveData
 {
-    QByteArray name;
+    String name;
 };
 
 struct SeqCycleMoveData
 {
-    QByteArray name;
+    String name;
 };
 
 enum
@@ -477,7 +463,7 @@ struct SeqTypeAnimation
 struct SeqMoveRawData
 {
     SeqBitSet requires_bits;
-    std::vector<int16_t> interrupted_by;
+    Vector<int16_t> interrupted_by;
     int16_t   nextMove[4];
     uint8_t   num_nextmoves;
     int16_t   cycleMove[4];
@@ -487,26 +473,26 @@ struct SeqMoveRawData
     SeqBitSet sticks_on_child_bits;
     const struct SeqMoveData *m_source_data;
     int idx;  // index of source move in SeqMoveData
-    //std::vector<SeqTypeAnimation> m_type_animations;
+    //Vector<SeqTypeAnimation> m_type_animations;
 };
 
 struct SeqMoveData
 {
-    QByteArray name;
+    String name;
     float Scale;
     float MoveRate;
     uint32_t Interpolate;
     uint32_t Priority;
     uint32_t Flags;
-    std::vector<SeqNextMoveData> m_NextMove;
-    std::vector<SeqCycleMoveData> m_CycleMove;
-    std::vector<SeqMoveTypeData> m_Type;
-    std::vector<QByteArray > SticksOnChild;
-    std::vector<QByteArray > SetsOnChild;
-    std::vector<QByteArray > Sets;
-    std::vector<QByteArray > Requires;
-    std::vector<QByteArray > Member;
-    std::vector<QByteArray > Interrupts;
+    Vector<SeqNextMoveData> m_NextMove;
+    Vector<SeqCycleMoveData> m_CycleMove;
+    Vector<SeqMoveTypeData> m_Type;
+    Vector<String > SticksOnChild;
+    Vector<String > SetsOnChild;
+    Vector<String > Sets;
+    Vector<String > Requires;
+    Vector<String > Member;
+    Vector<String > Interrupts;
 
     enum eFlags
     {
@@ -531,42 +517,42 @@ struct SeqMoveData
 
 struct SeqGroupNameData
 {
-    QByteArray name;
+    String name;
 };
 
 struct SeqTypeDefData
 {
-    QByteArray name;
-    QByteArray pBaseSkeleton;
-    QByteArray pParentType;
+    String name;
+    String pBaseSkeleton;
+    String pParentType;
 };
 
 struct SequencerData
 {
-    QByteArray name;
-    std::vector<SeqTypeDefData> m_TypeDef;
-    std::vector<SeqGroupNameData> m_Group;
-    std::vector<SeqMoveData> m_Move;
+    String name;
+    Vector<SeqTypeDefData> m_TypeDef;
+    Vector<SeqGroupNameData> m_Group;
+    Vector<SeqMoveData> m_Move;
 };
 
 struct SequencerList
 {
-    /// @note the size of this std::vector *cannot* be modified after load, since seqGetMoveIdxByName returns pointers to it's members.
+    /// @note the size of this Vector *cannot* be modified after load, since seqGetMoveIdxByName returns pointers to it's members.
     /// @todo consider using Handle pattern here ?
-    std::vector<SequencerData> sq_list;
+    Vector<SequencerData> sq_list;
     int dev_seqInfoCount;
-    QMap<QString, int> m_Sequencers; // ordered by sequencer's name ( implemented by 'operator <' )
-    SequencerData * getSequencerData(const QByteArray &seq_name);
+    Map<String, int> m_Sequencers; // ordered by sequencer's name ( implemented by 'operator <' )
+    SequencerData * getSequencerData(const String &seq_name);
 };
 // Binds an NPC/Player to a SequencerData
 struct EntitySequencerData
 {
-    QByteArray m_name;
-    QByteArray m_sequencer_name;
-    QByteArray m_seq_type;
-    QByteArray m_graphics;
-    QByteArray m_lod_names[3];
-    const QByteArray &lod_Name(int idx) const
+    String m_name;
+    String m_sequencer_name;
+    String m_seq_type;
+    String m_graphics;
+    String m_lod_names[3];
+    const String &lod_Name(int idx) const
     {
         switch(idx) {
         case 0:
@@ -586,14 +572,14 @@ struct EntitySequencerData
     float m_reverse_fade_out_distance=0;
     float m_fade_out_start=0;
     float m_fade_out_finish=0;
-    QByteArray m_shadow;
+    String m_shadow;
     int m_use_shadow=0;
     int m_ticks_to_linger_after_death=0;
     int m_ticks_to_fade_away_after_death=0;
-    QByteArray m_shadow_type;
-    QByteArray m_shadow_texture;
-    QByteArray m_shadow_quality;
-    QByteArray m_flags;
+    String m_shadow_type;
+    String m_shadow_texture;
+    String m_shadow_quality;
+    String m_flags;
     glm::vec3 m_shadow_size = {0,0,0};
     glm::vec3 m_shadow_offset = {0,0,0};
     int m_light_as_door_outside; // switch over to bool ?
@@ -601,29 +587,29 @@ struct EntitySequencerData
     //! \note if this is set the resulting scale will be randomly selected between m_geometry_scale and this
     glm::vec3 m_geometry_scale_max = {0,0,0};
     float m_anim_scale=0;
-    QByteArray m_effect_names[5];
+    String m_effect_names[5];
     int m_has_random_name=0;
     glm::vec3 m_collision_size = {0,0,0};
     glm::vec3 m_collision_offset = {0,0,0};
-    QByteArray m_world_group;
+    String m_world_group;
     float m_minimum_ambient=0;
-    QByteArray m_bone_scale_fat;
-    QByteArray m_bone_scale_skinny;
+    String m_bone_scale_fat;
+    String m_bone_scale_skinny;
     int m_random_bone_scale=0;
     int m_not_selectable=0;
     int m_no_collision=0;
     float m_bounciness=0;
-    QByteArray m_collision_type;
-    QByteArray m_placement;
-    QByteArray m_selection;
-    QByteArray m_constant_state;
+    String m_collision_type;
+    String m_placement;
+    String m_selection;
+    String m_constant_state;
 
-    QByteArray m_cape_file;
-    QByteArray m_cape_name;
-    QByteArray m_cape_harness_file;
-    QByteArray m_cape_harness_name;
-    QByteArray m_cape_textures[2];
-    QByteArray m_cape_inner_textures[2];
+    String m_cape_file;
+    String m_cape_name;
+    String m_cape_harness_file;
+    String m_cape_harness_name;
+    String m_cape_textures[2];
+    String m_cape_inner_textures[2];
     glm::vec3 m_cape_colors[2] = {{0,0,0},{0,0,0}};
     glm::vec3 m_inner_cape_colors[2] = {{0,0,0},{0,0,0}};
     glm::vec2 m_reticle_mod = {0,0}; // targeting reticle fixup translation
@@ -637,6 +623,6 @@ struct EntitySequencerData
     int m_converted_placement=0;
     SeqBitSet m_converted_constant_bits;
 };
-void cleanSeqFileName(QByteArray &filename);
-int16_t getSeqMoveIdxByName(const QByteArray &name, const SequencerData &seq);
-using SequencerTypeMap = std::unordered_map<QByteArray,EntitySequencerData>;
+void cleanSeqFileName(String &filename);
+int16_t getSeqMoveIdxByName(const String &name, const SequencerData &seq);
+using SequencerTypeMap = HashMap<String,EntitySequencerData>;

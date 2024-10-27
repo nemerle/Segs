@@ -87,7 +87,7 @@ static const SpawnNPCList g_defined_enemy_spawn_groups =
     }
 };*/
 
-std::vector<CritterSpawnDef> SpawnDefinitions::getCritterSpawnDefinitions()
+Vector<CritterSpawnDef> SpawnDefinitions::getCritterSpawnDefinitions()
 {
     if(m_critter_spawn_list.size() < 1)
     {
@@ -97,7 +97,7 @@ std::vector<CritterSpawnDef> SpawnDefinitions::getCritterSpawnDefinitions()
     return m_critter_spawn_list;
 }
 
-CritterSpawnDef SpawnDefinitions::getSpawnGroup(const QString &spawn_group_name)
+CritterSpawnDef SpawnDefinitions::getSpawnGroup(const String &spawn_group_name)
 {
     if(m_critter_spawn_list.size() < 1)
     {
@@ -106,10 +106,10 @@ CritterSpawnDef SpawnDefinitions::getSpawnGroup(const QString &spawn_group_name)
 
     for(const auto &spawn_group : m_critter_spawn_list)
     {
-        if(spawn_group.m_spawn_group.contains(spawn_group_name, Qt::CaseInsensitive))
+        if(spawn_group.m_spawn_group.contains(spawn_group_name, false))
             return spawn_group;
     }
-    qCDebug(logNpcSpawn) << "No matching \"" << spawn_group_name << "\" in g_defined_enemy_spawn_groups to sent group name."
+    sCDebug(logNpcSpawn) << "No matching \"" << spawn_group_name << "\" in g_defined_enemy_spawn_groups to sent group name."
                << "Returning Empty group...";
 
     return m_critter_spawn_list[0];

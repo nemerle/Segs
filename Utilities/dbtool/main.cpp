@@ -252,7 +252,7 @@ int main(int argc, char **argv)
                 qCritical()<< "adduser operation requires login and password";
                 return int(DBToolResult::NOT_ENOUGH_PARAMS);
             }
-            if(configs[0].isSqlite() && !fileExists(configs[0].m_db_name))
+            if(configs[0].isSqlite() && !fileExists(qPrintable(configs[0].m_db_name)))
             {
                 qCritical() << "Cannot add account, the database does not exist";
                 return int(DBToolResult::SQLITE_DB_MISSING);

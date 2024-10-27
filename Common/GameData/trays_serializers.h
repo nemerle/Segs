@@ -11,12 +11,11 @@
 
 #include <stdint.h>
 
-class QString;
 class PowerTrayItem;
 class PowerTray;
 class PowerTrayGroup;
 
-void saveTo(const PowerTrayGroup &target, const QString &baseName, bool text_format=false);
+void saveTo(const PowerTrayGroup &target, const String &baseName, bool text_format=false);
 
-void serializeToDb(const PowerTrayGroup &data, QString &tgt);
-void serializeFromDb(PowerTrayGroup &data, const QString &src);
+void serializeToDb(const PowerTrayGroup &data, String &tgt);
+void serializeFromDb(PowerTrayGroup &data, const String &src);

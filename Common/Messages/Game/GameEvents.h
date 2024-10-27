@@ -15,8 +15,7 @@
 
 // GameEvents make use of some of the event Data defined in GameDBSyncEvents
 #include "Common/Messages/GameDatabase/GameDBSyncEvents.h"
-#include <QtCore/QString>
-#include <array>
+#include "EASTL/array.h"
 
 namespace SEGSEvents
 {
@@ -67,7 +66,7 @@ public:
     // [[ev_def:field]]
     uint32_t m_mapnumber;
     // [[ev_def:field]]
-    QString m_char_name;
+    String m_char_name;
 
     EVENT_IMPL(MapServerAddrRequest)
 };
@@ -128,7 +127,7 @@ class DeleteCharacter : public GameLinkEvent
 public:
     DeleteCharacter():GameLinkEvent(GameEventTypes::evDeleteCharacter)
     {}
-    DeleteCharacter(EventProcessor *evsrc,uint8_t idx,const QString &name) : GameLinkEvent(GameEventTypes::evDeleteCharacter,evsrc),m_index(idx),m_char_name(name)
+    DeleteCharacter(EventProcessor *evsrc,uint8_t idx,const String &name) : GameLinkEvent(GameEventTypes::evDeleteCharacter,evsrc),m_index(idx),m_char_name(name)
     {}
     void serializeto(BitStream &bs) const override
     {
@@ -144,7 +143,7 @@ public:
     // [[ev_def:field]]
     uint8_t m_index;
     // [[ev_def:field]]
-    QString m_char_name;
+    String m_char_name;
     EVENT_IMPL(DeleteCharacter)
 };
 
@@ -197,15 +196,15 @@ public:
     // [[ev_def:field]]
     uint32_t m_build_date;
     // [[ev_def:field]]
-    QString currentVersion;
+    String currentVersion;
     // [[ev_def:field]]
-    std::array<uint8_t,16> clientInfo;
+    eastl::array<uint8_t,16> clientInfo;
     // [[ev_def:field]]
     uint32_t authID;
     // [[ev_def:field]]
     uint32_t authCookie;
     // [[ev_def:field]]
-    QString accountName;
+    String accountName;
     // [[ev_def:field]]
     bool localMapServer;
 };
@@ -222,7 +221,7 @@ public:
     // [[ev_def:field]]
     uint32_t m_unknown_new;
     // [[ev_def:field]]
-    std::array<uint8_t,16> m_clientinfo;
+    eastl::array<uint8_t,16> m_clientinfo;
     // [[ev_def:field]]
     GameAccountResponseData m_data;
     EVENT_IMPL(CharacterSlots)
@@ -234,12 +233,12 @@ class GameEntryError : public GameLinkEvent
 public:
     GameEntryError():GameLinkEvent(GameEventTypes::evGameEntryError)
     {}
-    GameEntryError(EventProcessor *evsrc,const QString &erstr):GameLinkEvent(GameEventTypes::evGameEntryError,evsrc),m_error(erstr)
+    GameEntryError(EventProcessor *evsrc,const String &erstr):GameLinkEvent(GameEventTypes::evGameEntryError,evsrc),m_error(erstr)
     {}
     void serializeto( BitStream &tgt ) const override;
     void serializefrom( BitStream &src ) override;
     // [[ev_def:field]]
-    QString m_error;
+    String m_error;
     EVENT_IMPL(GameEntryError)
 };
 

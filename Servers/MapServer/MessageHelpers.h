@@ -6,6 +6,8 @@
  */
 
 #pragma once
+#include "Containers/String.h"
+#include "Containers/StringView.h"
 #include "Messages/Map/MessageChannels.h"
 
 /**
@@ -19,8 +21,9 @@ namespace SEGSEvents
 {
 class EntitiesResponse;
 }
-void sendChatMessage(MessageChannel t, const QString &msg, Entity *e, MapClientSession &tgt);
-void sendInfoMessage(MessageChannel t, const QString &msg, MapClientSession &tgt);
+void sendChatMessage(MessageChannel t, const String &msg, Entity *e, MapClientSession &tgt);
+void sendInfoMessage(MessageChannel ch, StringView msg, MapClientSession &tgt);
+
 
 class BitStream;
 class EntityManager;

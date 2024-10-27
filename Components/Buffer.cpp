@@ -11,9 +11,9 @@
  */
 
 #include "Buffer.h"
+#include "EASTL/algorithm.h"
+#include "EASTL/utility.h"
 #include <cassert>
-#include <string>
-#include <algorithm> // for std::min/max
 
 GrowingBuffer::GrowingBuffer(uint8_t *buf, uint32_t size, bool take_ownership)
 {
@@ -64,18 +64,18 @@ GrowingBuffer::GrowingBuffer(const GrowingBuffer &from)
     m_max_size  = from.m_max_size;
     if(m_buf&&from.m_buf)
         memcpy(m_buf,from.m_buf,m_write_off); // copy up to write point
-    
+
 }
 
 GrowingBuffer::GrowingBuffer(GrowingBuffer &&from) noexcept
 {
-    std::swap(m_size,from.m_size);
-    std::swap(m_buf,from.m_buf);
-    std::swap(m_last_err,from.m_last_err);
-    std::swap(m_write_off,from.m_write_off);
-    std::swap(m_safe_area,from.m_safe_area);
-    std::swap(m_read_off,from.m_read_off);
-    std::swap(m_max_size,from.m_max_size);
+    eastl::swap(m_size,from.m_size);
+    eastl::swap(m_buf,from.m_buf);
+    eastl::swap(m_last_err,from.m_last_err);
+    eastl::swap(m_write_off,from.m_write_off);
+    eastl::swap(m_safe_area,from.m_safe_area);
+    eastl::swap(m_read_off,from.m_read_off);
+    eastl::swap(m_max_size,from.m_max_size);
 }
 GrowingBuffer::~GrowingBuffer()
 {
@@ -183,7 +183,7 @@ int GrowingBuffer::resize(uint32_t accommodate_size)
     if(accommodate_size<m_size)
         return 0;
     assert(accommodate_size<0x100000);
-    new_size = std::min<uint32_t>(new_size,m_max_size);
+    new_size = eastl::min<uint32_t>(new_size,m_max_size);
     // fix read/write indexers ( it'll happen only if new size is less then current size)
     if(m_read_off>new_size)
         m_read_off  = new_size;

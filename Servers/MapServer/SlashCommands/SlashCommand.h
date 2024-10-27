@@ -6,7 +6,6 @@
  */
 
 #pragma once
+#include "Containers/String.h"
 
-class QString;
-
-void runCommand(const QString &str, struct MapClientSession &sess);
+void runCommand(const String &str, struct MapClientSession &sess);

@@ -2,7 +2,7 @@
 
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
-#include <cereal/types/memory.hpp>
+#include <cereal/eastl/memory.hpp>
 
 template<class Archive>
 void ClassMod_Data::serialize(Archive &archive)

@@ -11,7 +11,7 @@
  */
 
 #include "attrib_serializers.h"
-#include "GameData/CharacterAttributes.h"
+#include "Common/GameData/CharacterAttributes.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
 #include "DataStorage.h"
@@ -37,7 +37,7 @@ bool loadFrom(BinStore * s, AttribNames_Data & target)
     bool ok = s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -61,9 +61,9 @@ bool loadFrom(BinStore * s, AttribNames_Data & target)
     return ok;
 }
 
-void saveTo(const AttribNames_Data & target, const QString & baseName, bool text_format)
+void saveTo(const AttribNames_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"AttributeNames",baseName,text_format);
+    SEGS::commonSaveTo(target,"AttributeNames",baseName,text_format);
 }
 
 bool loadFrom(BinStore *s, Parse_CharAttrib &target)
@@ -184,22 +184,22 @@ bool loadFrom(BinStore *s, Parse_CharAttribMax &target)
     return ok;
 }
 
-void serializeToDb(const Parse_CharAttrib &data, QString &tgt)
+void serializeToDb(const Parse_CharAttrib &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    tgt = String(ostr.str().c_str());
 }
 
-void serializeFromDb(Parse_CharAttrib &data,const QString &src)
+void serializeFromDb(Parse_CharAttrib &data,const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(src.c_str());
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

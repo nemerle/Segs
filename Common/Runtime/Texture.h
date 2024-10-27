@@ -6,18 +6,18 @@
  */
 #pragma once
 #include "Common/Runtime/HandleBasedStorage.h"
+#include "Common/Containers/String.h"
+#include "Containers/StringView.h"
 
 #include <glm/vec2.hpp>
-#include <QString>
-
 #include <stdint.h>
 
 struct ModelModifiers;
 struct TextureModifiers;
 class QFile;
-struct FSWrapper;
 namespace SEGS
 {
+struct IFilesystem;
 struct GeoSet;
 
 enum class CoHBlendMode : uint8_t
@@ -37,19 +37,29 @@ struct TextureWrapper
     using StorageClass = SEGS::TextureStorage; //tells the handle template to look up
     enum
     {
-        ALPHA          = 0x0001,
-        RGB8           = 0x0002,
-        COMP4          = 0x0004,
-        COMP8          = 0x0008,
-        DUAL           = 0x0010,
-        CLAMP          = 0x0080,
-        CUBEMAPFACE    = 0x0200,
-        REPLACEABLE    = 0x0400,
-        BUMPMAP        = 0x0800,
+        ALPHA = 0x1,
+        RGB8 = 0x2,
+        COMP4 = 0x4,
+        COMP8 = 0x8,
+        DUAL = 0x10,
+        TGA = 0x20,
+        DDS = 0x40,
+        CLAMP_UV = 0x80,
+        MOVIE = 0x100,
+        CUBEMAPFACE = 0x200,
+        REPLACEABLE = 0x400,
+        BUMPMAP = 0x800,
         BUMPMAP_MIRROR = 0x1000,
+        JPEG = 0x2000,
+        CLAMP_U = 0x100040,
+        CLAMP_V = 0x100080,
+        MIRROR_U = 0x100100,
+        MIRROR_V = 0x100200,
+        REPEAT_U = 0x100400,
+        REPEAT_V = 0x100800,
     };
-    QByteArray detailname;
-    QByteArray bumpmap;
+    String detailname;
+    String bumpmap;
     int flags {0};
     glm::vec2 scaleUV0 {0,0};
     glm::vec2 scaleUV1 {0,0};
@@ -65,5 +75,5 @@ struct TextureStorage : public HandleBasedStorage<TextureWrapper>
         return s_instance;
     }
 };
-void loadTexHeader(FSWrapper *fs, const QByteArray &fname);
+void loadTexHeader(IFilesystem *fs, StringView fname);
 } // end of SEGS namespace

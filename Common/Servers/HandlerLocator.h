@@ -6,8 +6,8 @@
  */
 
 #pragma once
-#include <deque>
-#include <unordered_map>
+#include "Containers/Deque.h"
+#include "Containers/HashMap.h"
 #include <stdint.h>
 
 class EventProcessor;
@@ -24,11 +24,11 @@ class HandlerLocator
     static EventProcessor *m_email_handler;
     static EventProcessor *m_friend_handler;
     static EventProcessor *m_team_handler;
-    static std::deque<EventProcessor *> m_game_servers;
-    static std::deque<EventProcessor *> m_map_servers;
-    static std::deque<EventProcessor *> m_game_db_servers;
-    static std::deque<std::deque<EventProcessor *>> m_map_instances;
-    static std::unordered_map<uint32_t,std::deque<EventProcessor *>> m_all_event_processors;
+    static Deque<EventProcessor *> m_game_servers;
+    static Deque<EventProcessor *> m_map_servers;
+    static Deque<EventProcessor *> m_game_db_servers;
+    static Deque<Deque<EventProcessor *>> m_map_instances;
+    static HashMap<uint32_t,Deque<EventProcessor *>> m_all_event_processors;
 public:
     HandlerLocator();
     static void setMessageBus(MessageBus *h) { m_message_bus=h; }
@@ -49,8 +49,8 @@ public:
     static void setTeam_Handler(EventProcessor *h) { m_team_handler=h; }
     static EventProcessor *getTeam_Handler() { return m_team_handler; }
 
-    static const std::deque<EventProcessor *> &allGameDBHandlers() { return m_game_db_servers; }
-    static const std::deque<EventProcessor *> &allGameHandlers() { return m_game_servers; }
+    static const Deque<EventProcessor *> &allGameDBHandlers() { return m_game_db_servers; }
+    static const Deque<EventProcessor *> &allGameHandlers() { return m_game_servers; }
     static EventProcessor *getGame_Handler(uint8_t id)
     {
         if(id>=m_game_servers.size())

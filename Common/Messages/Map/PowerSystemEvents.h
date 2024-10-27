@@ -9,8 +9,6 @@
 #include "GameCommand.h"
 #include "MapEventTypes.h"
 #include "GameData/Powers.h"
-
-#include <QtCore/QString>
 #include <glm/glm.hpp>
 
 namespace SEGSEvents
@@ -195,9 +193,9 @@ public:
     // [[ev_def:field]]
     int m_available_slots;
     // [[ev_def:field]]
-    std::vector<int> m_pset_idx;
+    Vector<int> m_pset_idx;
     // [[ev_def:field]]
-    std::vector<int> m_pow_idx;
+    Vector<int> m_pow_idx;
 
     BuyEnhancementSlot() : MapLinkEvent(MapEventTypes::evBuyEnhancementSlot)
     {}

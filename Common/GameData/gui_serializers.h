@@ -8,14 +8,14 @@
 #pragma once
 #include <stdint.h>
 
-class QString;
+#include "Common/Containers/String.h"
 class GUIWindow;
 class GUISettings;
 
 template<class Archive>
 void serialize(Archive &archive, GUISettings &gui, uint32_t const version);
 
-void saveTo(const GUISettings &target,const QString &baseName,bool text_format=false);
+void saveTo(const GUISettings &target,const String &baseName,bool text_format=false);
 
-void serializeToDb(const GUISettings &data, QString &tgt);
-void serializeFromDb(GUISettings &data, const QString &src);
+void serializeToDb(const GUISettings &data, String &tgt);
+void serializeFromDb(GUISettings &data, const String &src);

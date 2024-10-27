@@ -20,7 +20,7 @@
 /*
  * LFG Methods
  */
-std::vector<LFGMember> g_lfg_list;
+Vector<LFGMember> g_lfg_list;
 
 void addLFG(Entity &src)
 {
@@ -39,14 +39,14 @@ void removeLFG(Entity &tgt)
 {
     tgt.m_char->m_char_data.m_lfg = false;
     // remove by name
-    QString name_to_find = tgt.name();
-    auto iter = std::find_if( g_lfg_list.begin(), g_lfg_list.end(),
+    StringView name_to_find = tgt.name();
+    auto iter = eastl::find_if( g_lfg_list.begin(), g_lfg_list.end(),
                               [name_to_find](const LFGMember& list)->bool {return name_to_find==list.m_name;});
     if(iter!=g_lfg_list.end())
     {
         iter = g_lfg_list.erase(iter);
 
-        qCDebug(logLFG) << "Removing" << iter->m_name << "from LFG List";
+        sCDebug(logLFG) << "Removing" << iter->m_name << "from LFG List";
         if(logLFG().isDebugEnabled())
             dumpLFGList();
     }
@@ -54,17 +54,17 @@ void removeLFG(Entity &tgt)
 
 void dumpLFGList()
 {
-    QString output = "LFG List:" + QString::number(g_lfg_list.size());
+    String output = "LFG List:" + eastl::to_string(g_lfg_list.size());
 
     for (auto &m : g_lfg_list)
     {
         output += "\n\t" + m.m_name
                 + " " + m.m_classname
                 + " " + m.m_origin
-                + " " + QString::number(m.m_level);
+                + " " + eastl::to_string(m.m_level);
     }
 
-    qDebug().noquote() << output;
+    sDebug() << output;
 }
 
 //! @}

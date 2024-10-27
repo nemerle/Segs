@@ -15,7 +15,7 @@ TradeOffer::TradeOffer()
 {
 }
 
-TradeOffer::TradeOffer(uint32_t db_id, const QString& name)
+TradeOffer::TradeOffer(uint32_t db_id, const String& name)
     : GameCommandEvent(MapEventTypes::evTradeOffer)
     , m_db_id(db_id)
     , m_name(name)

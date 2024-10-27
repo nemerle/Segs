@@ -6,9 +6,9 @@
  */
 
 #pragma once
-#include <vector>
-#include <QtCore/QString>
-#include <QMap>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Map.h"
+#include "Common/Containers/Vector.h"
 
 enum ModKeys
 {
@@ -218,7 +218,7 @@ enum KeyName : int32_t
     COH_MOUSE_MOVE             = 0x1000,
 };
 
-static const QMap<QString,ModKeys> modNameToEnum = {
+static const Map<String,ModKeys> modNameToEnum = {
     {"LCTRL",CTRL_MOD},
     {"LCONTROL",CTRL_MOD},
     {"RCTRL",CTRL_MOD},
@@ -229,7 +229,7 @@ static const QMap<QString,ModKeys> modNameToEnum = {
     {"RSHIFT",SHIFT_MOD},
 };
 
-static const QMap<QString,KeyName> keyNameToEnum = {
+static const Map<String,KeyName> keyNameToEnum = {
     {"ESCAPE",COH_INPUT_ESCAPE},
     {"ESC",COH_INPUT_ESCAPE},
     {"1",COH_INPUT_1},
@@ -440,41 +440,41 @@ struct Keybind
 {
     KeyName Key;
     ModKeys Mods; // Mod  0, 1 - CONTROL_KEY_PRESSED, 2 - SHIFT PRESSED, 3 - ALT PRESSED
-    QByteArray KeyString;
-    QByteArray Command;
+    String KeyString;
+    String Command;
     bool    IsSecondary = false;
 };
 
 struct Keybind_Profiles
 {
-    QByteArray DisplayName;
-    QByteArray Name;
-    std::vector<Keybind> KeybindArr;
+    String DisplayName;
+    String Name;
+    Vector<Keybind> KeybindArr;
 };
 
 struct CommandEntry
 {
-    QByteArray KeyString;
+    String KeyString;
     KeyName Key;
     ModKeys Mods; // Mod  0, 1 - CONTROL_KEY_PRESSED, 2 - SHIFT PRESSED, 3 - ALT PRESSED
 };
 
 struct Command
 {
-    QByteArray CmdString;
-    QByteArray DisplayName;
+    String CmdString;
+    String DisplayName;
     CommandEntry CommandArr[2];
 };
 
 struct CommandCategory_Entry
 {
-    QByteArray DisplayName;
-    std::vector<Command> commands;
+    String DisplayName;
+    Vector<Command> commands;
 };
 
-using Parse_AllKeyProfiles = std::vector<Keybind_Profiles>;
-using CurrentKeybinds = std::vector<Keybind>;
-using Parse_AllCommandCategories = std::vector<CommandCategory_Entry>;
+using Parse_AllKeyProfiles = Vector<Keybind_Profiles>;
+using CurrentKeybinds = Vector<Keybind>;
+using Parse_AllCommandCategories = Vector<CommandCategory_Entry>;
 
 class KeybindSettings
 {
@@ -484,14 +484,14 @@ static const constexpr  uint32_t class_version = 1;
 public:
         // Keybind Members
         Parse_AllKeyProfiles    m_keybind_profiles;
-        QString                 m_cur_keybind_profile = "Default";
+        String                  m_cur_keybind_profile = "Default";
 
                                 KeybindSettings();
         // Keybind Methods
-        void                    setKeybindProfile(QString &profile);
+        void                    setKeybindProfile(String &profile);
         const CurrentKeybinds & getCurrentKeybinds() const;
         void                    resetKeybinds(const Parse_AllKeyProfiles &default_profiles);
-        void                    setKeybind(QString &profile, KeyName &key, ModKeys &mods, QString &command, bool &is_secondary);
-        void                    removeKeybind(QString &profile, KeyName &key, ModKeys &mods);
+        void                    setKeybind(String &profile, KeyName &key, ModKeys &mods, String &command, bool &is_secondary);
+        void                    removeKeybind(String &profile, KeyName &key, ModKeys &mods);
         void                    keybindsDump();
 };

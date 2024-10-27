@@ -8,8 +8,6 @@
 #pragma once
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
-#include <vector>
-#include <string>
 
 struct MapClientSession;
 
@@ -29,7 +27,7 @@ explicit            EntitiesResponse();
         const char *info() override { return m_incremental ? "Entities_Incremental" : "Entities_Full"; }
         /// Note: all bitstream members are marked as mutable, since they are appended, and append needs to update the bitstream.
         /// The `mutable` keyword has to be put before the event_gen comment :(
-        mutable 
+        mutable
         // [[ev_def:field]]
         BitStream blob_of_death {220};
         // [[ev_def:field]]

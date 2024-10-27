@@ -27,9 +27,9 @@
 #include "GameData/GameDataStore.h"
 #include "Servers/MapServer/DataHelpers.h"
 #include "Components/Logging.h"
-
-#include <QtCore/QString>
-#include <QtCore/QDebug>
+#include "Containers/String.h"
+#include "Common/Utils/string_utils.h"
+//#include <QtCore/QDebug>
 
 using namespace SEGSEvents;
 
@@ -41,9 +41,9 @@ Character::Character()
     m_char_data.m_using_sg_costume          = false;
     m_sg_costume                            = nullptr;
     m_char_data.m_has_titles = m_char_data.m_has_the_prefix
-            || !m_char_data.m_titles[0].isEmpty()
-            || !m_char_data.m_titles[1].isEmpty()
-            || !m_char_data.m_titles[2].isEmpty();
+            || !m_char_data.m_titles[0].empty()
+            || !m_char_data.m_titles[1].empty()
+            || !m_char_data.m_titles[2].empty();
     m_char_data.m_sidekick.m_has_sidekick = false;
     m_char_data.m_current_attribs.initAttribArrays();
 
@@ -75,11 +75,11 @@ void Character::reset()
 
 bool Character::isEmpty()
 {
-    return ( 0==m_name.compare(EMPTY_STRING,Qt::CaseInsensitive)&&
-            (0==m_char_data.m_class_name.compare(EMPTY_STRING,Qt::CaseInsensitive)));
+    return ( 0==m_name.comparei(EMPTY_STRING) &&
+            (0==m_char_data.m_class_name.comparei(EMPTY_STRING)));
 }
 
-void Character::setName(const QString &val )
+void Character::setName(const String &val )
 {
     if(val.length()>0)
         m_name = val;
@@ -94,7 +94,7 @@ void Character::sendTray(BitStream &bs) const
 
 void Character::finalizeLevel()
 {
-    qCDebug(logPowers) << "Finalizing Level";
+    sCDebug(logPowers) << "Finalizing Level";
 
     GameDataStore &data(getGameData());
     uint32_t max_level = data.expMaxLevel();
@@ -118,14 +118,14 @@ void Character::finalizeLevel()
     assert(m_char_data.m_max_insp_cols <= 5 || m_char_data.m_max_insp_rows <= 4);
 
     // Add inherent powers for this level
-    addPowersByLevel(QStringLiteral("Inherent"), QStringLiteral("Inherent"), m_char_data.m_level);
+    addPowersByLevel("Inherent", "Inherent", m_char_data.m_level);
 
     for(auto level : data.m_costume_slot_unlocks)
     {
         // add costume every time current level matches i
         // this would allow server operators to award all
         // costumes at 10th level, or different levels
-        if(level.toUInt() == m_char_data.m_level)
+        if(StringUtils::to_int(level) == (int)m_char_data.m_level)
             addCostumeSlot();
     }
 
@@ -133,13 +133,13 @@ void Character::finalizeLevel()
     m_char_data.m_reset_powersets = true; // possible that we need to reset the powerset array client side
 }
 
-void Character::addStartingInspirations(QStringList &starting_insps)
+void Character::addStartingInspirations(Vector<String> &starting_insps)
 {
-    for (QString &name : starting_insps)
+    for (String &name : starting_insps)
         addInspirationByName(m_char_data, name);
 }
 
-void Character::addStartingPowers(const QString &pcat_name, const QString &pset_name, const QStringList &power_names)
+void Character::addStartingPowers(const String &pcat_name, const String &pset_name, const Vector<String> &power_names)
 {
     PowerPool_Info ppool;
 
@@ -148,12 +148,12 @@ void Character::addStartingPowers(const QString &pcat_name, const QString &pset_
 
     addPowerSet(m_char_data, ppool); // add empty powerset
 
-    for(const QString &name : power_names)
+    for(const String &name : power_names)
     {
         // Because we pull from settings.cfg, it's possible
         // that power_names is empty but still contains one
         // item with a value of "". So we break here.
-        if(name.isEmpty())
+        if(name.empty())
             break;
 
         ppool.m_pow_idx = getPowerByName(name, ppool.m_pcat_idx, ppool.m_pset_idx);
@@ -161,7 +161,7 @@ void Character::addStartingPowers(const QString &pcat_name, const QString &pset_
     }
 }
 
-void Character::addPowersByLevel(const QString &pcat_name, const QString &pset_name, uint32_t level)
+void Character::addPowersByLevel(const String &pcat_name, const String &pset_name, uint32_t level)
 {
     PowerPool_Info ppool;
     ppool.m_pcat_idx = getPowerCatByName(pcat_name);
@@ -194,29 +194,45 @@ void Character::getPowerFromBuildInfo(BitStream &src)
     }
 }
 
+static String removeSpaces(StringView s) {
+    String res;
+    res.reserve(s.size());
+    for(char c : s) {
+        if(CharUtils::is_whitespace(c)) {
+            continue;
+        }
+        res.push_back(c);
+    }
+    return res;
+}
+
+static Vector<String> configStringArray(Settings &config,StringView key, const String &defaultval) {
+    return removeSpaces(config.value<String>(key, defaultval)).split(',');
+}
+
 void Character::GetCharBuildInfo(BitStream &src)
 {
     src.GetString(m_char_data.m_class_name);
     src.GetString(m_char_data.m_origin_name);
 
-    qInfo() << "Loading Starting Character Settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    sInfo() << "Loading Starting Character Settings...";
+    Settings config(Settings::getSettingsPath());
 
     config.beginGroup("StartingCharacter");
-        QRegExp space("\\s");
-        QStringList inherent_and_preorders = config.value(QStringLiteral("inherent_powers"), "Brawl").toString().remove(space).split(',');
-        QStringList starting_temps = config.value(QStringLiteral("starting_temps"), "EMP_Glove").toString().remove(space).split(',');
-        QStringList starting_insps = config.value(QStringLiteral("starting_inspirations"), "Resurgence").toString().remove(space).split(',');
-        uint startlevel = config.value(QStringLiteral("starting_level"), "1").toUInt() -1; //convert from 1-50 to 0-49
-        uint startinf = config.value(QStringLiteral("starting_inf"), "0").toUInt();
+
+        Vector<String> inherent_and_preorders = configStringArray(config,"inherent_powers", "Brawl");
+        Vector<String> starting_temps = configStringArray(config,"starting_temps", "EMP_Glove");
+        Vector<String> starting_insps = configStringArray(config,"starting_inspirations", "Resurgence");
+        int startlevel = config.value<int>("starting_level", 1) -1; //convert from 1-50 to 0-49
+        int startinf = config.value("starting_inf", 0);
     config.endGroup();
 
     m_char_data.m_level = startlevel;
     m_char_data.m_influence = startinf;
 
     // Temporary Powers MUST come first (must be idx 0)
-    addStartingPowers(QStringLiteral("Temporary_Powers"), QStringLiteral("Temporary_Powers"), starting_temps);
-    addStartingPowers(QStringLiteral("Inherent"), QStringLiteral("Inherent"), inherent_and_preorders);
+    addStartingPowers(("Temporary_Powers"), ("Temporary_Powers"), starting_temps);
+    addStartingPowers(("Inherent"), ("Inherent"), inherent_and_preorders);
     getPowerFromBuildInfo(src);     // primary, secondary
 
     // Now that character is created. Finalize level and update hp and end
@@ -280,7 +296,7 @@ void Character::sendOwnedPowers(BitStream &bs) const
             bs.StoreFloat(power.getPowerTemplate().Range);
 
             if(power.m_total_eh_slots > power.m_enhancements.size())
-                qCWarning(logPowers) << "sendOwnedPowers: Total EH Slots larger than vector!";
+                sCWarning(logPowers) << "sendOwnedPowers: Total EH Slots larger than vector!";
 
             bs.StorePackedBits(4, power.m_enhancements.size());
             for(const CharacterEnhancement &eh : power.m_enhancements)
@@ -318,7 +334,7 @@ void Character::SendCharBuildInfo(BitStream &bs) const
     PUTDEBUG("SendCharBuildInfo after boosts");
 }
 
-void Character::serializetoCharsel( BitStream &bs, const QString& entity_map_name )
+void Character::serializetoCharsel( BitStream &bs, const String& entity_map_name )
 {
     Character c = *this;
     bs.StorePackedBits(1,getLevel(c));
@@ -358,7 +374,7 @@ void Character::addCostumeSlot()
     if(m_costumes.size() == static_cast<size_t>(g_max_num_costume_slots))
         return; // client cannot handle more than 4 costumes;
 
-    qCDebug(logTailor) << "Adding Costume Slot" << m_costumes.size();
+    sCDebug(logTailor) << "Adding Costume Slot" << m_costumes.size();
 
     Costume new_costume = m_costumes.at(getCurrentCostumeIdx(*this));
     new_costume.m_index = m_costumes.size();
@@ -411,49 +427,49 @@ void Character::serialize_costumes(BitStream &bs, const ColorAndPartPacker *pack
 
 void Character::dumpSidekickInfo()
 {
-    QString msg = QString("Sidekick Info\n  has_sidekick: %1 \n  db_id: %2 \n  type: %3 ")
-            .arg(m_char_data.m_sidekick.m_has_sidekick)
-            .arg(m_char_data.m_sidekick.m_db_id)
-            .arg(m_char_data.m_sidekick.m_type);
+    String msg = String(String::CtorSprintf(),"Sidekick Info\n  has_sidekick: %d \n  db_id: %d \n  type: %d ",
+            m_char_data.m_sidekick.m_has_sidekick,
+            m_char_data.m_sidekick.m_db_id,
+            m_char_data.m_sidekick.m_type);
 
-    qDebug().noquote() << msg;
+    sDebug() << msg;
 }
 
 void Character::dumpBuildInfo()
 {
     Character &c = *this;
-    QString msg = "//--------------Char Debug--------------\n  "
+    String msg = "//--------------Char Debug--------------\n  "
             + getName()
             + "\n  " + getOrigin(c)
             + "\n  " + getClass(c)
-            + "\n  db_id: " + QString::number(m_db_id)
-            + "\n  acct: " + QString::number(getAccountId())
-            + "\n  lvl/clvl: " + QString::number(getLevel(c)) + "/" + QString::number(getCombatLevel(c))
-            + "\n  inf: " + QString::number(getInf(c))
-            + "\n  xp/debt: " + QString::number(getXP(c)) + "/" + QString::number(getDebt(c))
-            + "\n  lfg: " + QString::number(m_char_data.m_lfg)
-            + "\n  afk: " + QString::number(m_char_data.m_afk)
+            + "\n  db_id: " + eastl::to_string(m_db_id)
+            + "\n  acct: " + eastl::to_string(getAccountId())
+            + "\n  lvl/clvl: " + eastl::to_string(getLevel(c)) + "/" + eastl::to_string(getCombatLevel(c))
+            + "\n  inf: " + eastl::to_string(getInf(c))
+            + "\n  xp/debt: " + eastl::to_string(getXP(c)) + "/" + eastl::to_string(getDebt(c))
+            + "\n  lfg: " + eastl::to_string(m_char_data.m_lfg)
+            + "\n  afk: " + eastl::to_string(m_char_data.m_afk)
             + "\n  description: " + getDescription(c)
             + "\n  battleCry: " + getBattleCry(c)
             + "\n  Last Online: " + m_char_data.m_last_online;
 
-    qDebug().noquote() << msg;
+    sDebug() << msg;
 }
 
 void Character::dump()
 {
     dumpBuildInfo();
-    qDebug() << "//--------------Owned Powers--------------";
+    sDebug() << "//--------------Owned Powers--------------";
     dumpOwnedPowers(m_char_data);
-    qDebug() << "//-----------Owned Inspirations-----------";
+    sDebug() << "//-----------Owned Inspirations-----------";
     dumpInspirations(m_char_data);
-    qDebug() << "//-----------Owned Enhancements-----------";
+    sDebug() << "//-----------Owned Enhancements-----------";
     dumpEnhancements(m_char_data);
-    qDebug() << "//--------------Sidekick Info--------------";
+    sDebug() << "//--------------Sidekick Info--------------";
     dumpSidekickInfo();
-    qDebug() << "//------------------Tray------------------";
+    sDebug() << "//------------------Tray------------------";
     m_char_data.m_trays.dump();
-    qDebug() << "//-----------------Costume-----------------";
+    sDebug() << "//-----------------Costume-----------------";
     dumpCostumes(m_costumes);
 }
 
@@ -550,7 +566,7 @@ void Character::sendFullStats(BitStream &bs) const
 void Character::sendDescription(BitStream &bs) const
 {
 
-    qCDebug(logDescription) << "Sending Description & BattleCry"
+    sCDebug(logDescription) << "Sending Description & BattleCry"
              << "\nDescription: " << m_char_data.m_character_description
              << "\nBattle Cry: " << m_char_data.m_battle_cry;
 
@@ -624,8 +640,8 @@ bool toActualCharacter(const GameAccountResponseCharacterData &src,
 
     try
     {
-        qCDebug(logCharSel) << src.m_name << src.m_db_id << src.m_account_id << src.m_slot_idx;
-        qCDebug(logCharSel).noquote() << "Costume:" << src.m_serialized_costume_data;
+        sCDebug(logCharSel) << src.m_name << src.m_db_id << src.m_account_id << src.m_slot_idx;
+        sCDebug(logCharSel) << "Costume:" << src.m_serialized_costume_data;
         serializeFromQString(tgt.m_costumes, src.m_serialized_costume_data);
         serializeFromQString(cd, src.m_serialized_chardata);
         serializeFromQString(entity, src.m_serialized_entity_data);
@@ -633,11 +649,11 @@ bool toActualCharacter(const GameAccountResponseCharacterData &src,
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
     return true;
 }
@@ -661,11 +677,11 @@ bool fromActualCharacter(const Character &src, const PlayerData &player,
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 
     return true;

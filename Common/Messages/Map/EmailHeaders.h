@@ -20,8 +20,8 @@ public:
     struct EmailHeader
     {
         uint32_t id;
-        QString sender;
-        QString subject;
+        String sender;
+        String subject;
         uint32_t timestamp;
         template<class Archive>
         void serialize(Archive &ar)
@@ -32,14 +32,14 @@ public:
 
     explicit EmailHeaders() : GameCommandEvent(MapEventTypes::evEmailHeaders) {}
     /*Send multiple emails*/
-    EmailHeaders(const std::vector<EmailHeader> &email) : GameCommandEvent(MapEventTypes::evEmailHeaders),
+    EmailHeaders(const Vector<EmailHeader> &email) : GameCommandEvent(MapEventTypes::evEmailHeaders),
         m_fullupdate(true),
         m_emails(email)
     {
     }
 
     /*Defines a single email header to send*/
-    EmailHeaders(const uint32_t &id, const QString &sender, const QString &subject, const uint32_t &timestamp)
+    EmailHeaders(const uint32_t &id, const String &sender, const String &subject, const uint32_t &timestamp)
         : GameCommandEvent(evEmailHeaders), m_fullupdate(false)
     {
         m_emails.push_back(EmailHeader{ id, sender, subject, timestamp });
@@ -64,7 +64,7 @@ public:
     // [[ev_def:field]]
     bool    m_fullupdate; //Forces a refresh of the email window
     // [[ev_def:field]]
-    std::vector<EmailHeader> m_emails;
+    Vector<EmailHeader> m_emails;
 
     EVENT_IMPL(EmailHeaders)
 };

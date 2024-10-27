@@ -6,15 +6,18 @@
  */
 
 #pragma once
+#include "Containers/String.h"
+#include "Containers/Vector.h"
+
+#include <QtCore/QtContainerFwd>
 
 struct MapClientSession;
-class QStringList;
 
 // Slash Commands related to Contacts, Tasks, Stores
 
 // Access Level 9 Commands (GMs)
-void cmdHandler_SendContactDialog(const QStringList &params, MapClientSession &sess);
-void cmdHandler_SendContactDialogYesNoOk(const QStringList &params, MapClientSession &sess);
-void cmdHandler_ContactStatusList(const QStringList &params, MapClientSession &sess);
-void cmdHandler_AddTestTask(const QStringList &/*params*/, MapClientSession &sess);
-void cmdHandler_OpenStore(const QStringList &/*params*/, MapClientSession &sess);
+void cmdHandler_SendContactDialog(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_SendContactDialogYesNoOk(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_ContactStatusList(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_AddTestTask(const Vector<String> &/*params*/, MapClientSession &sess);
+void cmdHandler_OpenStore(const Vector<String> &/*params*/, MapClientSession &sess);

@@ -24,6 +24,7 @@ SET(target_INCLUDE
     ConfigExtension.h
     EventProcessor.h
     SEGSEvent.h
+    SEGSEvent_impl.h
     SEGSEventFactory.h
     LinkLevelEvent.h
     TimeEvent.h
@@ -42,13 +43,15 @@ SET (target_SOURCES
     ${target_INCLUDE}
 )
 INCLUDE_DIRECTORIES(${target_INCLUDE_DIR})
+
 scan_event_types(Common ${CMAKE_CURRENT_SOURCE_DIR})
 add_event_sources(Common target_SOURCES)
 
-add_library(SEGS_Components STATIC ${target_SOURCES} )
+add_library(SEGS_Components STATIC ${target_SOURCES}
+    SEGSEvent_impl.h
+    MemoryManagement.h MemoryManagement.cpp )
 add_dependencies(SEGS_Components ACE_BUILD)
 
-target_link_libraries(SEGS_Components PUBLIC Qt5::Core)
 target_link_libraries(SEGS_Components PUBLIC ace_IMP)
 IF(MINGW)
     target_link_libraries(SEGS_Components INTERFACE ws2_32)
@@ -57,12 +60,13 @@ ENDIF()
 if(ENABLE_TESTS)
     add_subdirectory(UnitTests)
 endif()
-target_include_directories(SEGS_Components INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../)
+target_include_directories(SEGS_Components PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
+target_link_libraries(SEGS_Components PUBLIC #[[cereal_IMP]] EASTL SegsUtils SegsContainers glm)
 
 # Retain directory structure in visual studio
-get_target_property(TARGET_SOURCES SEGS_Components SOURCES) 
+get_target_property(TARGET_SOURCES SEGS_Components SOURCES)
 list(REMOVE_ITEM TARGET_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/Common.gen.cpp)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${TARGET_SOURCES}) 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${TARGET_SOURCES})
 set_target_properties (SEGS_Components PROPERTIES
     FOLDER Components
 )

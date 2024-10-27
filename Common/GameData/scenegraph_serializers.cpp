@@ -18,8 +18,6 @@
 #include "scenegraph_definitions.h"
 #include "Components/Logging.h"
 
-#include <QFileInfo>
-
 namespace
 {
     bool loadFrom(BinStore *s, GroupProperty_Data &target)
@@ -101,6 +99,7 @@ namespace
     bool loadFrom(BinStore *s, DefBeacon_Data &target)
     {
         bool ok = true;
+
         s->prepare();
         ok &= s->read(target.name);
         ok &= s->read(target.amplitude);
@@ -165,7 +164,7 @@ namespace
         assert(ok);
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -230,7 +229,7 @@ bool loadFrom(BinStore *s, SceneGraph_Data &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -366,16 +365,17 @@ static void serialize(Archive & archive, SceneGraph_Data & m)
     archive(cereal::make_nvp("Refs",m.Ref));
 }
 
-void saveTo(const SceneGraph_Data &target, const QString &baseName, bool text_format)
+void saveTo(const SceneGraph_Data &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"SceneGraph",baseName,text_format);
+    SEGS::commonSaveTo(target,"SceneGraph",baseName,text_format);
 }
 
-bool loadFrom(FSWrapper &fs, const QString &filepath, SceneGraph_Data &target)
+bool loadFrom(const String &filepath, SceneGraph_Data &target)
 {
-    return commonReadFrom(fs,filepath,"SceneGraph",target);
+    return SEGS::commonReadFrom(filepath,"SceneGraph",target);
 }
-QString getFilepathCaseInsensitive(FSWrapper& fs, QString fpath)
+
+String getFilepathCaseInsensitive(SEGS::IFilesystem * fs, const String &fpath)
 {
     // Windows is far too lax about case sensitivity. Consequently
     // filenames aren't consistent. This should derive the filename
@@ -383,47 +383,53 @@ QString getFilepathCaseInsensitive(FSWrapper& fs, QString fpath)
     // formatted filepath when loading scene data.
 
     // check file exists, if so, return original path
-    if (fs.exists(fpath))
+    if (fs->exists(fpath))
         return fpath;
 
     // get base from path
-    QString base_path = QFileInfo(fpath).path();
+    String base_path(PathUtils::path(fpath));
 
-    if (!fs.exists(base_path))
-        qWarning() << "Failed to open" << base_path;
+    if (!fs->exists(base_path))
+        sWarning() << "Failed to open" << base_path;
 
-    QStringList files = fs.dir_entries(base_path);
-    for (QString& f : files)
-    {
-        //qCDebug(logSceneGraph) << "Comparing" << f << fpath;
-        if (fpath.endsWith(f, Qt::CaseInsensitive))
-            fpath = base_path + "/" + f;
-    }
+    String true_path;
+
+    fs->visitEntries(base_path,[&](StringView path,bool is_dir)->SEGS::IFilesystem::VisitResult {
+        if(fpath.ends_with(path,false)) {
+            true_path = path;
+            return SEGS::IFilesystem::VisitStop;
+        }
+        return SEGS::IFilesystem::VisitNext;
+    });
+
+    if(!true_path.empty())
+        return true_path;
 
     return fpath;
 }
-bool LoadSceneData(FSWrapper &fs, const QString &fname, SceneGraph_Data &scenegraph)
+bool LoadSceneData(const String &fname, SceneGraph_Data &scenegraph)
 {
+    SEGS::IFilesystem * fs = SEGS::getServiceLocator()->getFS();
     BinStore binfile;
-    QString fixed_path = getFilepathCaseInsensitive(fs,fname);
+    String fixed_path = getFilepathCaseInsensitive(fs,fname);
 
     if(fixed_path.contains(".crl"))
     {
-        if(!loadFrom(fs, fixed_path, scenegraph))
+        if(!loadFrom(fixed_path, scenegraph))
         {
-            qCritical() << "Failed to serialize data from crl:" << fixed_path;
+            sCritical() << "Failed to serialize data from crl:" << fixed_path;
             return false;
         }
         return true;
     }
-    if(!binfile.open(fs,fixed_path, scenegraph_i0_2_requiredCrc))
+    if(!binfile.open(fixed_path, scenegraph_i0_2_requiredCrc))
     {
-        qCritical() << "Failed to open original bin:" << fixed_path;
+        sCritical() << "Failed to open original bin:" << fixed_path;
         return false;
     }
     if(!loadFrom(&binfile, scenegraph))
     {
-        qCritical() << "Failed to load data from original bin:" << fixed_path;
+        sCritical() << "Failed to load data from original bin:" << fixed_path;
         return false;
     }
     return true;

@@ -58,7 +58,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef EASTL_EABASE_DISABLED
-    #include <EASTL/EABase/eabase.h>
+	#include <EASTL/EABase/eabase.h>
 	#include <EASTL/EABase/eadeprecated.h>
 #endif
 #include <EASTL/EABase/eahave.h>
@@ -444,12 +444,12 @@ namespace eastl
 // at least if the subscript operator is inlined because the expression will
 // be equivalent to &*(nullptr) and optimized ti nullptr. MSVC, Clang and GCC
 // all have this behaviour and UBSan & ASan report no issues with that code.
-// 
+//
 // Code that relies on this macro being disabled should instead use the
 // container's data() member function. The range [data(), data() + size())
 // is always valid, even when the container is empty (in which case data()
 // is not dereferencable).
-// 
+//
 // Enabling this macro adds asserts if the container is empty and the function
 // invocation is well defined. If the implementation may invoke UB, or the
 // container is non-empty, then the assert fires if EASTL_ASSERT_ENABLED is
@@ -644,8 +644,8 @@ namespace eastl
     #ifndef EASTL_DEBUG_BREAK
         #if defined(_MSC_VER) && (_MSC_VER >= 1300)
             #define EASTL_DEBUG_BREAK() __debugbreak()    // This is a compiler intrinsic which will map to appropriate inlined asm for the platform.
-		#elif defined(EA_PLATFORM_NINTENDO)
-			#define EASTL_DEBUG_BREAK() __builtin_debugtrap()  // Consider using the CLANG define
+        #elif defined(EA_PLATFORM_NINTENDO)
+            #define EASTL_DEBUG_BREAK() __builtin_debugtrap()  // Consider using the CLANG define
         #elif (defined(EA_PROCESSOR_ARM) && !defined(EA_PROCESSOR_ARM64)) && defined(__APPLE__)
             #define EASTL_DEBUG_BREAK() asm("trap")
         #elif defined(EA_PROCESSOR_ARM64) && defined(__APPLE__)
@@ -688,7 +688,7 @@ namespace eastl
 ///////////////////////////////////////////////////////////////////////////////
 // EASTL_CRASH
 //
-// Executes an invalid memory write, which should result in an exception 
+// Executes an invalid memory write, which should result in an exception
 // on most platforms.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -1084,10 +1084,10 @@ namespace eastl
 // of the validity of containers and their iterators. Validation checking is
 // something that often involves significantly more than basic assertion
 // checking, and it may sometimes be desirable to disable it.
-// 
+//
 // Validation sub-features are supported and can be enabled / disabled
 // individually.
-// 
+//
 // This macro would generally be used internally by EASTL.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -1381,7 +1381,7 @@ namespace eastl
 // If enabled then C++17-like functionality with inline variable is enabled.
 ///////////////////////////////////////////////////////////////////////////////
 #if !defined(EASTL_INLINE_VARIABLE_ENABLED)
-    #if((EABASE_VERSION_N < 20707) || defined(EA_COMPILER_NO_INLINE_VARIABLES))
+    #if((EABASE_VERSION_N < 20707) || (defined(EA_COMPILER_NO_INLINE_VARIABLES)&&(EA_COMPILER_NO_INLINE_VARIABLES!=0)))
         #define EASTL_INLINE_VARIABLE_ENABLED 0
     #else
         #define EASTL_INLINE_VARIABLE_ENABLED 1
@@ -1474,23 +1474,23 @@ namespace eastl
         #include <stddef.h>
         #define EASTL_SIZE_T  size_t
         #define EASTL_SSIZE_T intptr_t
-		// printf format specifiers for use with eastl_size_t
-		#define EASTL_PRIdSIZE "zd"
-		#define EASTL_PRIiSIZE "zi"
-		#define EASTL_PRIoSIZE "zo"
-		#define EASTL_PRIuSIZE "zu"
-		#define EASTL_PRIxSIZE "zx"
-		#define EASTL_PRIXSIZE "zX"
+        // printf format specifiers for use with eastl_size_t
+        #define EASTL_PRIdSIZE "zd"
+        #define EASTL_PRIiSIZE "zi"
+        #define EASTL_PRIoSIZE "zo"
+        #define EASTL_PRIuSIZE "zu"
+        #define EASTL_PRIxSIZE "zx"
+        #define EASTL_PRIXSIZE "zX"
     #else
         #define EASTL_SIZE_T  uint32_t
         #define EASTL_SSIZE_T int32_t
-		// printf format specifiers for use with eastl_size_t
-		#define EASTL_PRIdSIZE PRId32
-		#define EASTL_PRIiSIZE PRIi32
-		#define EASTL_PRIoSIZE PRIo32
-		#define EASTL_PRIuSIZE PRIu32
-		#define EASTL_PRIxSIZE PRIx32
-		#define EASTL_PRIXSIZE PRIX32
+        // printf format specifiers for use with eastl_size_t
+        #define EASTL_PRIdSIZE PRId32
+        #define EASTL_PRIiSIZE PRIi32
+        #define EASTL_PRIoSIZE PRIo32
+        #define EASTL_PRIuSIZE PRIu32
+        #define EASTL_PRIxSIZE PRIx32
+        #define EASTL_PRIXSIZE PRIX32
     #endif
 #endif
 
@@ -1737,9 +1737,9 @@ typedef EASTL_SSIZE_T eastl_ssize_t; // Signed version of eastl_size_t. Concept 
         #define EASTL_HAS_UNIQUE_OBJECT_REPRESENTATIONS_AVAILABLE 0
     #endif
 #if EASTL_HAS_INTRINSIC(is_final) || defined(EA_COMPILER_GNUC) || (defined(_MSC_VER) && (_MSC_VER >= 1914))	// VS2017 15.7+
-	#define EASTL_IS_FINAL_AVAILABLE 1
+    #define EASTL_IS_FINAL_AVAILABLE 1
 #else
-	#define EASTL_IS_FINAL_AVAILABLE 0
+    #define EASTL_IS_FINAL_AVAILABLE 0
 #endif
 
 #if EASTL_HAS_INTRINSIC(is_aggregate) || defined(EA_COMPILER_GNUC) || (defined(_MSC_VER) && (_MSC_VER >= 1915))  // VS2017 15.8+
@@ -1784,7 +1784,7 @@ typedef EASTL_SSIZE_T eastl_ssize_t; // Signed version of eastl_size_t. Concept 
 #endif
 
 // EASTL deprecation macros:
-// 
+//
 // EASTL_DEPRECATIONS_FOR_2024_APRIL
 // This macro is provided as a means to disable warnings temporarily (in particular if a user is compiling with warnings as errors).
 // All deprecations raised by this macro (when it is EA_ENABLED) are scheduled for removal approximately April 2024.

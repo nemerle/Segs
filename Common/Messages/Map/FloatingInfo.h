@@ -11,8 +11,6 @@
 #include "FloatingInfoStyles.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 // [[ev_def:type]]
@@ -22,13 +20,13 @@ public:
                         // [[ev_def:field]]
     uint32_t            m_tgt_idx;
                         // [[ev_def:field]]
-    QString             m_msg;
+    String              m_msg;
                         // [[ev_def:field]]
     FloatingInfoStyle   m_style;
                         // [[ev_def:field]]
     float               m_delay;
     explicit            FloatingInfo() : GameCommandEvent(evFloatingInfo) {}
-                        FloatingInfo(uint32_t tgt_idx, QString msg, FloatingInfoStyle style, float delay) : GameCommandEvent(evFloatingInfo),
+                        FloatingInfo(uint32_t tgt_idx, const String &msg, FloatingInfoStyle style, float delay) : GameCommandEvent(evFloatingInfo),
                             m_tgt_idx(tgt_idx),
                             m_msg(msg),
                             m_style(style),

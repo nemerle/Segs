@@ -8,7 +8,7 @@ void Sidekick::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Sidekick::class_version)
     {
-        qCritical() << "Failed to serialize Sidekick, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Sidekick, incompatible serialization format version " << version;
         return;
     }
 

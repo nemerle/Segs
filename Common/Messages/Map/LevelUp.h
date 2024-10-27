@@ -10,8 +10,6 @@
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 
@@ -50,7 +48,7 @@ public:
     }
     void    serializefrom(BitStream &/*bs*/) override
     {
-        qCDebug(logMapEvents) << "LevelUp Complete";
+        sCDebug(logMapEvents) << "LevelUp Complete";
 
         //button_id = bs.GetPackedBits(1);
         //result = bs.GetPackedBits(1);

@@ -7,16 +7,16 @@
 
 #pragma once
 #include "Common/CRUDP_Protocol/CRUDP_Protocol.h"
+
 #include "Components/EventProcessor.h"
 #include "Common/GameData/map_definitions.h"
 #include "Common/Messages/Map/GameCommand.h"
 #include "Common/Messages/Map/MessageChannels.h"
 #include "Common/GameData/Entity.h"
+#include "Common/Containers/DateTime.h"
 
 #include <ace/INET_Addr.h>
 #include <ace/Time_Value.h>
-#include <QtCore/QString>
-#include <QtCore/QDateTime>
 #include <glm/vec3.hpp>
 
 namespace SEGSEvents
@@ -121,10 +121,10 @@ struct ExpectMapClientRequestData
     uint64_t m_client_id;
     uint8_t m_access_level;
     ACE_INET_Addr m_from_addr;
-    QString char_from_db_data; //! serialized character data, if this is empty Map server assumes a new character
+    String char_from_db_data; //! serialized character data, if this is empty Map server assumes a new character
     uint16_t m_slot_idx;
-    QString m_character_name;
-    QString m_map_name;
+    String m_character_name;
+    String m_map_name;
     uint16_t m_max_slots;
     template<class Archive>
     void serialize(Archive &ar)
@@ -163,7 +163,7 @@ ONE_WAY_MESSAGE(Internal_EventTypes,ReloadConfig)
 struct GameServerStatusData
 {
     ACE_INET_Addr m_addr;
-    QDateTime m_last_status_update;
+    DateTime m_last_status_update;
     uint16_t m_current_players;
     uint16_t m_max_players;
     uint8_t m_id;
@@ -183,7 +183,7 @@ ONE_WAY_MESSAGE(Internal_EventTypes,GameServerStatus)
 //
 struct ServiceStatusData
 {
-    QString status_message;
+    String status_message;
     int status_value;
     template<class Archive>
     void serialize(Archive &ar)
@@ -239,7 +239,7 @@ struct MapSwapCollisionData
 {
     uint32_t m_ent_db_id;
     glm::vec3 m_pos;
-    QString m_node_name;
+    String m_node_name;
     template<class Archive>
     void serialize(Archive &ar)
     {
@@ -249,19 +249,19 @@ struct MapSwapCollisionData
 // [[ev_def:macro]]
 ONE_WAY_MESSAGE(Internal_EventTypes,MapSwapCollision)
 
-using GameCommandVector = std::vector<std::unique_ptr<GameCommandEvent>>;     // might need another vector of InternalEvents if sending to something like game_db
+using GameCommandVector = Vector<eastl::unique_ptr<GameCommandEvent>>;     // might need another vector of InternalEvents if sending to something like game_db
 
 struct ServiceToClientData
 {
     GameCommandVector m_commands;
-    QString m_message;
+    String m_message;
     uint64_t m_token;
     MessageChannel m_message_channel;
 
     ServiceToClientData(){};
 
     // use this if you are sending GameCommands and find your session from token (eg EmailService)
-    ServiceToClientData(uint64_t token, GameCommandVector &&commands, QString msg = {}, MessageChannel messageChannel = MessageChannel::DEBUG_INFO)
+    ServiceToClientData(uint64_t token, GameCommandVector &&commands, const String & msg = {}, MessageChannel messageChannel = MessageChannel::DEBUG_INFO)
     {
         m_token = token;
         m_commands = std::move(commands);
@@ -270,7 +270,7 @@ struct ServiceToClientData
     }
 
     // same as above, but with tokens
-    ServiceToClientData(uint64_t token, QString msg, MessageChannel messageChannel = MessageChannel::DEBUG_INFO)
+    ServiceToClientData(uint64_t token, const String &msg, MessageChannel messageChannel = MessageChannel::DEBUG_INFO)
     {
         m_token = token;
         m_message = msg;
@@ -278,7 +278,7 @@ struct ServiceToClientData
     }
 };
 
-using EntityFoundAction = std::function<void(Entity* ent)>;
+using EntityFoundAction = eastl::function<void(Entity* ent)>;
 
 struct ServiceToEntityData
 {
@@ -292,7 +292,7 @@ struct ServiceToEntityData
     }
 };
 
-using UPtrServiceToClientData = std::unique_ptr<SEGSEvents::ServiceToClientData>;
-using UPtrServiceToEntityData = std::unique_ptr<SEGSEvents::ServiceToEntityData>;
+using UPtrServiceToClientData = eastl::unique_ptr<SEGSEvents::ServiceToClientData>;
+using UPtrServiceToEntityData = eastl::unique_ptr<SEGSEvents::ServiceToEntityData>;
 
 } // end of SEGSEvents namespace

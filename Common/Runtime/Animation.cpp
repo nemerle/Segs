@@ -4,12 +4,8 @@
 #include "RuntimeData.h"
 
 #include "AnimationEngine.h"
-#include "GameData/anim_definitions.h"
+#include "Common/GameData/anim_definitions.h"
 
-#include <QDebug>
-#include <QFile>
-#include <QHash>
-#include <QSet>
 #include <cassert>
 
 using namespace SEGS;
@@ -17,8 +13,8 @@ using namespace SEGS;
 namespace
 {
 // animated geometries
-QHash<QString, GeoSet *> g_geoset_dictionary;
-QSet<QString>            g_missing_geos;
+HashMap<String, GeoSet *> g_geoset_dictionary;
+Set<String>            g_missing_geos;
 // file structure layouts
 #pragma pack(push, 1)
 struct PackedAnimPos
@@ -165,7 +161,7 @@ bool validBoneIdx(int idx)
 {
     return idx >= 0 && idx < 70;
 }
-void convertBoneHierarchy(const BoneLink *src, int start_bone_id, std::vector<BoneLink> &tgt)
+void convertBoneHierarchy(const BoneLink *src, int start_bone_id, Vector<BoneLink> &tgt)
 {
     for (int idx = start_bone_id; idx != -1; idx = src[idx].next_bone_idx)
     {
@@ -277,9 +273,9 @@ static void convertToAnimTrack(char *data_as_raw, AnimTrack &tgt)
     }
 }
 
-HAnimationTrack animReadTrackFile(QFile *fp)
+HAnimationTrack animReadTrackFile(IFile *fp)
 {
-    QByteArray      binary_data = fp->readAll();
+    auto binary_data = fp->readAll();
     HAnimationTrack handle      = AnimationStorage::instance().create();
     convertToAnimTrack(binary_data.data(), handle.get());
     return handle;
@@ -288,35 +284,36 @@ HAnimationTrack animReadTrackFile(QFile *fp)
 } // end of anonymous namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-HAnimationTrack getOrLoadAnimationTrack(const QByteArray &name)
+HAnimationTrack getOrLoadAnimationTrack(const String &name)
 {
     RuntimeData &rd(getRuntimeData());
-    QString      base_path = rd.m_prefab_mapping->m_base_path;
+    String      base_path = rd.m_prefab_mapping->m_base_path;
     char         key[256]  = {0};
 
-    if (name.isEmpty())
+    if (name.empty())
     {
-        qCritical() << "getAnimTrack needs a file name.";
+        sCritical() << "getAnimTrack needs a file name.";
         return {};
     }
 
     assert(name.size() < 256);
-    strcpy(key, qPrintable(name.toUpper()));
-    QByteArray      latin_name     = name;
-    QString         full_anim_path = ("player_library/animations/"+name+".anim").toLower();
-    HAnimationTrack animTrack      = AnimationEngine::get().m_loaded_tracks.value(latin_name.toUpper(), {});
+    strcpy(key, name.to_upper().c_str());
+    const String &latin_name = name;
+    String      full_anim_path = ("player_library/animations/"+name+".anim").to_lower();
+    HAnimationTrack animTrack      = AnimationEngine::get().m_loaded_tracks.at(latin_name.to_upper(), {});
     if (animTrack)
         return animTrack;
-
-    QFile anim_file(base_path + "/" + full_anim_path);
-    if (!anim_file.open(QFile::ReadOnly))
+    auto fs = SEGS::getServiceLocator()->getFS();
+    auto  anim_file = fs->open(base_path + "/" + full_anim_path, IFile::ReadOnly);
+    if (!anim_file)
     {
-        qCritical() << "failed to open animation file" << full_anim_path;
+        sCritical() << "failed to open animation file" << full_anim_path;
         return {};
     }
-    animTrack = animReadTrackFile(&anim_file);
+    animTrack = animReadTrackFile(anim_file);
+    delete anim_file;
 
-    AnimationEngine::get().m_loaded_tracks[latin_name.toUpper()] = animTrack;
+    AnimationEngine::get().m_loaded_tracks[latin_name.to_upper()] = animTrack;
     SEGS::AnimTrack &atrack(animTrack.get());
     HAnimationTrack  backup = getOrLoadAnimationTrack(atrack.m_parent_track_name);
     // make sure at least the backup animation is sane.
@@ -327,15 +324,17 @@ HAnimationTrack getOrLoadAnimationTrack(const QByteArray &name)
     atrack.m_max_hip_displacement = 4.0f;
     return animTrack;
 }
-static GeoSet *getAnimatedGeoSet(FSWrapper &fs,const QByteArray &name, QIODevice *&fp)
+static GeoSet *getAnimatedGeoSet(const String &name, SEGS::IFile *&fp)
 {
+    auto fs = SEGS::getServiceLocator()->getFS();
     RuntimeData &rd(getRuntimeData());
-    QByteArray      base_path = rd.m_prefab_mapping->m_base_path;
-    fp = fs.open(base_path + "/" + name,true);
+    String      base_path = rd.m_prefab_mapping->m_base_path;
+    String fpath = base_path + "/" + name;
+    fp = fs->open(fpath.c_str(), fpath.size(), IFile::ReadOnly);
     if (!fp)
     {
-        qWarning() << "Failed to open" << name;
-        g_missing_geos.insert(name.toLower());
+        sWarning() << "Failed to open" << name;
+        g_missing_geos.insert(name.to_lower());
         return nullptr;
     }
     GeoSet *geoset = new GeoSet;
@@ -345,20 +344,19 @@ static GeoSet *getAnimatedGeoSet(FSWrapper &fs,const QByteArray &name, QIODevice
     g_geoset_dictionary[geoset->name] = geoset;
     return geoset;
 }
-GeoSet *animLoad(FSWrapper &fs, const QByteArray &filename, bool background_load, bool header_only)
+GeoSet *animLoad(const String &filename, bool background_load, bool header_only)
 {
-    GeoSet *geoset;
-    QByteArray animname(filename);
+    String animname(filename);
 
-    if (animname.toLower().endsWith(".anm"))
-        animname.replace(animname.lastIndexOf("."), 4, ".geo");
+    if (animname.to_lower().ends_with(".anm"))
+        animname.replace(animname.find_last_of('.'), 4, ".geo");
 
-    if (animname.isEmpty())
-        qCritical("Cannot load animated geometry without a name\n");
-    if (g_missing_geos.contains(animname.toLower()))
+    if (animname.empty())
+        sCritical()<<"Cannot load animated geometry without a name\n";
+    if (g_missing_geos.contains(animname.to_lower()))
         return nullptr;
 
-    geoset = g_geoset_dictionary.value(animname, nullptr);
+    GeoSet* geoset = g_geoset_dictionary.at(animname, nullptr);
     if (geoset)
     {
         if (geoset->data_loaded || header_only)
@@ -366,9 +364,9 @@ GeoSet *animLoad(FSWrapper &fs, const QByteArray &filename, bool background_load
 
         // TODO: if given geo set is being loaded asynchronously, wait for it.
     }
-    QIODevice *file;
+    IFile *file=nullptr;
     if (!geoset)
-        geoset = getAnimatedGeoSet(fs,animname, file);
+        geoset = getAnimatedGeoSet(animname, file);
 
     if (header_only || !geoset)
         return geoset;

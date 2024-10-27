@@ -15,8 +15,6 @@
 //#include "MapLink.h"
 
 #include <glm/vec3.hpp>
-#include <QtCore/QString>
-#include <QtCore/QDebug>
 
 class Entity;
 
@@ -153,7 +151,7 @@ class ConsoleCommand final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString contents;
+    String contents;
     ConsoleCommand():MapLinkEvent(MapEventTypes::evConsoleCommand)
     {}
     void serializeto(BitStream &bs) const override
@@ -218,7 +216,7 @@ class MapInstanceConnected final : public MapLinkEvent
 public:
     MapInstanceConnected():MapLinkEvent(MapEventTypes::evMapInstanceConnected)
     {}
-    MapInstanceConnected(EventProcessor *evsrc,uint32_t resp,const QString &err) :
+    MapInstanceConnected(EventProcessor *evsrc,uint32_t resp,const String &err) :
         MapLinkEvent(MapEventTypes::evMapInstanceConnected,evsrc),
         m_resp(resp),
         m_fatal_error(err)
@@ -240,7 +238,7 @@ public:
     // [[ev_def:field]]
     uint32_t    m_resp;
     // [[ev_def:field]]
-    QString     m_fatal_error;
+    String      m_fatal_error;
     EVENT_IMPL(MapInstanceConnected)
 
 };
@@ -356,9 +354,9 @@ class DescriptionAndBattleCry final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString description;
+    String description;
     // [[ev_def:field]]
-    QString battlecry;
+    String battlecry;
     DescriptionAndBattleCry():MapLinkEvent(MapEventTypes::evDescriptionAndBattleCry)
     {}
     void serializeto(BitStream &bs) const override
@@ -484,7 +482,7 @@ class SetKeybind final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString profile;
+    String profile;
     // [[ev_def:field]]
     uint32_t key_and_secondary;
     // [[ev_def:field]]
@@ -492,7 +490,7 @@ public:
     // [[ev_def:field]]
     uint32_t mods;
     // [[ev_def:field]]
-    QString command;
+    String command;
     // [[ev_def:field]]
     bool is_secondary;
 
@@ -521,7 +519,7 @@ class RemoveKeybind final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString profile;
+    String profile;
     // [[ev_def:field]]
     uint32_t key;
     // [[ev_def:field]]
@@ -563,7 +561,7 @@ class SelectKeybindProfile final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString profile;
+    String profile;
     SelectKeybindProfile():MapLinkEvent(MapEventTypes::evSelectKeybindProfile)
     {}
     void serializeto(BitStream &bs) const override

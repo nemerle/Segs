@@ -16,9 +16,7 @@
 #include "GameData/playerdata_definitions.h"
 #include "GameData/map_definitions.h"
 #include "Messages/GameDatabase/GameDBSyncEvents.h"
-
-#include <QtCore/QDebug>
-
+#include "Components/Logging.h"
 using namespace SEGSEvents;
 
 // SpecHash<std::string,val>
@@ -31,18 +29,18 @@ using namespace SEGSEvents;
 
 void UpdateServer::dependent_dump() const
 {
-    qDebug() << "Game:pktCS_ServerUpdate";
-    qDebug() << "{";
+    sDebug() << "Game:pktCS_ServerUpdate";
+    sDebug() << "{";
 
-    qDebug() << "    buildDate"<<m_build_date;
+    sDebug() << "    buildDate"<<m_build_date;
     //uint8_t clientInfo[16];
-    qDebug() << "    localMapServer"<<localMapServer;
-    qDebug() << "    currentVersion"<<currentVersion;
+    sDebug() << "    localMapServer"<<localMapServer;
+    sDebug() << "    currentVersion"<<currentVersion;
     //uint8_t segsHash[16];
-    qDebug().nospace() << "    authId 0x"<<QString::number(authID,16);
-    qDebug().nospace() << "    authCookie 0x"<<QString::number(authCookie,16);
-    qDebug() << "    accountName"<<accountName;
-    qDebug() << "}";
+    sDebug() << "    authId 0x"<<eastl::to_string(authID,16);
+    sDebug() << "    authCookie 0x" << eastl::to_string(authCookie, 16);
+    sDebug() << "    accountName"<<accountName;
+    sDebug() << "}";
 }
 
 void UpdateServer::serializeto( BitStream &tgt ) const

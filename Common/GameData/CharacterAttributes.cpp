@@ -2,7 +2,7 @@
 
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
-#include <QDebug>
+//#include <QDebug>
 
 template<class Archive>
 void Parse_AttribDesc::serialize(Archive & archive)

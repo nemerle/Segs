@@ -6,14 +6,14 @@
  */
 
 #pragma once
-#include <QString>
+#include "EASTL/map.h"
 #include "cereal/cereal.hpp"
 #include "Components/Logging.h"
 
 struct PlayerProgress
 {
     enum : uint32_t {class_version = 1};
-    std::map<uint32_t, std::vector<bool> > m_visible_map_cells;
+    eastl::map<uint32_t, eastl::vector<bool> > m_visible_map_cells;
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);

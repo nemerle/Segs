@@ -7,9 +7,8 @@
 #pragma once
 
 #include "GameCommand.h"
-
-#include <QtCore/QString>
-
+#include "Components/SEGSEvent_impl.h"
+#include "Containers/String.h"
 
 namespace SEGSEvents
 {
@@ -21,11 +20,11 @@ class TradeCancel final : public GameCommandEvent
 public:
     EVENT_IMPL(TradeCancel)
     TradeCancel();
-    explicit TradeCancel(const QString& msg);
+    explicit TradeCancel(const String& msg);
     void serializeto(BitStream& bs) const override;
 
     // [[ev_def:field]]
-    QString m_msg;
+    String m_msg;
 };
 
 

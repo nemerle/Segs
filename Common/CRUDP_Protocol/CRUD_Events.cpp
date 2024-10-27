@@ -82,6 +82,6 @@ SEGSEvents::CRUDLink_Event *CRUD_EventFactory::EventFromStream(BitStream &bs)
         return new SEGSEvents::DisconnectRequest(); // CTRL_DISCONNECT_REQ
     default: break;
     }
-    qWarning("Unhandled control event type %d", control_opcode);
+    sWarning() << String(String::CtorSprintf(),"Unhandled control event type %d", control_opcode);
     return nullptr;
 }

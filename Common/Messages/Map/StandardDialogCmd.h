@@ -10,8 +10,6 @@
 #include "GameCommand.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 
@@ -20,10 +18,10 @@ class StandardDialogCmd final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString     m_msg;
+    String     m_msg;
 
     explicit StandardDialogCmd() : GameCommandEvent(evStandardDialogCmd) {}
-    StandardDialogCmd(QString msg) : GameCommandEvent(evStandardDialogCmd),
+    StandardDialogCmd(const String &msg) : GameCommandEvent(evStandardDialogCmd),
         m_msg(msg)
     {
     }

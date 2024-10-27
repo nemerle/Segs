@@ -7,15 +7,15 @@
 
 #pragma once
 
-#include <QString>
-#include <vector>
+#include "Common/Containers/String.h"
 #include <glm/gtx/quaternion.hpp>
+#include <Common/Containers/Vector.h>
 #include "Common/Runtime/HandleBasedStorage.h"
 
 struct BoneAnimTrack
 {
-    std::vector<glm::quat> rot_keys;
-    std::vector<glm::vec3> pos_keys;
+    Vector<glm::quat> rot_keys;
+    Vector<glm::vec3> pos_keys;
     uint16_t               rotation_ticks;
     uint16_t               position_ticks;
     int8_t                 tgtBoneOrTexId;
@@ -25,7 +25,7 @@ struct TextureAnim_Data
 {
     BoneAnimTrack *animtrack1;
     BoneAnimTrack *animtrack2;
-    QByteArray scrollType;
+    String scrollType;
     float speed;
     float stScale;
     int flags;
@@ -42,10 +42,10 @@ class AnimationStorage;
 struct AnimTrack
 {
     using StorageClass = AnimationStorage; //tells the handle template to look up
-    std::vector<BoneAnimTrack> m_bone_tracks;
-    std::vector<BoneLink>      m_skeleton_hierarchy;
-    QByteArray                 m_name;
-    QByteArray                 m_parent_track_name;
+    Vector<BoneAnimTrack> m_bone_tracks;
+    Vector<BoneLink>      m_skeleton_hierarchy;
+    String                m_name;
+    String                m_parent_track_name;
     SingularStoreHandleT<20,12,AnimTrack> m_backup_anim_track;
     int                        m_size;
     float                      m_max_hip_displacement;
