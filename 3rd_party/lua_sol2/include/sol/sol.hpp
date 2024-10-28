@@ -2984,10 +2984,10 @@ struct pre_main {
 #endif // luajit
 
 #if SOL_IS_ON(SOL_USE_CXX_LUAJIT)
-    #include <luajit.h>
+	#include <lua/luajit.h>
 #elif SOL_IS_ON(SOL_USE_LUAJIT)
     extern "C" {
-        #include <luajit.h>
+		#include <lua/luajit.h>
     }
 #endif // C++ LuaJIT ... whatever that means
 
