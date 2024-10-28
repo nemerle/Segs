@@ -6,36 +6,35 @@
  */
 
 #pragma once
-#include <vector>
-#include <array>
-#include <QtCore/QString>
+#include "Common/Containers/Vector.h"
+#include "Common/Containers/String.h"
 
 struct Parse_AttribDesc
 {
-    QByteArray Name;
-    QByteArray DisplayName;
-    QByteArray IconName;
+    String Name;
+    String DisplayName;
+    String IconName;
     template<class Archive>
     void serialize(Archive & archive);
 };
 
 struct AttribNames_Data
 {
-    std::vector<Parse_AttribDesc> m_Damage;
-    std::vector<Parse_AttribDesc> m_Defense;
-    std::vector<Parse_AttribDesc> m_Boost;
-    std::vector<Parse_AttribDesc> m_Group;
+    Vector<Parse_AttribDesc> m_Damage;
+    Vector<Parse_AttribDesc> m_Defense;
+    Vector<Parse_AttribDesc> m_Boost;
+    Vector<Parse_AttribDesc> m_Group;
     template<class Archive>
     void serialize(Archive & archive);
 };
 
 struct Parse_CharAttrib
 {
-    std::array<float,24> m_DamageTypes;
+    eastl::array<float,24> m_DamageTypes;
     float m_HitPoints           = 0;
     float m_Endurance           = 0;
     float m_ToHit               = 0;
-    std::array<float,24> m_DefenseTypes;
+    eastl::array<float,24> m_DefenseTypes;
     float m_Defense             = 0;
     float m_Evade               = 0;
     float m_SpeedRunning        = 0;
@@ -90,50 +89,50 @@ struct Parse_CharAttrib
 
 struct Parse_CharAttribMax
 {
-    std::array<std::vector<float>,24> m_DamageTypes ;
-    std::vector<float> m_HitPoints;
-    std::vector<float> m_Endurance;
-    std::vector<float> m_ToHit;
-    std::array<std::vector<float>,24> m_DefenseTypes;
-    std::vector<float> m_Defense;
-    std::vector<float> m_Evade;
-    std::vector<float> m_SpeedRunning;
-    std::vector<float> m_SpeedFlying;
-    std::vector<float> m_SpeedSwimming;
-    std::vector<float> m_SpeedJumping;
-    std::vector<float> m_jump_height;
-    std::vector<float> m_MovementControl;
-    std::vector<float> m_MovementFriction;
-    std::vector<float> m_Stealth;
-    std::vector<float> m_StealthRadius;
-    std::vector<float> m_PerceptionRadius;
-    std::vector<float> m_Regeneration;
-    std::vector<float> m_Recovery;
-    std::vector<float> m_ThreatLevel;
-    std::vector<float> m_Taunt;
-    std::vector<float> m_Confused;
-    std::vector<float> m_Afraid;
-    std::vector<float> m_Held;
-    std::vector<float> m_Immobilized;
-    std::vector<float> m_is_stunned;
-    std::vector<float> m_Sleep;
-    std::vector<float> m_is_flying;
-    std::vector<float> m_has_jumppack;
-    std::vector<float> m_Teleport;
-    std::vector<float> m_Untouchable;
-    std::vector<float> m_Intangible;
-    std::vector<float> m_OnlyAffectsSelf;
-    std::vector<float> m_Knockup;
-    std::vector<float> m_Knockback;
-    std::vector<float> m_Repel;
-    std::vector<float> m_Accuracy;
-    std::vector<float> m_Radius;
-    std::vector<float> m_Arc;
-    std::vector<float> m_Range;
-    std::vector<float> m_TimeToActivate;
-    std::vector<float> m_RechargeTime;
-    std::vector<float> m_InterruptTime;
-    std::vector<float> m_EnduranceDiscount;
+    eastl::array<Vector<float>,24> m_DamageTypes ;
+    Vector<float> m_HitPoints;
+    Vector<float> m_Endurance;
+    Vector<float> m_ToHit;
+    eastl::array<Vector<float>,24> m_DefenseTypes;
+    Vector<float> m_Defense;
+    Vector<float> m_Evade;
+    Vector<float> m_SpeedRunning;
+    Vector<float> m_SpeedFlying;
+    Vector<float> m_SpeedSwimming;
+    Vector<float> m_SpeedJumping;
+    Vector<float> m_jump_height;
+    Vector<float> m_MovementControl;
+    Vector<float> m_MovementFriction;
+    Vector<float> m_Stealth;
+    Vector<float> m_StealthRadius;
+    Vector<float> m_PerceptionRadius;
+    Vector<float> m_Regeneration;
+    Vector<float> m_Recovery;
+    Vector<float> m_ThreatLevel;
+    Vector<float> m_Taunt;
+    Vector<float> m_Confused;
+    Vector<float> m_Afraid;
+    Vector<float> m_Held;
+    Vector<float> m_Immobilized;
+    Vector<float> m_is_stunned;
+    Vector<float> m_Sleep;
+    Vector<float> m_is_flying;
+    Vector<float> m_has_jumppack;
+    Vector<float> m_Teleport;
+    Vector<float> m_Untouchable;
+    Vector<float> m_Intangible;
+    Vector<float> m_OnlyAffectsSelf;
+    Vector<float> m_Knockup;
+    Vector<float> m_Knockback;
+    Vector<float> m_Repel;
+    Vector<float> m_Accuracy;
+    Vector<float> m_Radius;
+    Vector<float> m_Arc;
+    Vector<float> m_Range;
+    Vector<float> m_TimeToActivate;
+    Vector<float> m_RechargeTime;
+    Vector<float> m_InterruptTime;
+    Vector<float> m_EnduranceDiscount;
     template<class Archive>
     void serialize(Archive & archive);
 };

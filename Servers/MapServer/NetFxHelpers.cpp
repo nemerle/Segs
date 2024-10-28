@@ -59,16 +59,17 @@ NetFxHandle createNetFx(FxHandle from_fx)
 }
 void attachToEntity(NetFxHandle h,Entity *tgt)
 {
+    using namespace magic_enum::bitwise_operators;
     NetFx &fx(lookup(h));
     if(!FXSystem::valid(fx.m_parent))
     {
-        qCritical("Parent effect is no longer/not yet a valid FX, cannot attach");
+        sCritical() << "Parent effect is no longer/not yet a valid FX, cannot attach";
         return;
     }
     fx.net_id = h.idx;
     fx.m_ref_count++;
     tgt->m_net_fx.emplace_back(h);
-    tgt->m_entity_update_flags.setFlag(Entity::FX,true);
+    tgt->m_entity_update_flags|=Entity::FX;
 }
 
 NetFx &lookup(NetFxHandle handle)
@@ -76,7 +77,7 @@ NetFx &lookup(NetFxHandle handle)
     static NetFx dummy;
     if(!NetFxStore::instance().canAccess(handle))
     {
-        qCritical() << "Invalid handle accessed";
+        sCritical() << "Invalid handle accessed";
         return dummy;
     }
     return NetFxStore::instance().access(handle);

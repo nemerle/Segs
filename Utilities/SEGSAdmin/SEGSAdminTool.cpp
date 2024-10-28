@@ -221,7 +221,7 @@ void SEGSAdminTool::check_db_exist(bool on_startup)
     ui->output->appendPlainText("Checking for existing databases...");
     qDebug() << "Checking for existing databases...";
 
-    QSettings config(Settings::getSettingsPath(), QSettings::IniFormat, nullptr);
+    QSettings config(Settings::getSettingsPath().c_str(), QSettings::IniFormat, nullptr);
 
     QString acc_db_driver = config.value("AdminServer/AccountDatabase/db_driver").toString();
     QString char_db_driver = config.value("AdminServer/CharacterDatabase/db_driver").toString();
@@ -458,7 +458,7 @@ void SEGSAdminTool::check_for_config_file() // Does this on application start
     QPixmap alert_triangle(":icons/Resources/alert-triangle.svg");
     // Load settings.cfg if exists
     ui->output->appendPlainText("Checking for existing configuration file...");
-    QFileInfo config_file(Settings::getSettingsPath());
+    QFileInfo config_file(Settings::getSettingsPath().c_str());
     if(config_file.exists())
     {
         QString config_file_path = config_file.absoluteFilePath();

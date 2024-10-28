@@ -7,12 +7,11 @@
 
 #pragma once
 
+#include "Common/Containers/StringView.h"
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QFileInfo>
-#include <vector>
 
 enum MapXferType : uint8_t
 {
@@ -49,31 +48,31 @@ struct Map_Data
 {
     glm::vec2 Location;
     glm::vec2 TextLocation;
-    QByteArray Name;
-    QByteArray Icon;
+    String Name;
+    String Icon;
 };
 
 struct MissionMapData
 {
-    QString m_mission_name;
+    String m_mission_name;
     MissionCategory m_mission_category;
-    std::vector<QString> m_layouts;
+    Vector<String> m_layouts;
 };
 
 
 struct MapData
 {
-    MapData(uint32_t idx,QByteArray internal_name,QByteArray display_name,MapType kind) :
+    MapData(uint32_t idx,String internal_name,String display_name,MapType kind) :
         m_map_idx(idx),m_map_name(internal_name),m_display_map_name(display_name),m_map_type(kind)
     {
     }
 
     uint32_t m_map_idx;
-    QByteArray m_map_name;             // City_00_01, City_01_01, etc...
-    QByteArray m_display_map_name;     // Outbreak, Atlas Park...
+    String m_map_name;             // City_00_01, City_01_01, etc...
+    String m_display_map_name;     // Outbreak, Atlas Park...
     MapType m_map_type;
-    QByteArray m_map_path;             // The ones ending with .txt
-    std::vector<MissionMapData> m_mission_data;
+    String m_map_path;             // The ones ending with .txt
+    Vector<MissionMapData> m_mission_data;
 };
 
 /*
@@ -96,7 +95,7 @@ Outdoor_Mission     /Outdoor_Unique         /Outdoor_Unique_Forest_01       /Out
 
 
 
-unique: 
+unique:
     maps/Missions/unique/Interdimensional/Interdimensional_01_01.bin
     maps/Missions/unique/TrialRooms/Eden/Trial_0X_0X_room.bin   //  with other Beacon, MissionBeacon, Spawns etc bins. has subfolder for audio..
     maps/Missions/unique/jumppuzzles/Jumppuzzles_Layout_01.bin  // ungrouped version
@@ -121,9 +120,9 @@ outdoor_missions
 
 struct MapXferData
 {
-    QString m_node_name;
-    QString m_target_map_name;      // City_01_01
-    QString m_target_spawn_name;    // Name of related spawnLocation node.
+    String m_node_name;
+    String m_target_map_name;      // City_01_01
+    String m_target_spawn_name;    // Name of related spawnLocation node.
     glm::vec3 m_position;
     MapXferType m_transfer_type;
     template<class Archive>
@@ -133,23 +132,23 @@ struct MapXferData
     }
 };
 
-using AllMaps_Data = std::vector<Map_Data>;
+using AllMaps_Data = Vector<Map_Data>;
 
-uint32_t       getMapIndex(const QString &map_name);
-std::vector<MapData> &getAllMapData();
-MapData &getMapData(QString &map_name);
-QString        getMapName(QString &map_name);
-QString        getMapName(uint32_t map_idx);
-QString        getDisplayMapName(uint32_t index);
-QString        getEntityDisplayMapName(const EntityData &ed);
+uint32_t       getMapIndex(const String &map_name);
+Vector<MapData> &getAllMapData();
+MapData &     getMapData(StringView map_name);
+String        getMapName(String &map_name);
+String        getMapName(uint32_t map_idx);
+String        getDisplayMapName(uint32_t index);
+String        getEntityDisplayMapName(const EntityData &ed);
 bool           isEntityOnMissionMap(EntityData &ed);
-QString        getMapPath(uint32_t index);
-QString        getMapPath(EntityData &ed);
-QString        getMapPath(QString &map_name);
+String        getMapPath(uint32_t index);
+String        getMapPath(EntityData &ed);
+String        getMapPath(String &map_name);
 
 void           loadAllMissionMapData();
-void           getMissionMapLevelData(QFileInfo map_level_folder, MapData &map_data);
-void           getMissionMapLayoutData(QFileInfo maps_layout, uint8_t map_level, MapData& map_data);
-QString        getMissionPath(QString map_name, MissionCategory size);
+void           getMissionMapLevelData(StringView map_level_folder, MapData &map_data);
+void           getMissionMapLayoutData(StringView maps_layout, uint8_t map_level, MapData& map_data);
+String         getMissionPath(StringView map_name, MissionCategory size);
 uint8_t        getMissionMapLevelRange(uint8_t char_level);
-void           getMissionMapOutdoorData(QFileInfo map_file, MapData& map_data);
+void           getMissionMapOutdoorData(StringView map_file, MapData& map_data);

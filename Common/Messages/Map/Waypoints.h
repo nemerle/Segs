@@ -55,7 +55,7 @@ public:
     void serializeto(BitStream &bs) const override
     {
         bs.StorePackedBits(1,11);
-        qWarning() << "SetDestination serializeto unimplemented.";
+        sWarning() << "SetDestination serializeto unimplemented.";
     }
     void serializefrom(BitStream &bs) override
     {

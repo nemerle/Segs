@@ -70,7 +70,7 @@ namespace
         ok &= s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -92,7 +92,7 @@ bool loadFrom(BinStore * s, SceneModifiers &target)
     bool ok = s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -167,40 +167,38 @@ static void serialize(Archive & archive, SceneModifiers & m)
     archive(cereal::make_nvp("Geometry",m.geometry_mods));
 }
 
-void saveTo(const SceneModifiers &target, const QString &baseName, bool text_format)
+void saveTo(const SceneModifiers &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"Tricks",baseName,text_format);
+    SEGS::commonSaveTo(target,"Tricks",baseName,text_format);
 }
-bool loadFrom(const QString &filepath, SceneModifiers &target)
+bool loadFrom(const String &filepath, SceneModifiers &target)
 {
-    QFSWrapper wrap;
-    return commonReadFrom(wrap,filepath,"Tricks",target);
+    return SEGS::commonReadFrom(filepath,"Tricks",target);
 }
-bool LoadModifiersData(const QString &fname, SceneModifiers &m)
+bool LoadModifiersData(const String &fname, SceneModifiers &m)
 {
-    QFSWrapper wrap;
     BinStore binfile;
 
     if(fname.contains(".crl"))
     {
         if(!loadFrom(fname, m))
         {
-            qCritical() << "Failed to serialize data from crl:" << fname;
+            sCritical() << "Failed to serialize data from crl:" << fname;
             return false;
         }
         return true;
     }
-    bool opened = binfile.open(wrap, fname, tricks_i0_requiredCrc);
+    bool opened = binfile.open(fname, tricks_i0_requiredCrc);
     if(!opened)
-        opened = binfile.open(wrap, fname, tricks_i2_requiredCrc);
+        opened = binfile.open(fname, tricks_i2_requiredCrc);
     if(!opened)
     {
-        qCritical() << "Failed to open original bin:" << fname;
+        sCritical() << "Failed to open original bin:" << fname;
         return false;
     }
     if(!loadFrom(&binfile, m))
     {
-        qCritical() << "Failed to load data from original bin:" << fname;
+        sCritical() << "Failed to load data from original bin:" << fname;
         return false;
     }
     return true;

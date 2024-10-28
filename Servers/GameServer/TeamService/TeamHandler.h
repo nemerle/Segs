@@ -13,9 +13,6 @@
 #include "GameData/Team.h"
 #include "GameData/LFG.h"
 #include "GameData/CharacterData.h"
-#include <unordered_map>
-#include <set>
-#include <vector>
 
 namespace SEGSEvents
 {
@@ -44,11 +41,11 @@ struct TeamHandlerState
     int m_game_server_id;
     EventProcessor *m_map_handler;
 
-    std::vector<Team *> m_team_list;
-	std::vector<LFGMember> m_lfg_list;
+    Vector<Team *> m_team_list;
+	Vector<LFGMember> m_lfg_list;
 
-    std::map<uint32_t, QString> m_id_to_name;
-    std::multimap<QString, SEGSEvents::Event *> m_pending_events;
+    Map<uint32_t, String> m_id_to_name;
+    eastl::multimap<String, SEGSEvents::Event *> m_pending_events;
 };
 
 class TeamHandler : public EventProcessor
@@ -63,8 +60,8 @@ public:
 private:
     TeamHandlerState m_state;
 
-	uint32_t id_for_name(const QString &name);
-    bool name_known(const QString &name);
+	uint32_t id_for_name(const String &name);
+    bool name_known(const String &name);
 
     void on_user_router_query_response(SEGSEvents::UserRouterQueryResponse *msg);
     void on_user_router_opaque_response(SEGSEvents::UserRouterOpaqueResponse *msg);
@@ -73,7 +70,8 @@ private:
     void on_team_member_kicked(SEGSEvents::TeamMemberKickedMessage *msg);
     void on_team_member_make_leader(SEGSEvents::TeamMakeLeaderMessage *msg);
 
-    void on_team_member_invite_handled(uint32_t invitee_id, QString &invitee_name, QString &leader_name, bool accepted, uint64_t session_token);
+    void on_team_member_invite_handled(uint32_t invitee_id, String &invitee_name, String &leader_name, bool accepted,
+                                       uint64_t session_token);
 
     void on_team_leave_team(SEGSEvents::TeamLeaveTeamMessage *msg);
     void on_team_toggle_lfg(SEGSEvents::TeamToggleLFGMessage *msg);
@@ -82,12 +80,12 @@ private:
     void notify_team_of_changes(Team *t, uint64_t session_token=0);
 	bool delete_team(Team *t);
 
-	bool name_is_lfg(const QString &name);
+	bool name_is_lfg(const String &name);
 	bool db_id_is_lfg(const uint32_t db_id);
 	void add_lfg(LFGMember m);
 	void remove_lfg(const uint32_t db_id);
 	Team* team_for_db_id(const uint32_t db_id);
-	Team* team_for_name(const QString &name);
+	Team* team_for_name(const String &name);
 
     void on_client_connected(SEGSEvents::ClientConnectedMessage *msg);
     void on_client_disconnected(SEGSEvents::ClientDisconnectedMessage *msg);

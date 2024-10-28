@@ -6,6 +6,7 @@
  */
 
 #pragma once
+
 #include "CharacterData.h"
 #include "CommonNetStructures.h"
 #include "Costume.h"
@@ -21,18 +22,17 @@
 #include "Common/GameData/CoHMath.h"
 #include "Common/GameData/Contact.h"
 #include "Common/GameData/Store.h"
+#include "Containers/Deque.h"
+#include "EASTL/shared_ptr.h"
 
 #include <glm/gtc/constants.hpp>
-#include <deque>
-#include <array>
-#include <memory>
 
 struct MapClientSession;
 class Team;
 class Trade;
 class Character;
 struct PlayerData;
-using Parse_AllKeyProfiles = std::vector<struct Keybind_Profiles>;
+using Parse_AllKeyProfiles = Vector<struct Keybind_Profiles>;
 
 enum class FadeDirection
 {
@@ -43,7 +43,7 @@ enum class FadeDirection
 // returned by getEntityFromDB()
 struct CharacterFromDB
 {
-    QString         name;
+    String          name;
     EntityData      entity_data;
     CharacterData   char_data;
     float           hitpoints;
@@ -80,10 +80,10 @@ enum class AppearanceType : uint8_t
 struct SuperGroup
 {
     int             m_SG_id         = {0};
-    QString         m_SG_name       = "Supergroup"; // 64 chars max
-    QString         m_SG_motto;
-    QString         m_SG_motd;
-    QString         m_SG_emblem;         // 128 chars max -> hash table key from the CostumeString_HTable
+    String          m_SG_name       = "Supergroup"; // 64 chars max
+    String          m_SG_motto;
+    String          m_SG_motd;
+    String          m_SG_emblem;         // 128 chars max -> hash table key from the CostumeString_HTable
     uint32_t        m_SG_color1     = 0; // supergroup color 1
     uint32_t        m_SG_color2     = 0; // supergroup color 2
     int             m_SG_rank       = 1;
@@ -93,7 +93,7 @@ struct FactionData
 {
     bool    m_has_faction = false;  // send Faction info
     int     m_rank = 0;             // iRank
-    QString m_faction_name;         // group_name
+    String  m_faction_name;         // group_name
 };
 
 struct NPCData
@@ -106,7 +106,7 @@ struct NPCData
 
 struct Aggro
 {
-    QString name;
+    String name;
     uint32_t idx;
     float aggro     = 0.0;
     float damage    = 0.0;
@@ -160,12 +160,12 @@ class Entity
 {
     // only EntityStore can create instances of this class
     friend class EntityStore;
-    friend std::array<Entity,10240>;
-    using CharacterPtr = std::unique_ptr<Character>;
-    using PlayerPtr = std::unique_ptr<PlayerData>;
-    using EntityPtr = std::unique_ptr<EntityData>;
-    using NPCPtr = std::unique_ptr<NPCData>;
-    using TradePtr = std::shared_ptr<Trade>;
+    friend eastl::array<Entity, 10240>;
+    using CharacterPtr = eastl::unique_ptr<Character>;
+    using PlayerPtr = eastl::unique_ptr<PlayerData>;
+    using EntityPtr = eastl::unique_ptr<EntityData>;
+    using NPCPtr = eastl::unique_ptr<NPCData>;
+    using TradePtr = eastl::shared_ptr<Trade>;
 private:
                             Entity();
                             ~Entity();
@@ -204,7 +204,8 @@ public:
             LOGOUT          = 0x10000,
             FULL            = ~0U
         };
-        Q_DECLARE_FLAGS(UpdateFlags, UpdateFlag)
+        using UpdateFlags = UpdateFlag;
+        //Q_DECLARE_FLAGS(UpdateFlags, UpdateFlag)
 
         SuperGroup          m_supergroup;                       // client has this in entity class, but maybe move to Character class?
         bool                m_has_supergroup        = true;
@@ -223,18 +224,18 @@ public:
         uint32_t            m_assist_target_idx     = 0;
         glm::vec3           m_target_loc;
 
-        std::deque<Aggro>           m_aggro_list;
-        std::vector<Buffs>          m_buffs;
-        std::deque<QueuedPowers>    m_queued_powers;
-        std::vector<QueuedPowers>   m_auto_powers;
-        std::vector<QueuedPowers>   m_recharging_powers;
-        std::vector<DelayedEffect>  m_delayed;
+        Deque<Aggro>           m_aggro_list;
+        Vector<Buffs>          m_buffs;
+        Deque<QueuedPowers>    m_queued_powers;
+        Vector<QueuedPowers>   m_auto_powers;
+        Vector<QueuedPowers>   m_recharging_powers;
+        Vector<DelayedEffect>  m_delayed;
         PowerStance                 m_stance;
         bool                        m_update_buffs  = false;
 
         // Animations: Sequencers, NetFx, and TriggeredMoves
-        std::vector<NetFxHandle>  m_net_fx;
-        std::vector<TriggeredMove> m_triggered_moves;
+        Vector<NetFxHandle>  m_net_fx;
+        Vector<TriggeredMove> m_triggered_moves;
         SeqBitSet           m_seq_state;                    // Should be part of SeqState
         ClientStates        m_state_mode            = ClientStates::SIMPLE;
         int                 m_seq_move_idx          = 0;
@@ -264,8 +265,8 @@ public:
 
         int                 u1 = 0; // used for live-debugging
 
-        std::array<PosUpdate, 64> m_pos_updates;
-        std::array<BinTreeEntry, 7> m_interp_bintree;
+        eastl::array<PosUpdate, 64> m_pos_updates;
+        eastl::array<BinTreeEntry, 7> m_interp_bintree;
         int                 m_update_idx                = 0;
         bool                m_hasname                   = false;
         bool                m_classname_override        = false;
@@ -288,16 +289,16 @@ public:
         bool                m_is_store                  = false;
         vStoreItems         m_store_items;
 
-        std::function<void(int)>  m_active_dialog;
+        eastl::function<void(int)>  m_active_dialog      = nullptr;
 
         void                dump();
 
 static  void                sendAllyID(BitStream &bs);
 static  void                sendPvP(BitStream &bs);
 
-        const QString &     name() const;
+        const String &      name() const;
         void                fillFromCharacter(const GameDataStore &data);
         void                beginLogout(uint16_t time_till_logout=10); // Default logout time is 10 s
-        void                setActiveDialogCallback(std::function<void(int)> callback);
+        void                setActiveDialogCallback(eastl::function<void(int)> callback);
 };
-Q_DECLARE_OPERATORS_FOR_FLAGS(Entity::UpdateFlags)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(Entity::UpdateFlags)

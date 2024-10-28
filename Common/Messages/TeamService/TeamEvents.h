@@ -32,9 +32,9 @@ enum TeamEventTypes : uint32_t
 
 struct TeamMemberInvitedData
 {
-    QString m_leader_name;
+    String m_leader_name;
     uint32_t m_leader_id;
-    QString m_invitee_name;
+    String m_invitee_name;
     template<class Archive>
     void serialize(Archive &ar)
     {
@@ -48,7 +48,7 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamMemberInvited)
 struct TeamMemberKickedData
 {
     uint32_t m_leader_id;
-    QString m_kickee_name;
+    String m_kickee_name;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -63,8 +63,8 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamMemberKicked)
 struct TeamMemberInviteAcceptedData
 {
     uint32_t m_invitee_id;
-	QString m_invitee_name;
-	QString m_leader_name;
+	String m_invitee_name;
+	String m_leader_name;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -79,8 +79,8 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamMemberInviteAccepted)
 struct TeamMemberInviteDeclinedData
 {
     uint32_t m_invitee_id;
-	QString m_invitee_name;
-	QString m_leader_name;
+	String m_invitee_name;
+	String m_leader_name;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -95,7 +95,7 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamMemberInviteDeclined)
 struct TeamToggleLFGData
 {
     uint32_t m_db_id;
-	QString m_name;
+	String m_name;
 	CharacterData m_char_data;
 
     template<class Archive>
@@ -111,8 +111,8 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamToggleLFG)
 struct TeamRefreshLFGData
 {
     uint32_t m_db_id;
-	QString m_name;
-	std::vector<LFGMember> m_lfg_list;
+    String                 m_name;
+	Vector<LFGMember> m_lfg_list;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -142,7 +142,7 @@ ONE_WAY_MESSAGE(TeamEventTypes,TeamUpdated)
 struct TeamMakeLeaderData
 {
     uint32_t m_leader_id;
-    QString m_new_leader_name;
+    String m_new_leader_name;
     
     template<class Archive>
     void serialize(Archive &ar)

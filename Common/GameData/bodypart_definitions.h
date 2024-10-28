@@ -6,9 +6,8 @@
  */
 
 #pragma once
-#include <QtCore/QString>
-#include <array>
-#include <vector>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 
 enum BoneIds
 {
@@ -17,21 +16,21 @@ enum BoneIds
 
 struct BodyPart_Data
 {
-    QByteArray m_Name;
-    QByteArray m_GeoName;
-    QByteArray m_TexName;
-    QByteArray m_BaseName;
+    String m_Name;
+    String m_GeoName;
+    String m_TexName;
+    String m_BaseName;
     int m_BoneCount;
     int m_InfluenceCost;
     // Transient data.
-    std::array<int,2> boneIndices;
+    eastl::array<int,2> boneIndices;
     int part_idx;
 };
 struct BodyPartsStorage
 {
-    std::vector<BodyPart_Data> m_parts;
+    Vector<BodyPart_Data> m_parts;
 
-    BodyPart_Data *getBodyPartFromName(const QByteArray &name);
+    BodyPart_Data *getBodyPartFromName(const String &name);
 
     void postProcess();
 };

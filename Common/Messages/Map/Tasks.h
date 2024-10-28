@@ -20,8 +20,8 @@ namespace SEGSEvents
         // [[ev_def:field]
         vTaskEntryList m_task_entry_list;
         explicit TaskStatusList() : GameCommandEvent(MapEventTypes::evTaskStatusList){}
-        TaskStatusList(vTaskEntryList task_entry_list) : GameCommandEvent(MapEventTypes::evTaskStatusList),
-             m_task_entry_list(task_entry_list)
+        TaskStatusList(const vTaskEntryList &task_entry_list) : GameCommandEvent(MapEventTypes::evTaskStatusList),
+                                                                m_task_entry_list(task_entry_list)
         {
         }
 
@@ -66,7 +66,7 @@ namespace SEGSEvents
                         bs.StoreString(task.m_location.m_location_name);
                     }
 
-                     qCDebug(logTasks) << "taskEntry Task: " << loop_count_2 << " Entered ";
+                     sCDebug(logTasks) << "taskEntry Task: " << loop_count_2 << " Entered ";
                     ++loop_count_2;
                 }
             }
@@ -87,9 +87,9 @@ namespace SEGSEvents
 
         void serializeto(BitStream &bs) const override
         {
-            qCDebug(logMapEvents) << "Sending packet 46";
+            sCDebug(logMapEvents) << "Sending packet 46";
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 46
-            qCDebug(logTasks) << "Sending m_selected_task.m_task_idx: " << m_selected_task.m_task_idx;
+            sCDebug(logTasks) << "Sending m_selected_task.m_task_idx: " << m_selected_task.m_task_idx;
             bs.StorePackedBits(1, m_selected_task.m_task_idx);
         }
 
@@ -119,10 +119,10 @@ namespace SEGSEvents
         // [[ev_def:field]
         uint32_t m_task_idx;
         // [[ev_def:field]
-        QString m_task_detail;
+        String m_task_detail;
 
         explicit TaskDetail() : GameCommandEvent(MapEventTypes::evTaskDetail){}
-        TaskDetail(uint32_t db_id, uint32_t task_idx, QString task_detail) : GameCommandEvent(MapEventTypes::evTaskDetail)
+        TaskDetail(uint32_t db_id, uint32_t task_idx, const String &task_detail) : GameCommandEvent(MapEventTypes::evTaskDetail)
         {
             m_db_id = db_id;
             m_task_idx = task_idx;
@@ -131,7 +131,7 @@ namespace SEGSEvents
 
         void serializeto(BitStream &bs) const override
         {
-            qCDebug(logMapEvents) << "Sending packet 75";
+            sCDebug(logMapEvents) << "Sending packet 75";
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 75
             bs.StorePackedBits(1, m_db_id);
             bs.StorePackedBits(1, m_task_idx);
@@ -161,7 +161,7 @@ namespace SEGSEvents
         {
             m_db_id = bs.GetPackedBits(1);
             m_task_idx = bs.GetPackedBits(1);
-            qCDebug(logMapEvents) << "ReceiveContactStatus Event";
+            sCDebug(logMapEvents) << "ReceiveContactStatus Event";
         }
 
         EVENT_IMPL(ReceiveTaskDetailRequest)
@@ -172,12 +172,12 @@ namespace SEGSEvents
     {
     public:
         // [[ev_def:field]]
-        QString m_message;
+        String m_message;
         // [[ev_def:field]]
         float m_mission_time = 0;
 
         explicit MissionObjectiveTimer() : GameCommandEvent(MapEventTypes::evMissionObjectiveTimer){}
-        MissionObjectiveTimer(QString message, float mission_time) : GameCommandEvent(MapEventTypes::evMissionObjectiveTimer){
+        MissionObjectiveTimer(const String &message, float mission_time) : GameCommandEvent(MapEventTypes::evMissionObjectiveTimer){
             m_message = message;
             m_mission_time = mission_time;
         }

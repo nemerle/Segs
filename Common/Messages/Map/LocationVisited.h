@@ -9,7 +9,6 @@
 #include "GameCommand.h"
 #include "MapEventTypes.h"
 
-#include <QtCore/QString>
 #include <glm/vec3.hpp>
 
 namespace SEGSEvents
@@ -25,7 +24,7 @@ public:
     void serializeto(BitStream &) const override;
 
     // [[ev_def:field]]
-    QString m_name;
+    String m_name;
     // [[ev_def:field]]
     glm::vec3 m_pos;
     EVENT_IMPL(LocationVisited)

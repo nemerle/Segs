@@ -1,4 +1,4 @@
-add_subdirectory(slav)
+#add_subdirectory(slav)
 add_subdirectory(event_gen)
 
 IF(BUILD_COX_MAP_VIEWER)

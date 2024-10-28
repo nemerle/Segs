@@ -16,30 +16,30 @@ template<class KEY,class VALUE,class COMPARE_FUNCTOR>
 COMPARE_FUNCTOR CoXGenericHashMap<KEY, VALUE,COMPARE_FUNCTOR>::comp;
 
 template<>
-uint32_t JenkinsHash<QString>::operator()(const QString &val,uint32_t prev_val) const
+uint32_t JenkinsHash<String>::operator()(const String &val,uint32_t prev_val) const
 {
-    return hash((const uint8_t *)qPrintable(val),uint32_t(val.size()),prev_val);
+    return hash((const uint8_t *)val.data(),uint32_t(val.size()),prev_val);
 }
 
 template<class KEY,class VALUE>
 JenkinsHash<KEY> CoxHashCommon<KEY, VALUE>::hash;
 
 template<class VALUE>
-uint32_t CoXHashMap<VALUE>::find_index(const QString &key, uint32_t &index_tgt, uint32_t &key_tgt, bool a5) const
+uint32_t CoXHashMap<VALUE>::find_index(const String &key, uint32_t &index_tgt, uint32_t &key_tgt, bool a5) const
 {
     uint32_t HashValue;
     int hash_index;
     uint32_t res;
-    QString tmp_key;
+    String tmp_key;
     HashValue = 0;
     tmp_key = key;
     if( (this->m_flags & SINGLE_BYTE) )
     {
         if( key.size() >= 0x1000 )
             return 0;
-        tmp_key=tmp_key.toUpper();
+        tmp_key=tmp_key.to_upper();
     }
-    while ( 1 )
+    while ( true )
     {
         HashValue = this->hash(tmp_key,HashValue);
         hash_index = HashValue & (int(this->m_storage.size()) - 1);
@@ -122,12 +122,12 @@ uint32_t CoXGenericHashMap<KEY, VALUE, COMPARE_FUNCTOR>::find_index( const KEY &
 
 // somehow this is needed on VC
 template
-JenkinsHash<std::string> CoxHashCommon<std::string, std::string>::hash;
+JenkinsHash<eastl::string> CoxHashCommon<eastl::string, eastl::string>::hash;
 template
 JenkinsHash<uint32_t> CoxHashCommon<uint32_t, uint32_t>::hash;
 
 template
-class CoXHashMap<QString>;
+class CoXHashMap<String>;
 template
 class CoXGenericHashMap<uint32_t,uint32_t,IntCompare>;
 

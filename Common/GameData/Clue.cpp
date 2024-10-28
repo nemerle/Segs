@@ -16,7 +16,7 @@ void Souvenir::serialize(Archive &archive, uint32_t const version)
  {
      if(version != Souvenir::class_version)
      {
-         qCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
+         sCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
          return;
      }
      archive(cereal::make_nvp("idx",m_idx));
@@ -33,7 +33,7 @@ void Souvenir::serialize(Archive &archive, uint32_t const version)
  {
      if(version != Clue::class_version)
      {
-         qCritical() << "Failed to serialize Clue, incompatible serialization format version " << version;
+         sCritical() << "Failed to serialize Clue, incompatible serialization format version " << version;
          return;
      }
      archive(cereal::make_nvp("Name",m_name));

@@ -9,7 +9,6 @@
 
 #include "Components/SEGSEvent.h"
 
-class QString;
 class BitStream;
 
 namespace SEGSEvents

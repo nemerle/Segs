@@ -13,9 +13,9 @@ class Entity;
 struct LFGMember
 {
     uint32_t m_db_id;       // player DBID
-    QString m_name;         // player name
-    QString m_classname;    // player class
-    QString m_origin;       // player origin
+    String m_name;         // player name
+    String m_classname;    // player class
+    String m_origin;       // player origin
     uint32_t m_level;       // player level
     template<class Archive>
     void serialize(Archive &ar)
@@ -27,7 +27,7 @@ struct LFGMember
 /*
  * LFG Methods
  */
-extern std::vector<LFGMember> g_lfg_list;
+extern Vector<LFGMember> g_lfg_list;
 
 void addLFG(Entity &src);
 void removeLFG(Entity &src);

@@ -9,14 +9,13 @@
 
 
 #include <cstdint>
-#include <vector>
+#include "Common/Containers/String.h"
 
 struct BodyPartsStorage;
 class BinStore;
-class QString;
 struct BodyPart_Data;
 
 constexpr const static uint32_t bodyparts_i0_requiredCrc = 0x541B59EB;
 bool loadFrom(BinStore *s,BodyPartsStorage &target) ;
-void saveTo(const BodyPartsStorage &target,const QString &baseName,bool text_format=false);
+void saveTo(const BodyPartsStorage &target,const String &baseName,bool text_format=false);
 

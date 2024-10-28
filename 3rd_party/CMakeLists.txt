@@ -14,12 +14,17 @@ if(MINGW OR MSVC) # ERICEDIT: If the OS is Windows:
         )
 endif()
 
+add_library(glm INTERFACE)
+target_include_directories(glm INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
 ########################################################################################
 # Optional components
 ########################################################################################
+include(ExternalProject_EASTL.cmake)
 include(ExternalProject_LUA.cmake)
 include(ExternalProject_SOL2.cmake)
 include(ExternalProject_JCON.cmake)
-if(BUILD_EDITOR)
-include(ExternalProject_SegsEngine.cmake)
-endif()
+

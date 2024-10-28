@@ -11,37 +11,38 @@
  */
 
 #include "keybind_serializers.h"
-#include "keybind_definitions.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
+#include "Containers/Set.h"
+#include "keybind_definitions.h"
 
 #include "Components/Logging.h"
 #include "DataStorage.h"
 
 namespace
 {
-    KeyName resolveKey(const QString &name)
+    KeyName resolveKey(const String &name)
     {
-        auto iter = keyNameToEnum.find(name.toUpper());
+        auto iter = keyNameToEnum.find(name.to_upper());
         if(iter!=keyNameToEnum.end())
-            return *iter;
+            return iter->second;
         return COH_INPUT_INVALID;
     }
 
-    ModKeys resolveMod(const QString &name)
+    ModKeys resolveMod(const String &name)
     {
-        auto iter = modNameToEnum.find(name.toUpper());
+        auto iter = modNameToEnum.find(name.to_upper());
         if(iter!=modNameToEnum.end())
-            return *iter;
+            return iter->second;
         return NO_MOD;
     }
 
-    std::vector<Keybind> correctSecondaryBinds(std::vector<Keybind> &keybinds)
+    Vector<Keybind> correctSecondaryBinds(Vector<Keybind> &keybinds)
     {
-        QSet<QString> known_commands;
+        Set<String> known_commands;
         for(Keybind & bind : keybinds)  {
             if(known_commands.contains(bind.Command)) {
-                qCDebug(logKeybinds) << "Found duplicate keybind " + bind.Command + " Setting to alternate.";
+                sCDebug(logKeybinds) << "Found duplicate keybind " + bind.Command + " Setting to alternate.";
                 bind.IsSecondary = true;
             }
             else {
@@ -59,7 +60,7 @@ namespace
         ok &= s->read(target.Command);
         ok &= s->prepare_nested(); // will update the file size left
 
-        QList<QByteArray> combo = target.KeyString.split('+');
+        Vector<String> combo = target.KeyString.split('+');
 
         if(combo.size() > 1)
         {
@@ -69,7 +70,7 @@ namespace
         else
             target.Key = resolveKey(target.KeyString);
 
-        qCDebug(logKeybinds) << "\tbind:" << target.KeyString << target.Key << target.Mods << target.Command;
+        sCDebug(logKeybinds) << "\tbind:" << target.KeyString << target.Key << target.Mods << target.Command;
 
         assert(ok && s->end_encountered());
         return ok;
@@ -85,9 +86,9 @@ namespace
         if(s->end_encountered())
             return ok;
 
-        qCDebug(logKeybinds) << "Loading Profile:" << target.DisplayName << target.Name;
+        sCDebug(logKeybinds) << "Loading Profile:" << target.DisplayName << target.Name;
 
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -101,7 +102,7 @@ namespace
 
         target.KeybindArr = correctSecondaryBinds(target.KeybindArr);
 
-        qCDebug(logKeybinds) << "Total Keybinds:" << target.KeybindArr.size();
+        sCDebug(logKeybinds) << "Total Keybinds:" << target.KeybindArr.size();
 
         assert(ok);
         return ok;
@@ -117,7 +118,7 @@ namespace
         if(s->end_encountered())
             return ok;
 
-        qCDebug(logKeybinds) << target.CmdString << target.DisplayName;
+        sCDebug(logKeybinds) << target.CmdString << target.DisplayName;
 
         assert(ok);
         return ok;
@@ -131,7 +132,7 @@ namespace
         ok &= s->prepare_nested(); // will update the file size left
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -154,7 +155,7 @@ bool loadFrom(BinStore * s, Parse_AllKeyProfiles & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -176,7 +177,7 @@ bool loadFrom(BinStore * s, Parse_AllCommandCategories & target)
     ok &= s->prepare_nested(); // will update the file size left
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -217,7 +218,7 @@ void serialize(Archive &archive, KeybindSettings &kbds, const uint32_t version)
 {
     if(version != KeybindSettings::class_version)
     {
-        qCritical() << "Failed to serialize KeybindSettings, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize KeybindSettings, incompatible serialization format version " << version;
         return;
     }
 
@@ -253,29 +254,29 @@ void serialize(Archive &archive, Parse_AllCommandCategories &k, const uint32_t /
     archive(cereal::make_nvp("AllCommandCategories",k));
 }
 
-void saveTo(const KeybindSettings &target, const QString &baseName, bool text_format)
+void saveTo(const KeybindSettings &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"KeybindSettings",baseName,text_format);
+    SEGS::commonSaveTo(target,"KeybindSettings",baseName,text_format);
 }
 
 SPECIALIZE_VERSIONED_SERIALIZATIONS(KeybindSettings)
 
-void serializeToDb(const KeybindSettings &data, QString &tgt)
+void serializeToDb(const KeybindSettings &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    tgt = String(ostr.str().c_str());
 }
 
-void serializeFromDb(KeybindSettings &data,const QString &src)
+void serializeFromDb(KeybindSettings &data,const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(src.c_str());
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

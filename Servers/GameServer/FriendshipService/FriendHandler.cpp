@@ -154,9 +154,9 @@ void on_friend_removed(FriendHandlerState &state,FriendRemovedMessage *msg)
     FriendsList *list = &state.m_player_info_map[msg->m_data.m_char_db_id].m_friends_list;
 
     //Look for all friends in your list that have match the given db id, and remove them.
-    std::vector<Friend> *tmp = &state.m_player_info_map[msg->m_data.m_char_db_id].m_friends_list.m_friends;
-    tmp->erase(std::remove_if(tmp->begin(), tmp->end(), [removed_id](Friend const& f)
-        {return f.m_db_id == removed_id;}), tmp->end());
+    Vector<Friend> &tmp = state.m_player_info_map[msg->m_data.m_char_db_id].m_friends_list.m_friends;
+    tmp.erase(eastl::remove_if(tmp.begin(), tmp.end(), [removed_id](Friend const& f)
+        {return f.m_db_id == removed_id;}), tmp.end());
 
     if(list->m_friends.empty())
         list->m_has_friends = false;

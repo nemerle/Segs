@@ -6,19 +6,17 @@
 #include "Prefab.h"
 #include "Sound.h"
 
-#include "GameData/scenegraph_definitions.h"
-#include "GameData/scenegraph_serializers.h"
-#include "GameData/trick_definitions.h"
-#include "GameData/trick_serializers.h"
-#include "GameData/DataStorage.h"
-#include "GameData/CoHMath.h"
+#include "Common/GameData/scenegraph_definitions.h"
+#include "Common/GameData/scenegraph_serializers.h"
+#include "Common/GameData/trick_definitions.h"
+#include "Common/GameData/trick_serializers.h"
+#include "Common/GameData/DataStorage.h"
+#include "Common/GameData/CoHMath.h"
 #include "Common/Runtime/Prefab.h"
 #include "Components/Logging.h"
 
 #include "glm/mat3x3.hpp"
 #include "glm/gtx/quaternion.hpp"
-#include <QDir>
-#include <QRegularExpression>
 #include <cmath>
 
 using namespace SEGS;
@@ -85,12 +83,12 @@ struct Model32
     PackInfo        pack_data[7];
 };
 
-bool groupInLibSub(const QString &name)
+bool groupInLibSub(const String &name)
 {
     if(name.contains('/'))
-        return !name.startsWith("maps");
+        return !name.starts_with("maps");
 
-    return !name.startsWith("grp");
+    return !name.starts_with("grp");
 }
 
 uint32_t is_flag_set(uint32_t bf,GroupFlags flg)
@@ -103,95 +101,107 @@ uint32_t is_flag_set(uint32_t bf,GroupFlags flg)
 namespace SEGS
 {
 
-SceneNode * getNodeByName(const SceneGraph &graph,const QByteArray &name)
+SceneNode * getNodeByName(const SceneGraph &graph,const String &name)
 {
-    QString filename;
-    int idx = name.lastIndexOf('/');
-    if( idx==-1 )
+    String filename;
+    auto idx = name.rfind('/');
+    if( idx==String::npos )
         filename = name;
     else
-        filename = name.mid(idx+1);
+        filename = name.substr(idx+1);
 
-    return graph.name_to_node.value(filename.toLower(), nullptr);
+    return graph.name_to_node.at(filename.to_lower(), nullptr);
 }
 
 } // end of SEGS namespace
 
-QByteArray  groupMakeName(const QByteArray &base,LoadingContext &ctx)
+String  groupMakeName(StringView base,LoadingContext &ctx)
 {
-    QByteArray buf;
-    do
-        buf = base + QByteArray::number(++ctx.last_node_id);
+    String buf;
+    buf.reserve(base.size()+10);
+    do {
+        buf.clear();
+        buf.append(base);
+        buf.append(StringUtils::num(++ctx.last_node_id));
+    }
     while (getNodeByName(*ctx.m_target,buf));
 
     return buf;
 }
+static size_t nextNonLetter(StringView str) {
+    for(size_t idx=0; str.size();++idx) {
+        if(!((str[idx]>='A' && str[idx]<='Z') || (str[idx]>='a' && str[idx]<='z')))
+            return idx;
+
+    }
+    return String::npos;
+}
 
 // Create new names for any 'numbered' scene nodes
-QByteArray groupRename(LoadingContext &ctx, const QByteArray &oldname, bool is_def)
+String groupRename(LoadingContext &ctx, const String &oldname, bool is_def)
 {
-    QByteArray str = oldname.contains('/') ? oldname : ctx.m_renamer.basename + '/' + oldname;
+    String str = oldname.contains('/') ? oldname : ctx.m_renamer.basename + '/' + oldname;
     if( groupInLibSub(str) )
         return str;
-    QByteArray querystring = str.toLower();
-    if( !is_def && !querystring.contains("/grp") && !querystring.contains("/map") )
+    if( !is_def && !StringUtils::contains(str,"/grp",StringUtils::CaseInsensitive) && !StringUtils::contains(str,"/map",StringUtils::CaseInsensitive) )
         return str;
 
+    String querystring = str.to_lower();
     auto str_iter = ctx.m_renamer.new_names.find(querystring);
 
     if( str_iter!=ctx.m_renamer.new_names.end() )
-        return *str_iter;
+        return str_iter->second;
 
-    QByteArray prefix = str;
-    int gidx = prefix.toLower().indexOf("/grp",0);
-    if( gidx!=-1 )
+    StringView prefix = str;
+    auto gidx = StringUtils::findn(prefix,"/grp",0);
+    if( gidx!=String::npos )
     {
-        prefix = prefix.mid(gidx+4); // skip /grp
-        prefix = prefix.mid(0,QString(prefix).indexOf(QRegularExpression("[^A-Za-z]"))); // collect chars to first non-letter
+        prefix = prefix.substr(gidx+4); // skip /grp
+        prefix = prefix.substr(0,nextNonLetter(prefix)); // collect chars to first non-letter
     }
     else
     {
-        if( prefix.toLower().contains("/map") )
+        if( StringUtils::contains(prefix,"/map",StringUtils::CaseInsensitive) )
             prefix = "maps/grp";
         else
         {
-            qCDebug(logSceneGraph) << "bad def name:" << prefix;
+            sCDebug(logSceneGraph) << "bad def name:" << prefix;
             prefix = "baddef";
         }
     }
-    QByteArray tgt = groupMakeName(prefix,ctx);
+    String tgt = groupMakeName(prefix,ctx);
     ctx.m_renamer.new_names[querystring] = tgt;
     return tgt;
 }
 
-QByteArray buildBaseName(const QByteArray& path)
+String buildBaseName(const String& path)
 {
-    QStringList z = QString(path).split(QDir::separator());
+    Vector<String> z = String(path).split('/');
 
     if(z.size()>1)
         z.pop_back(); // remove file name
 
     if(z.front()=="object_library")
         z.pop_front();
-    else if(z.contains("maps",Qt::CaseInsensitive))
+    else if(StringUtils::contains(z,"maps",StringUtils::CaseInsensitive))
     {
-        while(0!=z.front().compare("maps",Qt::CaseInsensitive))
+        while(0!=StringUtils::compare(z.front(),"maps",StringUtils::CaseInsensitive))
             z.pop_front();
     }
 
-    return z.join('/').toUtf8();
+    return String::joined(z,"/");
 }
 
-QByteArray mapNameToPath(const QByteArray &name,LoadingContext &ctx)
+String mapNameToPath(const String &name,LoadingContext &ctx)
 {
-    int start_idx = name.toLower().indexOf("object_library");
-    if( -1==start_idx )
-        start_idx = name.toLower().indexOf("maps");
+    auto start_idx = name.to_lower().find("object_library");
+    if( String::npos==start_idx )
+        start_idx = name.to_lower().find("maps");
 
-    QByteArray buf = ctx.m_base_path+"geobin/" + name.mid(start_idx);
+    String buf = ctx.m_base_path+"geobin/" + name.substr(start_idx);
 
-    const int last_dot = buf.lastIndexOf('.');
-    if(-1==last_dot)
+    const auto last_dot = buf.rfind('.');
+    if(String::npos==last_dot)
         buf+=".bin";
     else if(!buf.contains(".crl"))
         buf.replace(last_dot,buf.size()-last_dot,".bin");
@@ -219,7 +229,7 @@ RootNode *newRef(SceneGraph &scene)
 
 void addRoot(const SceneRootNode_Data &refload, LoadingContext &ctx, PrefabStore &store)
 {
-    QByteArray newname = groupRename(ctx, refload.name, false);
+    String newname = groupRename(ctx, refload.name, false);
     auto *def = getNodeByName(*ctx.m_target,newname);
     if(!def)
     {
@@ -241,11 +251,11 @@ void addRoot(const SceneRootNode_Data &refload, LoadingContext &ctx, PrefabStore
         assert(geo_store);
         NodeLoadRequest req;
         {
-            QFileInfo geofi(geo_store->geopath);
-            QString base_file = geofi.path();
-            assert(newname.startsWith(geofi.path().toUtf8()));
-            req.base_file = base_file.toUtf8();
-            req.node_name = newname.mid(geofi.path().size()+1);
+            StringView geofi(geo_store->geopath);
+            StringView base_file = PathUtils::path(geofi);
+            assert(newname.starts_with(base_file));
+            req.base_file = base_file;
+            req.node_name = newname.substr(base_file.size()+1);
         }
         ctx.m_target->node_request_instantiation(reg_tgt,req);
     }
@@ -260,30 +270,29 @@ SceneNode *newDef(SceneGraph &scene,int level)
     return res;
 }
 
-void setNodeNameAndPath(SceneGraph &scene,SceneNode *node, QString obj_path)
+void setNodeNameAndPath(SceneGraph &scene,SceneNode *node, String obj_path)
 {
-    QString result;
+    String result;
     size_t strlenobjec = strlen("object_library");
-    if( obj_path.startsWith("object_library", Qt::CaseInsensitive) )
-        obj_path.remove(0, strlenobjec + 1);
+    if( StringUtils::begins_with(obj_path,"object_library", StringUtils::CaseInsensitive) )
+        obj_path.erase(0, strlenobjec + 1);
     if( groupInLibSub(obj_path) )
         result = "object_library/";
 
     result += obj_path;
-    int last_separator = result.lastIndexOf('/');
-    QStringView key = QStringView(result).mid(last_separator + 1);
-    QString lowkey = key.toString().toLower();
+    auto last_separator = result.rfind('/');
+    String key = result.substr(last_separator + 1);
+    String lowkey = key.to_lower();
 
     auto iter = scene.name_to_node.find(lowkey);
     if(iter==scene.name_to_node.end())
         scene.name_to_node[lowkey] = node;
 
-    node->m_name = key.toUtf8();
+    node->m_name = key;
     node->m_dir.clear();
 
-
-    if( last_separator != -1 )
-        node->m_dir = result.mid(0,last_separator).toUtf8();
+    if( (last_separator+1) != 0 )
+        node->m_dir = result.substr(0,last_separator-1);
 }
 
 void addChildNodes(const SceneGraphNode_Data &inp_data, SceneNode *node, LoadingContext &ctx, PrefabStore &store)
@@ -294,7 +303,7 @@ void addChildNodes(const SceneGraphNode_Data &inp_data, SceneNode *node, Loading
     node->m_children.reserve(inp_data.p_Grp.size());
     for(const GroupLoc_Data & dat : inp_data.p_Grp)
     {
-        const QByteArray new_name = groupRename(ctx, dat.name, false);
+        const String new_name = groupRename(ctx, dat.name, false);
         SceneNodeChildTransform child;
         NodeLoadRequest request;
         child.node = getNodeByName(*ctx.m_target, new_name);
@@ -302,7 +311,7 @@ void addChildNodes(const SceneGraphNode_Data &inp_data, SceneNode *node, Loading
         {
             bool loaded = store.loadNamedPrefab(new_name, ctx, &request);
             if(!loaded)
-                qCritical() << "Cannot load named prefab" << new_name << "result is" << loaded;
+                sCritical() << "Cannot load named prefab" << new_name << "result is" << loaded;
             child.node = getNodeByName(*ctx.m_target, new_name);
         }
         if(child.node)
@@ -320,8 +329,8 @@ void addChildNodes(const SceneGraphNode_Data &inp_data, SceneNode *node, Loading
         if(ctx.prevent_nesting && !child.node)
         {
             // insert child_node with null node, will be fixed when requested geo library is loaded.
-            if(request.base_file.isEmpty()||request.node_name.isEmpty()) {
-                qDebug() << "Cannot find the source for requested:"<<new_name;
+            if(request.base_file.empty()||request.node_name.empty()) {
+                sDebug() << "Cannot find the source for requested:"<<new_name;
                 continue;
             }
             int child_idx = node->m_children.size();
@@ -331,12 +340,12 @@ void addChildNodes(const SceneGraphNode_Data &inp_data, SceneNode *node, Loading
         else if( child.node )
             node->m_children.emplace_back(child);
         else {
-            qCritical() << "Node" << node->m_name << "\ncan't find member" << dat.name;
+            sCritical() << "Node" << node->m_name << "\ncan't find member" << dat.name;
         }
 
     }
 }
-void postprocessLOD(const std::vector<DefLod_Data> &lods, SceneNode *node)
+void postprocessLOD(const Vector<DefLod_Data> &lods, SceneNode *node)
 {
     if(lods.empty())
         return;
@@ -353,16 +362,15 @@ void postprocessLOD(const std::vector<DefLod_Data> &lods, SceneNode *node)
     node->lod_near_fade = lod_data.NearFade;
 }
 
-void postprocessLight(const std::vector<DefOmni_Data> & light_data, SceneNode *node)
+void postprocessLight(const Vector<DefOmni_Data> & light_data, SceneNode *node)
 {
     if( light_data.empty() )
         return;
     const DefOmni_Data &omnid(light_data.front());
-    node->m_light = std::make_unique<LightProperties>(LightProperties{
-        RGBA(omnid.omniColor&0xFF,(omnid.omniColor>>8)&0xFF,(omnid.omniColor>>16)&0xFF,0).toFloats(),
-        omnid.Size,
-        omnid.isNegative
-    });
+    node->m_light = eastl::make_unique<LightProperties>(
+        RGBA(omnid.omniColor & 0xFF, (omnid.omniColor >> 8) & 0xFF, (omnid.omniColor >> 16) & 0xFF, 0).toFloats(),
+        omnid.Size, omnid.isNegative
+    );
 }
 
 bool nodeCalculateBounds(SceneNode *group)
@@ -451,7 +459,7 @@ void  nodeSetVisBounds(SceneNode *group)
 
     group->vis_dist = maxvis;
 }
-void postprocessSound(const std::vector<DefSound_Data> &data,SceneNode *node)
+void postprocessSound(const Vector<DefSound_Data> &data,SceneNode *node)
 {
     if(data.empty())
         return;
@@ -466,7 +474,7 @@ void postprocessSound(const std::vector<DefSound_Data> &data,SceneNode *node)
     node->sound_info = handle;
 }
 
-void postprocessEditorBeacon(const std::vector<DefBeacon_Data> &data, SceneNode * /*node*/)
+void postprocessEditorBeacon(const Vector<DefBeacon_Data> &data, SceneNode * /*node*/)
 {
     if( data.empty())
         return;
@@ -479,7 +487,7 @@ void postprocessEditorBeacon(const std::vector<DefBeacon_Data> &data, SceneNode 
 //    node->m_editor_beacon=b;
 }
 
-void postprocessFog(const std::vector<DefFog_Data> &data, SceneNode * /*node*/)
+void postprocessFog(const Vector<DefFog_Data> &data, SceneNode * /*node*/)
 {
     //TODO: only 1 fog value is used here, either change the source structure or consider how multi-fog would work ?
     if( data.empty() )
@@ -495,7 +503,7 @@ void postprocessFog(const std::vector<DefFog_Data> &data, SceneNode * /*node*/)
     // f->far = fog_data.fogY;
 }
 
-void postprocessAmbient(const std::vector<DefAmbient_Data> &data, SceneNode * /*a2*/)
+void postprocessAmbient(const Vector<DefAmbient_Data> &data, SceneNode * /*a2*/)
 {
     //TODO: only one value is used here, either change the source structure or consider how multi-ambient would work ?
     if( data.empty() )
@@ -508,28 +516,24 @@ void postprocessAmbient(const std::vector<DefAmbient_Data> &data, SceneNode * /*
     // l->color = light_data.clr;
 }
 
-void postprocessTintColor(const std::vector<TintColor_Data> &data, SceneNode * /*node*/)
+void postprocessTintColor(const Vector<TintColor_Data> &data, SceneNode * node)
 {
     //TODO: only 1 tint is used here, either change the source structure or consider how multi-tint would work ?
     if( data.empty() )
         return;
-    //const TintColor_Data &tint_data(data.front());
-    //TODO: MapViewer does not handle this case
-    //Nodes with a tint set could use that value, if proper ModelModifiers flag was set.
+    node->tintOverride = eastl::make_pair<RGBA,RGBA>(data.front().clr1,data.front().clr2);
     //ColorOnly models would use first tint color
     //DistAlpha would use alpha from first tint color
     //SetColor would set the blend colors to tint values
 }
 
-void postprocessTextureReplacers(const std::vector<ReplaceTex_Data> &data, SceneNode * /*node*/)
+void postprocessTextureReplacers(const Vector<ReplaceTex_Data> &data, SceneNode * node)
 {
     //WARNING: This needs pretty urgent attention, MapViewer does not handle this at all
     // and it's a pretty important piece of the puzzle.
     for (const ReplaceTex_Data &tex_repl : data )
     {
-        qCDebug(logSceneGraph) << "Texture to Replace:" << tex_repl.repl_with;
-        // HInstanceMod tr = InstanceModStorage::instance().create();
-        // tr->addTextureReplacement(tex_repl.texUnit,tex_repl.repl_with);
+        node->m_texture_replacements.emplace_back(eastl::make_pair(tex_repl.texIdxToReplace,tex_repl.repl_with));
     }
 }
 
@@ -579,7 +583,7 @@ void  groupApplyModifiers(SceneNode *node)
     node->tray           = is_flag_set(gflags, VisTray) | is_flag_set(gflags, VisOutside);
 
     if(mods->LodNear != 0.0f || mods->LodFar != 0.0f || mods->LodNearFade != 0.0f || mods->LodFarFade != 0.0f || mods->LodScale != 0.0f)
-        node->lod_fromtrick = 1;
+        node->lod_fromtrick = true;
     if( mods->node._TrickFlags & NoColl )
         ; //TODO: disable collisions for this node
     if( mods->node._TrickFlags & SelectOnly )
@@ -589,23 +593,23 @@ void  groupApplyModifiers(SceneNode *node)
 }
 bool addNode(const SceneGraphNode_Data &defload, LoadingContext &ctx,PrefabStore &prefabs)
 {
-    if(defload.p_Grp.empty() && defload.p_Obj.isEmpty())
+    if(defload.p_Grp.empty() && defload.p_Obj.empty())
         return false;
 
-    QByteArray obj_path = groupRename(ctx, defload.name, true);
+    String obj_path = groupRename(ctx, defload.name, true);
     SceneNode * node = getNodeByName(*ctx.m_target,obj_path);
     if(!node)
     {
         node = newDef(*ctx.m_target,ctx.m_nesting_level);
         if(!defload.p_Property.empty())
-            node->m_properties = new std::vector<GroupProperty_Data> (defload.p_Property);
+            node->m_properties = new Vector<GroupProperty_Data> (defload.p_Property);
     }
 
-    if( !defload.p_Obj.isEmpty() )
+    if( !defload.p_Obj.empty() )
     {
         node->m_model = prefabs.groupModelFind(defload.p_Obj,ctx);
         if( !node->m_model ) {
-            qCritical() << "Cannot find root geometry in" << defload.p_Obj;
+            sCritical() << "Cannot find root geometry in" << defload.p_Obj;
         }
 
         groupApplyModifiers(node);
@@ -615,7 +619,7 @@ bool addNode(const SceneGraphNode_Data &defload, LoadingContext &ctx,PrefabStore
 
     if( node->m_children.empty() && !node->m_model )
     {
-        qCDebug(logSceneGraph) << "Should delete def" << defload.name << " after conversion it has no children, nor models";
+        sCDebug(logSceneGraph) << "Should delete def" << defload.name << " after conversion it has no children, nor models";
         return false;
     }
 
@@ -629,8 +633,8 @@ bool addNode(const SceneGraphNode_Data &defload, LoadingContext &ctx,PrefabStore
     postprocessSound(defload.p_Sound,node);
     postprocessLight(defload.p_Omni, node);
 
-    if(!defload.type.isEmpty())
-        node->m_fx_name_hash  = CompileTimeUtils::hash_32_fnv1a_const(defload.type.toLower().constData());
+    if(!defload.type.empty())
+        node->m_fx_name_hash  = CompileTimeUtils::hash_32_fnv1a_const(defload.type.to_lower().c_str());
     if(ctx.prevent_nesting)
     {
         // no calculation possible if we've been prevented  from loading nested scenes/models.
@@ -654,28 +658,35 @@ void serializeIn(SceneGraph_Data &scenegraph,LoadingContext &ctx,PrefabStore &pr
 namespace SEGS {
     void SceneGraph::node_request_instantiation(NodeLoadTarget tgt, NodeLoadRequest needs)
     {
-        assert(!needs.node_name.isEmpty());
-        assert(!needs.base_file.isEmpty());
+        assert(!needs.node_name.empty());
+        assert(!needs.base_file.empty());
         assert(!m_requests[needs].contains(tgt));
         m_requests[needs].push_back(tgt);
     }
 
-bool loadSceneGraph(const QByteArray &path,LoadingContext &ctx,PrefabStore &prefabs)
+    SceneGraph::~SceneGraph() {
+        for (auto & root : roots)
+            delete root;
+        for (auto & def : all_converted_defs)
+            delete def;
+    }
+
+    bool loadSceneGraph(const String &path,LoadingContext &ctx,PrefabStore &prefabs)
 {
-    qInfo() << "SceneGraph Path: " << path;
-    QByteArray binName = mapNameToPath(path,ctx);
-    qInfo() << "Scenegraph BinName: " << binName;
+    sInfo() << "SceneGraph Path: " << path;
+    String binName = mapNameToPath(path,ctx);
+    sInfo() << "Scenegraph BinName: " << binName;
     SceneGraph_Data serialized_graph;
     ctx.m_renamer.basename = buildBaseName(path);
     binName.replace("Chunks.bin", "CHUNKS.bin");
-    if(!LoadSceneData(*ctx.fs_wrap, binName, serialized_graph))
+    if(!LoadSceneData(binName, serialized_graph))
         return false;
 
     serializeIn(serialized_graph, ctx, prefabs);
     return true;
 }
 
-SceneGraph *loadWholeMap(FSWrapper *fs, const QByteArray &filename)
+SceneGraph *loadWholeMap(IFilesystem *fs, const String &filename)
 {
     RuntimeData &rd(getRuntimeData());
     assert(fs);
@@ -684,11 +695,11 @@ SceneGraph *loadWholeMap(FSWrapper *fs, const QByteArray &filename)
     SEGS::LoadingContext ctx(0);
     ctx.fs_wrap = fs;
     ctx.m_target = m_scene_graph;
-    int geobin_idx= filename.indexOf("geobin");
-    int maps_idx = filename.indexOf("maps");
-    ctx.m_base_path = filename.mid(0, geobin_idx);
+    auto geobin_idx= filename.find("geobin");
+    auto maps_idx = filename.find("maps");
+    ctx.m_base_path = filename.substr(0, geobin_idx);
     assert(rd.m_prefab_mapping);
-    QByteArray upcase_city = filename;
+    String upcase_city = filename;
     upcase_city.replace("city", "City");
     upcase_city.replace("hazard", "Hazard");
     upcase_city.replace("trial", "Trial");
@@ -704,7 +715,7 @@ SceneGraph *loadWholeMap(FSWrapper *fs, const QByteArray &filename)
     upcase_city.replace("column", "Column");
     upcase_city.replace("cot", "COT");
     rd.m_prefab_mapping->sceneGraphWasReset();
-    bool res = loadSceneGraph(upcase_city.mid(maps_idx), ctx, *rd.m_prefab_mapping);
+    bool res = loadSceneGraph(upcase_city.substr(maps_idx), ctx, *rd.m_prefab_mapping);
     if(!res)
     {
         delete m_scene_graph;
@@ -713,7 +724,7 @@ SceneGraph *loadWholeMap(FSWrapper *fs, const QByteArray &filename)
     return m_scene_graph;
 }
 
-SceneGraph * loadSceneGraphNoNesting(FSWrapper *fs, const QByteArray &filename, QSet<QByteArray> &missing_geosets)
+SceneGraph * loadSceneGraphNoNesting(IFilesystem *fs, const String &filename, Set<String> &missing_geosets)
 {
     RuntimeData& rd(getRuntimeData());
     assert(fs);
@@ -722,12 +733,12 @@ SceneGraph * loadSceneGraphNoNesting(FSWrapper *fs, const QByteArray &filename, 
     ctx.fs_wrap = fs;
     ctx.m_target = m_scene_graph;
     ctx.prevent_nesting = true;
-    int geobin_idx = filename.indexOf("geobin");
-    int maps_idx = filename.indexOf("maps");
-    ctx.m_base_path = filename.mid(0, geobin_idx);
+    auto geobin_idx = filename.find("geobin");
+    auto maps_idx = filename.find("maps");
+    ctx.m_base_path = filename.substr(0, geobin_idx);
     assert(rd.m_prefab_mapping);
     rd.m_prefab_mapping->m_missing_geosets.clear();
-    QByteArray upcase_city = filename;
+    String upcase_city = filename;
     upcase_city.replace("city", "City");
     upcase_city.replace("hazard", "Hazard");
     upcase_city.replace("trial", "Trial");
@@ -743,7 +754,7 @@ SceneGraph * loadSceneGraphNoNesting(FSWrapper *fs, const QByteArray &filename, 
     upcase_city.replace("column", "Column");
     upcase_city.replace("cot", "COT");
     rd.m_prefab_mapping->sceneGraphWasReset();
-    bool res = loadSceneGraph(upcase_city.mid(maps_idx), ctx, *rd.m_prefab_mapping);
+    bool res = loadSceneGraph(upcase_city.substr(maps_idx), ctx, *rd.m_prefab_mapping);
     if (!res)
     {
         delete m_scene_graph;
@@ -753,12 +764,13 @@ SceneGraph * loadSceneGraphNoNesting(FSWrapper *fs, const QByteArray &filename, 
     return m_scene_graph;
 }
 
-void loadSubgraph(const QByteArray &filename, LoadingContext &ctx, PrefabStore &prefabs)
+void loadSubgraph(const String &filename, LoadingContext &ctx, PrefabStore &prefabs)
 {
-    QFileInfo fi(filename);
+    StringView fpath = PathUtils::path(filename);
+    StringView basename = PathUtils::get_basename(filename);
     LoadingContext tmp = ctx;
     tmp.m_nesting_level++;
-    loadSceneGraph((fi.path()+"/"+fi.completeBaseName()+".txt").toUtf8(),tmp,prefabs);
+    loadSceneGraph((String(fpath)+"/"+basename+".txt"),tmp,prefabs);
 }
 
 } // end of SEGS namespace

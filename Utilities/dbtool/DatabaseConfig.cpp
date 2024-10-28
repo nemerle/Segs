@@ -30,10 +30,10 @@
 bool DatabaseConfig::initialize_from_settings(const QString &settings_file_name, const QString &group_name)
 {
     // Set settings file path, since we're in a different directory
-    Settings::setSettingsPath(settings_file_name);
-    QString settings_full_path = Settings::getSettingsPath();
+    Settings::setSettingsPath(qPrintable(settings_file_name));
+    QString settings_full_path = QString::fromUtf8(Settings::getSettingsPath().c_str());
 
-    if(!fileExists(settings_full_path))
+    if (!fileExists(Settings::getSettingsPath()))
     {
         qWarning() << "Cannot find settings template file" << settings_full_path;
         return false;
@@ -45,7 +45,7 @@ bool DatabaseConfig::initialize_from_settings(const QString &settings_file_name,
         config.beginGroup(group_name);
             m_driver = config.value(QStringLiteral("db_driver"),"QSQLITE").toString();
             m_filename = config.value(QStringLiteral("db_name"),"segs").toString();
-            m_db_name = Settings::getSEGSDir() + QDir::separator() + m_filename; // don't add suffix here, so that it can be optional for users
+            m_db_name = QString::fromUtf8(Settings::getSEGSDir().c_str()) + QDir::separator() + m_filename; // don't add suffix here, so that it can be optional for users
             m_host = config.value(QStringLiteral("db_host"),"127.0.0.1").toString();
             m_port = config.value(QStringLiteral("db_port"),"5432").toString();
             m_user = config.value(QStringLiteral("db_user"),"segs").toString();
@@ -60,7 +60,7 @@ bool DatabaseConfig::initialize_from_settings(const QString &settings_file_name,
     if(!isSqlite())
         m_db_name = m_short_name; // for client-server db systems, use name instead of path
 
-    qCDebug(logSettings) << m_db_name << "database settings loaded from" << settings_full_path;
+    sCDebug(logSettings) << qPrintable(m_db_name + " database settings loaded from " + settings_full_path);
 
     return putFilePath();
 }
@@ -68,15 +68,15 @@ bool DatabaseConfig::initialize_from_settings(const QString &settings_file_name,
 bool DatabaseConfig::putFilePath()
 {
     // Find database templates directory
-    QDir tpl_dir(Settings::getTemplateDirPath());
+    QDir tpl_dir(Settings::getTemplateDirPath().c_str());
     if(!tpl_dir.exists())
     {
-        qWarning() << "SEGS dbtool cannot find the SEGS root folder "
+        sWarning() << "SEGS dbtool cannot find the SEGS root folder "
                    << "(where the default_setup directory resides)";
         return false;
     }
 
-    qCDebug(logSettings) << "Templates Dir" << Settings::getTemplateDirPath();
+    sCDebug(logSettings) << "Templates Dir" << Settings::getTemplateDirPath();
 
     QString driver;
     if(isSqlite())
@@ -87,13 +87,13 @@ bool DatabaseConfig::putFilePath()
         driver = "pgsql";
     else
     {
-        qCritical("Unknown database driver.");
+        sCritical()<<"Unknown database driver.";
         return false;
     }
 
     QString base_dir(tpl_dir.absolutePath() + QDir::separator());
     m_template_path = QString("%1%2/segs%3_%2_create.sql").arg(base_dir).arg(driver).arg(m_character_db?"_game":"");
 
-    qCDebug(logSettings) << "m_file_path" << m_template_path;
+    sCDebug(logSettings) << qPrintable("m_file_path" + m_template_path);
     return true;
 }

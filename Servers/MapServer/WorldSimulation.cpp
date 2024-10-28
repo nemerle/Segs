@@ -101,7 +101,7 @@ void World::checkDelayedEffects(Entity *e, uint32_t msec)
         {
             if (e->m_aggro_list.size() > 0)
             {
-                QString msg = "say I'm harmless!";
+                String msg = "say I'm harmless!";
                 if (e->m_npc->src_data->m_Powers.size() > 0)
                 {
                 Entity * tgt = getEntity(m_owner_instance, e->m_aggro_list[0].idx);
@@ -109,11 +109,11 @@ void World::checkDelayedEffects(Entity *e, uint32_t msec)
                 if (tgt == nullptr || tgt->m_char->m_is_dead || glm::distance(tgt->m_entity_data.m_pos, e->m_entity_data.m_pos) > 100)
                 {
                     e->m_aggro_list[0].aggro = 0;
-                    qCDebug(logNPCs) << e->m_aggro_list[0].name << "moved to front of aggrolist";
+                    sCDebug(logNPCs) << e->m_aggro_list[0].name << "moved to front of aggrolist";
                 }
                 if (e->m_aggro_list[0].aggro > 0)
                 {
-                    msg = " " + e->m_aggro_list[0].name + " has " + QString("%1 aggro") .arg(e->m_aggro_list[0].aggro);
+                    msg = " " + e->m_aggro_list[0].name + " has " + e->m_aggro_list[0].aggro + " aggro";
                 }
                 else
                 {
@@ -125,7 +125,7 @@ void World::checkDelayedEffects(Entity *e, uint32_t msec)
                     {
                         Aggro swap = e->m_aggro_list[0];
                         e->m_aggro_list.pop_front();
-                        qCDebug(logNPCs) << e->m_aggro_list[0].name << "now has aggro";
+                        sCDebug(logNPCs) << e->m_aggro_list[0].name << "now has aggro";
                         e->m_aggro_list.push_back(swap);    //this isn't sorted, but good enough to find a new target
                     }
 
@@ -141,7 +141,7 @@ void World::checkDelayedEffects(Entity *e, uint32_t msec)
                             && glm::distance(_near->m_entity_data.m_pos, e->m_entity_data.m_pos) < 50)
                     {
                         //this could be sent to the EM to send to all critteres in this spawn
-                        QString msg = " I see " + _near->name();
+                        String msg = " I see " + _near->name();
                         m_owner_instance->add_chat_message(e, msg);
 
                         e->m_aggro_list.push_back({ _near->name(),_near->m_idx,1,0});// 1 point of aggro
@@ -229,7 +229,7 @@ void World::checkActivationTimers(Entity *e)
                 }
                 else
                 {
-                    QString from_msg = "charging!";                     //so players know they are activating a power
+                    String from_msg = "charging!";                     //so players know they are activating a power
                     sendFloatingInfo(*e->m_client, from_msg, FloatingInfoStyle::FloatingInfo_Info, 0.0);
                 }
             }
@@ -354,19 +354,19 @@ void World::collisionStep(Entity *e, uint32_t /*msec*/)
     {
         // Range-For only uses the values, so you can't get the keys unless you use toStdMap() or iterate keys().
         // Both are less efficient than just using an iterator.
-        QHash<QString, MapXferData>::const_iterator i = m_owner_instance->get_map_zone_transfers().constBegin();
-        while (i != m_owner_instance->get_map_zone_transfers().constEnd())
+        auto i = m_owner_instance->get_map_zone_transfers().cbegin();
+        while (i != m_owner_instance->get_map_zone_transfers().cend())
         {
             // TODO: This needs to check against the trigger plane for transfers. This should be part of the wall objects geobin. Also need to make sure that this doesn't cause players to immediately zone after being spawned in a spawnLocation near a zoneline.            
-            if ((e->m_entity_data.m_pos.x >= i.value().m_position.x - 20 && e->m_entity_data.m_pos.x <= i.value().m_position.x + 20) &&
-                (e->m_entity_data.m_pos.y >= i.value().m_position.y - 20 && e->m_entity_data.m_pos.y <= i.value().m_position.y + 20) &&
-                (e->m_entity_data.m_pos.z >= i.value().m_position.z - 20 && e->m_entity_data.m_pos.z <= i.value().m_position.z + 20))
+            if ((e->m_entity_data.m_pos.x >= i->second.m_position.x - 20 && e->m_entity_data.m_pos.x <= i->second.m_position.x + 20) &&
+                (e->m_entity_data.m_pos.y >= i->second.m_position.y - 20 && e->m_entity_data.m_pos.y <= i->second.m_position.y + 20) &&
+                (e->m_entity_data.m_pos.z >= i->second.m_position.z - 20 && e->m_entity_data.m_pos.z <= i->second.m_position.z + 20))
             {
                 e->m_map_swap_collided = true;  // So we don't send repeated events for the same entity
-                m_owner_instance->putq(new MapSwapCollisionMessage({e->m_db_id, e->m_entity_data.m_pos, i.key()}, 0));
+                m_owner_instance->putq(new MapSwapCollisionMessage({e->m_db_id, e->m_entity_data.m_pos, i->first}, 0));
                 return; // don't want to keep checking for other maps for this entity
             }
-            i++;
+            ++i;
 
         }
     }
@@ -394,7 +394,7 @@ void World::updateEntity(Entity *e, const ACE_Time_Value &dT)
     {
         if(e->m_team->m_data.m_team_members.size() <= 1)
         {
-            qWarning() << "Team cleanup being handled in updateEntity, but we need to move this to TeamHandler";
+            sWarning() << "Team cleanup being handled in updateEntity, but we need to move this to TeamHandler";
             e->m_has_team = false;
             e->m_team = nullptr;
         }

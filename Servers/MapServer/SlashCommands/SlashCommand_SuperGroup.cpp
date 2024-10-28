@@ -25,16 +25,16 @@ using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 9 Commands (GMs)
-void cmdHandler_SetSuperGroup(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetSuperGroup(const Vector<String> &params, MapClientSession &sess)
 {
-    int sg_id       = params.value(0).toInt();
-    QString sg_name = params.value(1);
-    int sg_rank     = params.value(2).toInt();
+    int sg_id      = StringUtils::to_int(params.at(0));
+    String sg_name = params.at(1);
+    int sg_rank    = StringUtils::to_int(params.at(2));
 
     setSuperGroup(*sess.m_ent, sg_id, sg_name, sg_rank);
 
-    QString msg = QString("Set SuperGroup:  id: %1  name: %2  rank: %3").arg(QString::number(sg_id), sg_name, QString::number(sg_rank));
-    qCDebug(logSlashCommand) << msg;
+    String msg(String::CtorSprintf(),"Set SuperGroup:  id: %d  name: %s  rank: %d",sg_id, sg_name.c_str(), sg_rank);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 

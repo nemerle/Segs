@@ -13,18 +13,15 @@
 #include "DataStorage.h"
 #include "Components/Colors.h"
 
-#include <QtCore/QString>
-#include <QtCore/QFileInfo>
-
 bool BinStore::check_bin_version_and_crc(uint32_t req_crc)
 {
-    QString tgt;
+    String tgt;
     uint32_t crc_from_file;
     char magic_contents[8];
     m_str->read(magic_contents,8);
     read(crc_from_file);
     tgt=read_pstr(4096);
-    if( 0!=strncmp(magic_contents,"CrypticS",8) || tgt.mid(0,6)!="Parse4" || (req_crc!=0 && crc_from_file != req_crc) ) //
+    if( 0!=strncmp(magic_contents,"CrypticS",8) || StringView(tgt).substr(0,6)!="Parse4" || (req_crc!=0 && crc_from_file != req_crc) ) //
     {
         m_str->close();
         return false;
@@ -32,9 +29,9 @@ bool BinStore::check_bin_version_and_crc(uint32_t req_crc)
     return true;
 }
 
-const QByteArray &BinStore::read_pstr( size_t maxlen )
+const String &BinStore::read_pstr( size_t maxlen )
 {
-    static QByteArray buf;
+    static String buf;
     uint16_t len=0;
     buf.resize(0);
     if(read(len)!=true)
@@ -72,12 +69,12 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
             m_str->seek(v+m_str->pos());
         return true;
     }
-    const QByteArray &hdr(read_pstr(20));
+    const String &hdr(read_pstr(20));
     uint32_t sz;
     read_internal(sz);
 
-    quint64 read_start = m_str->pos();
-    if(!hdr.startsWith("Files1")||sz<=0)
+    uint64_t read_start = m_str->pos();
+    if(!hdr.starts_with("Files1")||sz<=0)
         return false;
     int num_data_blocks;
     read_internal(num_data_blocks);
@@ -88,22 +85,23 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
         read_internal(fe.date);
         m_entries.push_back(fe);
     }
-    quint64 read_end = m_str->pos();
+    uint64_t read_end = m_str->pos();
     m_file_sizes.push_back(m_str->size()-read_end);
     return (sz==(read_end-read_start));
 }
 
-bool BinStore::open(FSWrapper& fs, const QString &name,uint32_t required_crc )
+bool BinStore::open(const String &name, uint32_t required_crc )
 {
+    auto fs = SEGS::getServiceLocator()->getFS();
     if(m_str && m_str->isOpen())
     {
         m_str->close();
         delete m_str;
         m_str = nullptr;
     }
-    m_str=fs.open(name,true);
+    m_str=fs->open(name.c_str(),name.size(),SEGS::IFile::ReadOnly);
     if(!m_str) {
-            return false;
+        return false;
     }
     bool result = check_bin_version_and_crc(required_crc);
     return result && read_data_blocks(true);
@@ -194,13 +192,13 @@ bool BinStore::read(uint8_t *&val, uint32_t length)
     return parse_ok;
 }
 
-bool BinStore::read(QByteArray &val)
+bool BinStore::read(String &val)
 {
     val=this->read_str(12000);
     return true;
 }
 
-bool BinStore::read(std::vector<QByteArray> &res)
+bool BinStore::read(Vector<String> &res)
 {
     bool parse_ok=true;
     uint32_t to_read = 0;
@@ -215,7 +213,7 @@ bool BinStore::read(std::vector<QByteArray> &res)
     return parse_ok;
 }
 
-bool BinStore::read(std::vector<uint32_t> &res)
+bool BinStore::read(Vector<uint32_t> &res)
 {
     bool parse_ok=true;
     uint32_t to_read = 0;
@@ -231,7 +229,7 @@ bool BinStore::read(std::vector<uint32_t> &res)
     return parse_ok;
 }
 
-bool BinStore::read(std::vector<int32_t> &res)
+bool BinStore::read(Vector<int32_t> &res)
 {
     bool parse_ok=true;
     uint32_t to_read = 0;
@@ -247,7 +245,7 @@ bool BinStore::read(std::vector<int32_t> &res)
     return parse_ok;
 }
 
-bool BinStore::read(std::vector<float> &res)
+bool BinStore::read(Vector<float> &res)
 {
     bool parse_ok=true;
     uint32_t to_read = 0;
@@ -270,9 +268,9 @@ bool BinStore::read_bytes( char *tgt,size_t sz )
     return true;
 }
 
-const QByteArray & BinStore::read_str( size_t maxlen )
+const String & BinStore::read_str( size_t maxlen )
 {
-    const QByteArray &result(read_pstr(maxlen));
+    const String &result(read_pstr(maxlen));
     fixup();
     return result;
 }
@@ -283,7 +281,7 @@ void BinStore::prepare()
     bytes_read=0;
 }
 
-uint32_t BinStore::read_header( QByteArray &name,size_t maxlen )
+uint32_t BinStore::read_header( String &name,size_t maxlen )
 {
     name = read_pstr(maxlen);
     uint32_t res;
@@ -300,7 +298,7 @@ bool BinStore::prepare_nested()
     return result;
 }
 
-bool BinStore::nesting_name(QByteArray &name)
+bool BinStore::nesting_name(String &name)
 {
     uint32_t expected_size = read_header(name,12000);
     if(expected_size == uint32_t(~0))
@@ -314,7 +312,7 @@ bool BinStore::nesting_name(QByteArray &name)
 
 void BinStore::fixup()
 {
-    qint64 nonmult4 = ((m_str->pos() + 3) & ~3) - m_str->pos();
+    int64_t nonmult4 = ((m_str->pos() + 3) & ~3) - m_str->pos();
     if(nonmult4)
     {
         m_str->seek(nonmult4+m_str->pos());

@@ -9,8 +9,6 @@
 #include "GameCommand.h"
 #include "MapEventTypes.h"
 
-#include <QtCore/QString>
-
 namespace SEGSEvents
 {
 
@@ -20,7 +18,7 @@ class MapXferWait final : public MapLinkEvent
 public:
     MapXferWait() : MapLinkEvent(MapEventTypes::evMapXferWait)
     {}
-    MapXferWait(QString map_name) : MapLinkEvent(MapEventTypes::evMapXferWait)
+    MapXferWait(const String &map_name) : MapLinkEvent(MapEventTypes::evMapXferWait)
     {
         m_map_name = map_name;
     }
@@ -35,7 +33,7 @@ public:
     }
 
     // [[ev_def:field]]
-    QString     m_map_name;
+    String     m_map_name;
 
     EVENT_IMPL(MapXferWait)
 };

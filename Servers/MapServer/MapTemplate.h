@@ -9,33 +9,30 @@
 #include "Servers/ServerEndpoint.h"
 #include "Common/GameData/Entity.h"
 
-#include <QString>
-#include <vector>
-
 class MapInstance;
 
 // TODO: instances should be uniquely identifiable, so getting a Client/Team specific instances is possible
 class MapTemplate
 {
-static  uint8_t                     s_template_id;
-        std::vector<MapInstance *>  m_instances; // switch from vector to priority queue ?
-        QString                     m_map_filename;
-        uint8_t                     m_game_server_id;
-        uint32_t                    m_map_server_id;
-        ListenAndLocationAddresses  m_base_loc;
-        bool                        m_is_mission_map;
+static  uint8_t                    s_template_id;
+        Vector<MapInstance *>      m_instances; // switch from vector to priority queue ?
+        String                     m_map_filename;
+        uint8_t                    m_game_server_id;
+        uint32_t                   m_map_server_id;
+        ListenAndLocationAddresses m_base_loc;
+        bool                       m_is_mission_map;
 
 public:
-                                    MapTemplate(const QString &template_filename,
+                                   MapTemplate(StringView template_filename,
                                                 uint8_t game_server_id, uint32_t map_server_id,
                                                 const ListenAndLocationAddresses &loc, const bool is_mission_map);
-        MapInstance *               get_instance(uint8_t char_level); //! If there are no instances, starts a new one.
-        size_t                      num_instances();
-        void                        shut_down_all();
-        QString                     client_filename() const;
-        QString                     base_name() const;
-        QString                     mission_base_name() const;
-        uint8_t                     get_level_range(uint8_t char_level);
+        MapInstance *              get_instance(uint8_t char_level); //! If there are no instances, starts a new one.
+        size_t                     num_instances();
+        void                       shut_down_all();
+        String                     client_filename() const;
+        String                     base_name() const;
+        String                     mission_base_name() const;
+        uint8_t                    get_level_range(uint8_t char_level);
 };
 
 // Generates instances based on some kind of schema file

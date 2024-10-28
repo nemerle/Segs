@@ -19,7 +19,7 @@ class ChatMessage : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString         m_msg;
+    String         m_msg;
     // [[ev_def:field]]
     MessageChannel  m_channel_type;
     // [[ev_def:field]]
@@ -27,7 +27,7 @@ public:
     // [[ev_def:field]]
     int             m_target_player_id;
                     ChatMessage() : GameCommandEvent(MapEventTypes::evChatMessage) {}
-                    ChatMessage(MessageChannel t, const QString &msg) : GameCommandEvent(MapEventTypes::evChatMessage),
+                    ChatMessage(MessageChannel t, const String &msg) : GameCommandEvent(MapEventTypes::evChatMessage),
                         m_msg(msg),m_channel_type(t)
                     {
                     }

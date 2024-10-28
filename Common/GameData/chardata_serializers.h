@@ -7,7 +7,6 @@
 
 #pragma once
 #include <stdint.h>
-
+#include "Common/Containers/String.h"
 struct CharacterData;
-class QString;
-void saveTo(const CharacterData &target,const QString &baseName,bool text_format=false);
+void saveTo(const CharacterData &target,const String &baseName,bool text_format=false);

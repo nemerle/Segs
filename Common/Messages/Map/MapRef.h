@@ -8,9 +8,6 @@
 #pragma once
 #include "GameData/CommonNetStructures.h"
 
-#include <QtCore/QString>
-#include <string>
-
 class MapRef
 {
 public:
@@ -18,15 +15,15 @@ public:
     bool        reduced_transform;
     glm::mat4x3 m_matrix;
     TransformStruct m_transforms;
-    QString m_name;
-    MapRef(int idx,const glm::mat4x3 &mat,const QString &name) :
+    String m_name;
+    MapRef(int idx,const glm::mat4x3 &mat,const String &name) :
         m_idx(idx),
         m_matrix(mat),
         m_name(name)
     {
         reduced_transform=false;
     }
-    MapRef(int idx,const QString &name,glm::vec3 &pos,glm::vec3 &rot) : m_idx(idx),m_name(name)
+    MapRef(int idx,const String &name,glm::vec3 &pos,glm::vec3 &rot) : m_idx(idx),m_name(name)
     {
         reduced_transform=true;
         m_transforms=TransformStruct(pos,rot,glm::vec3(),true,true,false);

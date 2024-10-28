@@ -15,12 +15,14 @@
 
 #include "PacketCodec.h"
 #include "Components/BitStream.h"
+#include "Components/Logging.h"
 
-
+#include "EASTL/sort.h"
 #include <cassert>
 
-#include <QDebug>
-using namespace std::chrono;
+
+using SteadyChronoData = std::chrono::steady_clock::time_point;
+
 /**
  Cryptic Reliable UDP
  CrudP
@@ -70,9 +72,12 @@ int getPacketResendDelay(signed int attempts, int ping, int before_first)
 
 } // end of anonymous namespace
 
-void PacketSibDestroyer(const std::pair<int, CrudP_Protocol::pPacketStorage> &a)
+void PacketSibDestroyer(const eastl::pair<int, CrudP_Protocol::pPacketStorage> &a)
 {
-    for_each(a.second.begin(), a.second.end(), PacketDestroyer);
+    for(auto pack : a.second)
+    {
+        PacketDestroyer(pack);
+    }
 }
 
 bool CrudP_Protocol::PacketSeqCompare(const CrudP_Packet *a,const CrudP_Packet *b)
@@ -96,16 +101,20 @@ void CrudP_Protocol::clearQueues(bool recv_queue,bool clear_send_queue)
     //  seen_seq.clear();
     if(recv_queue)
     {
-        for_each(avail_packets.begin(),avail_packets.end(),PacketDestroyer);
-        for_each(sibling_map.begin(),sibling_map.end(),PacketSibDestroyer);
+        eastl::for_each(avail_packets.begin(),avail_packets.end(),PacketDestroyer);
+        for (const auto &p : sibling_map)
+        {
+            PacketSibDestroyer(p);
+
+        }
         sibling_map.clear();
         avail_packets.clear();
     }
     if(clear_send_queue)
     {
         std::lock_guard<std::mutex> grd(m_packets_mutex);
-        for_each(send_queue.begin(),send_queue.end(),PacketDestroyer);
-        for_each(reliable_packets.begin(),reliable_packets.end(),PacketDestroyer);
+        eastl::for_each(send_queue.begin(), send_queue.end(), PacketDestroyer);
+        eastl::for_each(reliable_packets.begin(), reliable_packets.end(), PacketDestroyer);
         retransmit_queue.clear();
         reliable_packets.clear();
         send_queue.clear();
@@ -128,7 +137,7 @@ void CrudP_Protocol::ReceivedBlock(BitStream &src)
     uint32_t realcsum  = PacketCodecNull::Checksum(src.read_ptr(),src.GetReadableDataSize());
     if(realcsum!=checksum)
     {
-        qWarning() << "Checksum error.";
+        sWarning() << "Checksum error.";
         return;
     }
     m_last_activity = steady_clock::now();
@@ -184,7 +193,7 @@ void CrudP_Protocol::storeAcks(BitStream &bs)
     }
     recv_acks.sort();
     recv_acks.unique();
-    std::list<uint32_t>::iterator iter = recv_acks.begin();
+    List<uint32_t>::iterator iter = recv_acks.begin();
     uint32_t num_acks = std::min<uint32_t>(recv_acks.size(),16); // store up to 16 acks
     bs.StorePackedBits(1,num_acks);
 
@@ -225,7 +234,7 @@ void CrudP_Protocol::PushRecvPacket(CrudP_Packet *a)
     }
     // clean up acked packets from reliable_packets
     auto first_invalid =
-            std::remove_if(reliable_packets.begin(), reliable_packets.end(),
+            eastl::remove_if(reliable_packets.begin(), reliable_packets.end(),
                            [](CrudP_Packet *p) -> bool { return p == nullptr; });
     reliable_packets.erase(first_invalid,reliable_packets.end());
 
@@ -301,7 +310,7 @@ CrudP_Packet *CrudP_Protocol::RecvPacket()
 
     if(avail_packets.empty())
         return nullptr;
-    sort(avail_packets.begin(),avail_packets.end(),&CrudP_Protocol::PacketSeqCompare);
+    eastl::sort(avail_packets.begin(),avail_packets.end(),&CrudP_Protocol::PacketSeqCompare);
     pkt = avail_packets.front();
     avail_packets.pop_front();
     // duplicate packet removal
@@ -334,7 +343,7 @@ void CrudP_Protocol::PacketAck(uint32_t id)
         if( !retransmit_queue.empty() )
         {
             // check if our packet is already in retransmit_queue, if so, remove it from there.
-            auto iter = std::find(retransmit_queue.begin(),retransmit_queue.end(),pack);
+            auto iter = eastl::find(retransmit_queue.begin(),retransmit_queue.end(),pack);
             if( iter!=retransmit_queue.end() )
                 retransmit_queue.erase(iter);
         }
@@ -433,7 +442,7 @@ bool CrudP_Protocol::addToSendQueue(CrudP_Packet *pak)
         return false;
 
     pak->setSeqNo(++send_seq);
-    pak->setLastSend(steady_clock::now());
+    pak->setLastSend(SteadyChronoWrapper::now());
     {
         std::lock_guard<std::mutex> grd(m_packets_mutex);
         send_queue.push_back(pak);
@@ -489,7 +498,7 @@ bool CrudP_Protocol::isUnresponsiveLink()
         return false; // client didn't send anything in less than 15 s, give it a bit more time
     for(CrudP_Packet * pkt : reliable_packets)
     {
-        if(duration_cast<milliseconds>(time_now - pkt->creationTime()).count() >= 300)
+        if(duration_cast<milliseconds>(time_now - toSteadyChronoType<SteadyChronoData>(pkt->creationTime())).count() >= 300)
             return true;
     }
     return false;
@@ -499,7 +508,7 @@ bool CrudP_Protocol::batchSend(lCrudP_Packet &tgt)
 {
     if(isUnresponsiveLink())
     {
-        qDebug() << "Unresponsive link";
+        sDebug() << "Unresponsive link";
         return false;
     }
     // move some packets from reliable_packets to retransmit_queue
@@ -550,11 +559,11 @@ void CrudP_Protocol::processRetransmits()
             break;
         int resend_period =
                 getPacketResendDelay(pkt->retransmitCount(), ping_time, pkt->GetSequenceNumber() < first_packet_id);
-        long milliseconds_since_xfer = duration_cast<milliseconds>(now - pkt->lastSend()).count();
+        long milliseconds_since_xfer = duration_cast<milliseconds>(now - toSteadyChronoType<SteadyChronoData>(pkt->lastSend())).count();
         if(milliseconds_since_xfer <= resend_period)
             continue;
         retransmit_queue.push_back(pkt);
-        pkt->setLastSend(steady_clock::now());
+        pkt->setLastSend(SteadyChronoWrapper::now());
         // todo: record packet send time in protocol instance ?
         pkt->incRetransmits();
     }

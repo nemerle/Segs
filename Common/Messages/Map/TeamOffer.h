@@ -27,12 +27,12 @@ public:
     // [[ev_def:field]]
     uint32_t m_db_id;
     // [[ev_def:field]]
-    QString m_name;
+    String m_name;
     // [[ev_def:field]]
     TeamOfferType m_offer_type;
 
 explicit    TeamOffer() : GameCommandEvent(MapEventTypes::evTeamOffer) {}
-            TeamOffer(uint32_t &db_id, QString &name, TeamOfferType &type) : GameCommandEvent(MapEventTypes::evTeamOffer),
+            TeamOffer(uint32_t &db_id, const String &name, TeamOfferType &type) : GameCommandEvent(MapEventTypes::evTeamOffer),
                 m_db_id(db_id),
                 m_name(name),
                 m_offer_type(type)

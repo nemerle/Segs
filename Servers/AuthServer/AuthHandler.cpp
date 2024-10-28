@@ -327,13 +327,13 @@ void AuthHandler::on_server_list_request( ServerListRequest *ev )
     qDebug() << "Client requesting server list...";
     lnk->set_link_stage(AuthLink::CLIENT_SERVSELECT);
     ServerListResponse *r=new ServerListResponse;
-    std::deque<GameServerInfo> info;
-    std::vector<GameServerStatusData> status_copy;
+    Deque<GameServerInfo> info;
+    Vector<GameServerStatusData> status_copy;
     {
         // copy game server data to local var
         MTGuard guard(m_server_mutex);
         status_copy.reserve(m_known_game_servers.size());
-        for(const std::pair<const uint8_t,GameServerStatusData> &server : m_known_game_servers)
+        for(const eastl::pair<const uint8_t,GameServerStatusData> &server : m_known_game_servers)
         {
             status_copy.push_back(server.second);
         }

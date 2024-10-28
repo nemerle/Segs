@@ -15,7 +15,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include <QtCore/QString>
+#include "Containers/String.h"
 
 using namespace std;
 void storeBitsConditional(BitStream &bs, uint8_t numbits, int bits )
@@ -77,7 +77,7 @@ int getPackedBitsConditional( BitStream &bs,uint8_t numbits )
     return 0;
 }
 
-void storeStringConditional( BitStream &bs,const QString &str )
+void storeStringConditional( BitStream &bs,const String &str )
 {
     bs.StoreBits(1,str.size()>0);
     if(str.size()>0)

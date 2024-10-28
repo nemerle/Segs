@@ -39,12 +39,13 @@ DBToolResult DBConnection::addAccount(const QString &username, const QString &pa
     }
 
     PasswordHasher hasher;
-    QByteArray salt = hasher.generateSalt();
-    QByteArray password_array = hasher.hashPassword(password.toUtf8(), salt);
+    auto salt = hasher.generateSalt();
+    auto enc= hasher.hashPassword(password.toUtf8().data(), salt);
+    QByteArray     password_array((char *)enc.data(), enc.size());
     m_query->bindValue(0, username);
     m_query->bindValue(1, password_array);
     m_query->bindValue(2, access_level);
-    m_query->bindValue(3, salt);
+    m_query->bindValue(3, QByteArray(salt.data(),salt.size()));
 
     if(!m_query->exec())
     {

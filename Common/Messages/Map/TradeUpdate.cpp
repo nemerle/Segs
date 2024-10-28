@@ -14,9 +14,9 @@ namespace SEGSEvents
 
 namespace {
 
-static std::vector<CharacterEnhancement> getTradedEnhancements(const Entity& ent, const TradeInfo& info)
+static Vector<CharacterEnhancement> getTradedEnhancements(const Entity& ent, const TradeInfo& info)
 {
-    std::vector<CharacterEnhancement> result;
+    Vector<CharacterEnhancement> result;
 
     for (const uint32_t idx : info.m_enhancements)
     {
@@ -30,9 +30,9 @@ static std::vector<CharacterEnhancement> getTradedEnhancements(const Entity& ent
     return result;
 }
 
-static std::vector<CharacterInspiration> getTradedInspirations(const Entity& ent, const TradeInfo& info)
+static Vector<CharacterInspiration> getTradedInspirations(const Entity& ent, const TradeInfo& info)
 {
-    std::vector<CharacterInspiration> result;
+    Vector<CharacterInspiration> result;
 
     for (const TradeInspiration& trade_insp : info.m_inspirations)
     {

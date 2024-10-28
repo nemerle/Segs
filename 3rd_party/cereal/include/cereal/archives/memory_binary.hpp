@@ -30,7 +30,7 @@
 #define CEREAL_ARCHIVES_BINARY_HPP_
 
 #include <cereal/cereal.hpp>
-#include <vector>
+#include <EASTL/vector.h>
 #include <cstring>
 
 namespace cereal
@@ -51,7 +51,7 @@ namespace cereal
       //! Construct, outputting to the provided stream
       /*! @param stream The stream to output to.  Can be a stringstream, a file stream, or
                         even cout! */
-      VectorOutputArchive(std::vector<uint8_t> & stream) :
+      VectorOutputArchive(eastl::vector<uint8_t> & stream) :
         OutputArchive<VectorOutputArchive, AllowEmptyClassElision>(this),
         itsStream(stream)
       { }
@@ -64,7 +64,7 @@ namespace cereal
       }
 
     private:
-      std::vector<uint8_t> & itsStream;
+      eastl::vector<uint8_t> &itsStream;
   };
 
   // ######################################################################
@@ -82,7 +82,8 @@ namespace cereal
   {
     public:
       //! Construct, loading from the provided stream
-      VectorInputArchive(const std::vector<uint8_t> & stream) :
+        VectorInputArchive(const eastl::vector<uint8_t> &stream)
+            :
         InputArchive<VectorInputArchive, AllowEmptyClassElision>(this),
         itsStream(stream)
     { }
@@ -99,7 +100,7 @@ namespace cereal
       }
 
     private:
-      const std::vector<uint8_t> & itsStream;
+      const eastl::vector<uint8_t> &itsStream;
 	  size_t currentOffset=0;
   };
 

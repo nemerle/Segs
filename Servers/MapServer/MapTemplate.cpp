@@ -19,7 +19,7 @@ using namespace SEGSEvents;
 
 uint8_t MapTemplate::s_template_id = 1;
 
-MapTemplate::MapTemplate(const QString &filename, uint8_t game_server_id, uint32_t map_server_id,
+MapTemplate::MapTemplate(StringView filename, uint8_t game_server_id, uint32_t map_server_id,
                          const ListenAndLocationAddresses &loc, const bool is_mission_map)
     : m_map_filename(filename), m_game_server_id(game_server_id), m_map_server_id(map_server_id), m_base_loc(loc), m_is_mission_map(is_mission_map)
 {
@@ -37,7 +37,7 @@ MapInstance * MapTemplate::get_instance(uint8_t char_level)
         m_instances.back()->spin_up_for(m_game_server_id,m_map_server_id,s_template_id++);
         if (m_is_mission_map)
         {
-            QString filename = getMissionPath(mission_base_name(), MissionCategory::MEDIUM);
+            String filename = getMissionPath(mission_base_name(), MissionCategory::MEDIUM);
             m_instances.back()->start(filename);
         }
         else
@@ -61,12 +61,13 @@ void MapTemplate::shut_down_all()
     }
 }
 
-QString MapTemplate::client_filename() const
+String MapTemplate::client_filename() const
 {
     if (!m_is_mission_map)
     {
-        QString map_desc_from_path = base_name();
-        return QString("maps/city_zones/%1/%1.txt").arg(map_desc_from_path);
+        String map_desc_from_path = base_name();
+        return String(String::CtorSprintf(), "maps/city_zones/%s/%s.txt", map_desc_from_path.c_str(),
+                      map_desc_from_path.c_str());
     }
     else
     {
@@ -76,24 +77,24 @@ QString MapTemplate::client_filename() const
         // "maps/missions/sewers/sewers_15/sewers_15_layout_01_01"
         // "maps/missions/sewers/sewers_30/sewers_30_layout_02_04"
         // some folders have audio.
-        QString map_desc_from_path = mission_base_name();   // Sewers, Caves, etc.
-        return QString("maps/missions/%1").arg(map_desc_from_path);
+        String map_desc_from_path = mission_base_name();   // Sewers, Caves, etc.
+        return String(String::CtorSprintf(), "maps/missions/%s",map_desc_from_path.c_str());
     }
     
 }
 
-QString MapTemplate::base_name() const
+String MapTemplate::base_name() const
 {
-    int city_idx     = m_map_filename.indexOf('/')+1;
-    int end_or_slash = m_map_filename.indexOf('/', city_idx);
+    auto city_idx     = m_map_filename.find('/')+1;
+    auto end_or_slash = m_map_filename.find('/', city_idx);
     assert(city_idx != 0);
-    return m_map_filename.mid(city_idx, end_or_slash == -1 ? -1 : m_map_filename.size() - end_or_slash).toLower();
+    return m_map_filename.substr(city_idx, end_or_slash == -1 ? -1 : m_map_filename.size() - end_or_slash).to_lower();
 
 }
 
-QString MapTemplate::mission_base_name() const
+String MapTemplate::mission_base_name() const
 {
-    return base_name().replace(QString("Mission_"), QString(), Qt::CaseInsensitive).toLower();
+    return base_name().to_lower().replaced("mission_", "");
 }
 
 size_t MapTemplate::num_instances()

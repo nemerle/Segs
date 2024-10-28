@@ -25,17 +25,17 @@ using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 9 Commands
-void cmdHandler_SendContactDialog(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SendContactDialog(const Vector<String> &params, MapClientSession &sess)
 {
-    QString content = params.join(" ");
-    std::vector<ContactEntry> active_contacts;
+    String content = String::joined(params," ");
+    Vector<ContactEntry> active_contacts;
     // TODO: Derive number to send from parameters
     int num_contacts_to_send = 4;
 
     for(int i = 0; i < num_contacts_to_send; ++i)
     {
         ContactEntry con;
-        con.m_response_text = QString("Response #%1").arg(i);
+        con.m_response_text = String(String::CtorSprintf(),"Response #%d",i);
         con.m_link = i; // a reference to contactLinkHash?
         active_contacts.push_back(con);
     }
@@ -43,23 +43,25 @@ void cmdHandler_SendContactDialog(const QStringList &params, MapClientSession &s
     sendContactDialog(sess, content, active_contacts);
 }
 
-void cmdHandler_SendContactDialogYesNoOk(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SendContactDialogYesNoOk(const Vector<String> &params, MapClientSession &sess)
 {
     if(params.size() < 2)
     {
-        qCDebug(logSlashCommand) << "Bad invocation:" << params.join(" ") << " requires at least two arguments";
-        sendInfoMessage(MessageChannel::USER_ERROR, "Bad invocation:" + params.join(" ") + " requires at least two arguments", sess);
+        sCDebug(logSlashCommand) << "Bad invocation:" << String::joined(params, " ")
+                                 << " requires at least two arguments";
+        sendInfoMessage(MessageChannel::USER_ERROR,
+                        "Bad invocation:" + String::joined(params, " ") + " requires at least two arguments", sess);
         return;
     }
 
     bool ok = true;
-    bool has_yesno = params.at(0).toInt(&ok);
+    bool has_yesno = StringUtils::to_int(params.at(0),&ok);
     // Combine params after int and use those as dialog content
-    QString content = params.mid(1).join(" ");
+    String content = String::joined(Span<const String>(params).subspan(1)," ");
 
     if(!ok)
     {
-        qCDebug(logSlashCommand) << "First argument must be boolean value;" << content;
+        sCDebug(logSlashCommand) << "First argument must be boolean value;" << content;
         sendInfoMessage(MessageChannel::USER_ERROR, "First argument must be boolean value;" + content, sess);
         return;
     }
@@ -67,7 +69,7 @@ void cmdHandler_SendContactDialogYesNoOk(const QStringList &params, MapClientSes
     sendContactDialogYesNoOk(sess, content, has_yesno);
 }
 
-void cmdHandler_ContactStatusList(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_ContactStatusList(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     Contact startingContact;
     startingContact.setName("Officer Flint"); // "OfficerFlint
@@ -89,11 +91,11 @@ void cmdHandler_ContactStatusList(const QStringList &/*params*/, MapClientSessio
     startingContact.m_can_use_cell = false;
 
     updateContactStatusList(sess, startingContact);
-    QString msg = "Sending OfficerFlint to contactList";
+    String msg = "Sending OfficerFlint to contactList";
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_AddTestTask(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_AddTestTask(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     Task tk;
     tk.m_db_id = 1;
@@ -116,13 +118,13 @@ void cmdHandler_AddTestTask(const QStringList &/*params*/, MapClientSession &ses
     tk.m_task_idx = 0;
 
     sendUpdateTaskStatusList(sess, tk);
-    QString msg = "Sending Test Task to client";
+    String msg = "Sending Test Task to client";
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_OpenStore(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_OpenStore(const Vector<String> &/*params*/, MapClientSession &sess)
 {
-    qCDebug(logSlashCommand) << "OpenStore...";
+    sCDebug(logSlashCommand) << "OpenStore...";
     openStore(sess, 0); // Default entity_idx as it doesn't change anything currently
 }
 

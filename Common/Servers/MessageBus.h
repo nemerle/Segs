@@ -7,12 +7,10 @@
 
 #pragma once
 #include "Components/EventProcessor.h"
+#include "Common/Containers/HashMap.h"
 
 #include <ace/Thread_Mutex.h>
 #include <ace/Guard_T.h>
-
-#include <unordered_map>
-#include <vector>
 
 class MessageBusEndpoint;
 
@@ -24,8 +22,8 @@ class SEGSTimer;
 
 class MessageBus final : public EventProcessor
 {
-    std::unordered_map<uint32_t,std::vector<MessageBusEndpoint *> > m_specific_subscriber_map;
-    std::vector<MessageBusEndpoint *> m_catch_all_subscribers;
+    HashMap<uint32_t,Vector<MessageBusEndpoint *> > m_specific_subscriber_map;
+    Vector<MessageBusEndpoint *> m_catch_all_subscribers;
     uint32_t m_statistics_timer_id;
     friend void postGlobalEvent(SEGSEvents::Event *ev);
     friend void shutDownMessageBus();

@@ -13,7 +13,8 @@
 #include "CharacterHelpers.h"
 #include "Character.h"
 #include "Costume.h"
-#include <QDateTime>
+
+#include <chrono>
 
 /*
  * Character Methods
@@ -27,19 +28,19 @@ float               getEnd(const Character &c) { return c.m_char_data.m_current_
 float               getMaxHP(const Character &c) { return c.m_max_attribs.m_HitPoints; }
 float               getMaxEnd(const Character &c) { return c.m_max_attribs.m_Endurance; }
 uint32_t            getCurrentCostumeIdx(const Character &c) { return c.m_char_data.m_current_costume_idx; }
-const QString &     getOrigin(const Character &c) { return c.m_char_data.m_origin_name; }
-const QString &     getClass(const Character &c) { return c.m_char_data.m_class_name; }
+const String &     getOrigin(const Character &c) { return c.m_char_data.m_origin_name; }
+const String &     getClass(const Character &c) { return c.m_char_data.m_class_name; }
 uint32_t            getXP(const Character &c) { return c.m_char_data.m_experience_points; }
 uint32_t            getDebt(const Character &c) { return c.m_char_data.m_experience_debt; }
 uint32_t            getPatrolXP(const Character &c) { return c.m_char_data.m_experience_patrol; }
-const QString &     getGenericTitle(const Character &c) { return c.m_char_data.m_titles[0]; }
-const QString &     getOriginTitle(const Character &c) { return c.m_char_data.m_titles[1]; }
-const QString &     getSpecialTitle(const Character &c) { return c.m_char_data.m_titles[2]; }
+const String &     getGenericTitle(const Character &c) { return c.m_char_data.m_titles[0]; }
+const String &     getOriginTitle(const Character &c) { return c.m_char_data.m_titles[1]; }
+const String &     getSpecialTitle(const Character &c) { return c.m_char_data.m_titles[2]; }
 uint32_t            getInf(const Character &c) { return c.m_char_data.m_influence; }
-const QString &     getDescription(const Character &c) { return c.m_char_data.m_character_description ; }
-const QString &     getBattleCry(const Character &c) { return c.m_char_data.m_battle_cry; }
-const QString &     getAlignment(const Character &c) { return c.m_char_data.m_alignment; }
-const QString &     getLastOnline(const Character &c) { return c.m_char_data.m_last_online; }
+const String &     getDescription(const Character &c) { return c.m_char_data.m_character_description ; }
+const String &     getBattleCry(const Character &c) { return c.m_char_data.m_battle_cry; }
+const String &     getAlignment(const Character &c) { return c.m_char_data.m_alignment; }
+const String &     getLastOnline(const Character &c) { return c.m_char_data.m_last_online; }
 
 // Setters
 void setLevel(Character &c, uint32_t val)
@@ -106,17 +107,17 @@ void setDebt(Character &c, uint32_t val)
     c.m_char_data.m_experience_debt = val;
 }
 
-void setTitles(Character &c, bool prefix, QString generic, QString origin, QString special)
+void setTitles(Character &c, bool prefix, StringView generic, StringView origin, StringView special)
 {
     // if "NULL", clear string
     if(generic=="NULL")
-        generic.clear();
+        generic=StringView();
     if(origin=="NULL")
-        origin.clear();
+        origin=StringView();
     if(special=="NULL")
-        special.clear();
+        special=StringView();
 
-    c.m_char_data.m_has_titles = prefix || !generic.isEmpty() || !origin.isEmpty() || !special.isEmpty();
+    c.m_char_data.m_has_titles = prefix || !generic.empty() || !origin.empty() || !special.empty();
     if(!c.m_char_data.m_has_titles)
       return;
 
@@ -131,17 +132,17 @@ void setInf(Character &c, uint32_t val)
     c.m_char_data.m_influence = val;
 }
 
-void setDescription(Character &c, QString val)
+void setDescription(Character &c, StringView val)
 {
     c.m_char_data.m_character_description = val;
 }
 
-void setBattleCry(Character &c, QString val)
+void setBattleCry(Character &c, StringView val)
 {
     c.m_char_data.m_battle_cry = val;
 }
 
-void setAFK(Character &c, const bool is_afk, QString msg)
+void setAFK(Character &c, const bool is_afk, StringView msg)
 {
     c.m_char_data.m_afk = is_afk;
     if(is_afk)
@@ -155,7 +156,7 @@ bool isAFK(Character &c)
 void initializeCharacter(Character &c)
 {
     GameDataStore &data(getGameData());
-    uint entclass = getEntityClassIndex(data, true, c.m_char_data.m_class_name);
+    int entclass = getEntityClassIndex(data, true, c.m_char_data.m_class_name);
     c.m_char_data.m_current_attribs = data.m_player_classes[entclass].m_AttribBase[0];
     c.m_char_data.m_current_attribs.m_HitPoints = c.m_max_attribs.m_HitPoints;
     c.m_char_data.m_current_attribs.m_Endurance = c.m_max_attribs.m_Endurance;
@@ -164,13 +165,25 @@ void initializeCharacter(Character &c)
 
 void updateLastOnline(Character &c)
 {
-    c.m_char_data.m_last_online = QDateTime::currentDateTime().toString();
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+
+    std::tm local_tm;
+#ifdef _WIN32
+    localtime_s(&local_tm, &time_t_now);
+#else
+    localtime_r(&time_t_now, &local_tm);
+#endif
+
+    char buffer[32]={0};
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_tm);
+    c.m_char_data.m_last_online = String(buffer);
 }
 
 // Toggles
-void toggleAFK(Character &c, QString msg)
+void toggleAFK(Character &c, StringView msg)
 {
-    if(msg.isEmpty())
+    if(msg.empty())
         msg = "AFK";
 
     setAFK(c, !c.m_char_data.m_afk, msg);
@@ -180,7 +193,7 @@ void toggleAFK(Character &c, QString msg)
 /*
  * Titles -- TODO: get titles from texts/English/titles_def
  */
-static const QStringList g_generic_titles =
+static const eastl::fixed_vector<StringView,20> g_generic_titles =
 {
     "NULL",
     "Awesome",
@@ -205,7 +218,7 @@ static const QStringList g_generic_titles =
 };
 
 // TODO: get titles from texts/English/titles_def
-static const QStringList g_origin_titles =
+static const eastl::fixed_vector<StringView,20> g_origin_titles =
 {
     "NULL",
     "Adept",
@@ -229,12 +242,12 @@ static const QStringList g_origin_titles =
     "Watchful",
 };
 
-const QString &getGenericTitle(uint32_t val)
+StringView getGenericTitle(uint32_t val)
 {
     return g_generic_titles.at(val);
 }
 
-const QString &getOriginTitle(uint32_t val)
+StringView getOriginTitle(uint32_t val)
 {
     return g_origin_titles.at(val);
 }

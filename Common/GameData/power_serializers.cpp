@@ -17,7 +17,7 @@
 #include "Components/serialization_types.h"
 #include "DataStorage.h"
 
-#include <QMetaEnum>
+//#include <QMetaEnum>
 #include <type_traits>
 
 bool loadFrom(BinStore *s, StoredAttribMod &target)
@@ -126,7 +126,7 @@ bool loadFrom(BinStore *s, Power_Data &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -154,7 +154,7 @@ bool loadFrom(BinStore *s, Parse_PowerSet &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -181,7 +181,7 @@ bool loadFrom(BinStore *s, StoredPowerCategory &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -203,7 +203,7 @@ bool loadFrom(BinStore *s, AllPowerCategories &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -242,16 +242,16 @@ bool loadFrom(BinStore *s, AllPowerCategories &target)
 template<class Archive>
 static void serialize(Archive & archive, StoredAttribMod & src)
 {
-    QByteArray temp;
+    String temp;
     archive(cereal::make_nvp("EffectType",temp));
-    if (temp.toLower() == "mez")
+    if (temp.to_lower() == "mez")
         archive(cereal::make_nvp("MezType",temp));
-    if (temp.toLower() == "enhancement")
+    if (temp.to_lower() == "enhancement")
         archive(cereal::make_nvp("ETModifies",temp));
-    src.name = temp.toLower();
+    src.name = temp.to_lower();
 
-    static const QString dmgtypes[] = {"Smashing","Lethal","Fire","Cold","Energy","Negative","Toxic","Psionic","Special"};
-    static const QString deftypes[] = {"Smashing","Lethal","Fire","Cold","Energy","Negative","Melee","Ranged","AoE"};
+    static const String dmgtypes[] = {"Smashing","Lethal","Fire","Cold","Energy","Negative","Toxic","Psionic","Special"};
+    static const String deftypes[] = {"Smashing","Lethal","Fire","Cold","Energy","Negative","Melee","Ranged","AoE"};
     archive(cereal::make_nvp("DamageType",temp));
     if (temp != "None")
         for (int i = 0;i<dmgtypes->size();i++)
@@ -259,29 +259,29 @@ static void serialize(Archive & archive, StoredAttribMod & src)
                  src.Attrib = i;
 
     archive(cereal::make_nvp("Aspect",temp));
-    if(temp.toLower() == "cur")
+    if(temp.to_lower() == "cur")
         src.Aspect = AttribMod_Aspect::Current;
-    else if(temp.toLower() == "res")
+    else if(temp.to_lower() == "res")
         src.Aspect = AttribMod_Aspect::Resistance;
-    else if(temp.toLower() == "str")
+    else if(temp.to_lower() == "str")
         src.Aspect = AttribMod_Aspect::Strength;
-    else if(temp.toLower() == "max")
+    else if(temp.to_lower() == "max")
         src.Aspect = AttribMod_Aspect::Maximum;
     else
         src.Aspect = AttribMod_Aspect::Absolute;
 
     archive(cereal::make_nvp("ToWho",temp));
-    if (temp.toLower() == "self")
+    if (temp.to_lower() == "self")
         src.Target = SEGS_Enums_Power::AttribModTarget::Self;   //default is target
 
     int table;
     archive(cereal::make_nvp("nModifierTable",table));
     if (table < 43)
-        src.Table = QByteArray::number(table);
+        src.Table = StringUtils::num_int64(table);
     archive(cereal::make_nvp("Scale",src.Scale));
 
     archive(cereal::make_nvp("AttribType",temp));
-    if (temp.toLower() == "duration")
+    if (temp.to_lower() == "duration")
         src.Type = AttribModType::Duration;                     //default is magnitude
 
     float time;
@@ -303,14 +303,14 @@ static void serialize(Archive & archive, StoredAttribMod & src)
     src.AllowResistance = allow;
 
     archive(cereal::make_nvp("Stacking",temp));
-    if (temp.toLower() == "yes")
+    if (temp.to_lower() == "yes")
         src.StackType = AttribStackType::Stack;                 //default replace
     archive(cereal::make_nvp("Duration",src.Duration));
     archive(cereal::make_nvp("Mag",src.Magnitude));
     archive(cereal::make_nvp("Summon",src.EntityDef));
 
     archive(cereal::make_nvp("EffectId",temp));
-    if (temp.toLower() == "MLCrit" || temp.toLower() == "BossCrit")
+    if (temp.to_lower() == "MLCrit" || temp.to_lower() == "BossCrit")
         src.Chance = 5;              //make crit happen 5% of the time instead of on every hit
 
     /* The following are not used yet
@@ -336,25 +336,26 @@ namespace cereal
 {
 static std::string save_minimal(cereal::JSONOutputArchive & /*archive*/, const SeqBitNames & src)
 {
-    QMetaEnum metaEnum = QMetaEnum::fromType<SEGS_Enums::SeqBitNames>();
-    QString val = metaEnum.valueToKey(std::underlying_type<SeqBitNames>::type(src));
-    return val.toStdString();
+    using namespace magic_enum;
+    auto val = magic_enum::enum_name(src);
+    assert(!val.empty());
+    return {val.begin(),val.end()};
 }
 static void load_minimal(const cereal::JSONInputArchive & /*archive*/, SeqBitNames & val,const std::string &src)
 {
-    QMetaEnum metaEnum = QMetaEnum::fromType<SEGS_Enums::SeqBitNames>();
-    val  = SeqBitNames(metaEnum.keyToValue(src.c_str()));
+    auto opt_val = magic_enum::enum_cast<SEGS_Enums::SeqBitNames>(eastl::string_view(src.c_str()));
+    val  = opt_val.has_value() ? opt_val.value() : SeqBitNames::INVALID_BIT;
 }
 static std::string save_minimal(cereal::JSONOutputArchive & /*archive*/, const AttackType & src)
 {
-    QMetaEnum metaEnum = QMetaEnum::fromType<SEGS_Enums_Power::AttackType>();
-    QString val = metaEnum.valueToKey(std::underlying_type<AttackType>::type(src));
-    return val.toStdString();
+    auto val = magic_enum::enum_name(src);
+    assert(!val.empty());
+    return {val.begin(),val.end()};
 }
 static void load_minimal(const cereal::JSONInputArchive & /*archive*/, AttackType & val,const std::string &src)
 {
-    QMetaEnum metaEnum = QMetaEnum::fromType<SEGS_Enums_Power::AttackType>();
-    val  = AttackType(metaEnum.keyToValue(src.c_str()));
+    auto opt_val = magic_enum::enum_cast<AttackType>(eastl::string_view(src.c_str()));
+    val  = opt_val.has_value() ? opt_val.value() : AttackType::None;
 }
 }
 template<class Archive>
@@ -450,13 +451,12 @@ static void serialize(Archive & archive, AllPowerCategories & src)
     archive(cereal::make_nvp("Categories",src.m_categories));
 }
 
-void saveTo(const AllPowerCategories & target, const QString & baseName, bool text_format)
+void saveTo(const AllPowerCategories & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"Powers",baseName,text_format);
+    SEGS::commonSaveTo(target,"Powers",baseName,text_format);
 }
-bool loadFrom(const QString &filepath, AllPowerCategories &target)
+bool loadFrom(const String &filepath, AllPowerCategories &target)
 {
-    QFSWrapper wrap;
-    return commonReadFrom(wrap,filepath,"Powers",target);
+    return SEGS::commonReadFrom(filepath,"Powers",target);
 }
 //! @}

@@ -9,8 +9,6 @@
 #include "GameCommand.h"
 #include "MapEvents.h"
 
-class QString;
-
 namespace SEGSEvents
 {
 
@@ -19,10 +17,10 @@ namespace SEGSEvents
     {
     public:
         //  [[ev_def:field]]
-        QString m_content;
+        String m_content;
 
         explicit Browser() : GameCommandEvent(MapEventTypes::evBrowser) {}
-        Browser(QString content) : GameCommandEvent(MapEventTypes::evBrowser),
+        Browser(const String &content) : GameCommandEvent(MapEventTypes::evBrowser),
             m_content(content)
         {
         }
@@ -48,7 +46,7 @@ namespace SEGSEvents
         }
         void    serializefrom(BitStream &/*bs*/) override
         {
-            qCDebug(logMapEvents) << "Browser Close Event";
+            sCDebug(logMapEvents) << "Browser Close Event";
         }
 
         EVENT_IMPL(BrowserClose)

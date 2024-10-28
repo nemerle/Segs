@@ -7,13 +7,12 @@
 
 #pragma once
 
-#include <QtCore/QString>
+#include "Common/Containers/StringView.h"
 #include <stdint.h>
-#include <vector>
 #include <cassert>
 
-#include <QDebug>
 #include <cereal/cereal.hpp>
+#include <Components/Logging.h>
 
 enum ReticleVisibility : uint32_t {
   rv_HideAlways             = 0,
@@ -43,14 +42,14 @@ struct ClientOption
         eType type;
         void *tgt;
     };
-    std::string name;
-    std::vector<Arg> m_args;
+    String name;
+    Vector<Arg> m_args;
     //ClientOption(const char *v) : name(v) {}
 };
 
 class ClientOptions
 {
-    std::vector<ClientOption> m_opts;
+    Vector<ClientOption> m_opts;
     void init();
 public:
     ClientOptions()
@@ -105,38 +104,17 @@ public:
         return &m_opts[idx];
     }
 
-    void clientOptionsDump() const
-    {
-        qDebug().noquote() << "Debugging ClientOptions:"
-                 << "\n\t" << "Invert Mouse:" << m_mouse_invert
-                 << "\n\t" << "Mouse Speed:" << m_mouse_speed
-                 << "\n\t" << "Turn Speed:" << m_turn_speed
-                 << "\n\t" << "Fade Chat Window:" << m_fade_chat_wnd
-                 << "\n\t" << "Fade Nav Window:" << m_fade_nav_wnd
-                 << "\n\t" << "Show Tooltips:" << m_show_tooltips
-                 << "\n\t" << "Allow Profanity:" << m_allow_profanity
-                 << "\n\t" << "Chat Balloons:" << m_chat_balloons
-                 << "\n\t" << "Show Archetype:" << m_show_archetype
-                 << "\n\t" << "Show SuperGroup:" << m_show_supergroup
-                 << "\n\t" << "Show Player Name:" << m_show_player_name
-                 << "\n\t" << "Show Player Bars:" << m_show_player_bars
-                 << "\n\t" << "Show Enemy Name:" << m_show_enemy_name
-                 << "\n\t" << "Show Enemy Bars:" << m_show_enemy_bars
-                 << "\n\t" << "Show Player Reticles:" << m_show_player_reticles
-                 << "\n\t" << "Show Enemy Reticles:" << m_show_enemy_reticles
-                 << "\n\t" << "Show Assist Reticles:" << m_show_assist_reticles
-                 << "\n\t" << "Chat Font Size:" << m_chat_font_size;
-    }
+    void clientOptionsDump() const;
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version)
     {
         if(version != ClientOptions::class_version)
         {
-            qCritical() << "Failed to serialize ClientOptions, incompatible serialization format version " << version;
+            sCritical() << "Failed to serialize ClientOptions, incompatible serialization format version " << version;
             return;
         }
-    
+
         archive(cereal::make_nvp("FirstPersonView", m_first_person_view));
         archive(cereal::make_nvp("MouseSpeed", m_mouse_speed));
         archive(cereal::make_nvp("TurnSpeed", m_turn_speed));

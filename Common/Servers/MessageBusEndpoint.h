@@ -7,7 +7,6 @@
 
 #pragma once
 #include "Components/EventProcessor.h"
-#include <vector>
 
 /**
  * @brief The MessageBusEndpoint class is responsible for:
@@ -20,7 +19,7 @@ class MessageBusEndpoint
     EventProcessor &m_true_handler;
     MessageBusEndpoint(const MessageBusEndpoint &) = delete;
     MessageBusEndpoint &operator =(const MessageBusEndpoint &) = delete;
-    std::vector<uint32_t> m_active_subscriptions;
+    Vector<uint32_t> m_active_subscriptions;
 public:
     MessageBusEndpoint(EventProcessor &h) : m_true_handler(h) {}
     ~MessageBusEndpoint();

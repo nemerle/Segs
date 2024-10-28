@@ -15,7 +15,7 @@ TradeCancel::TradeCancel()
 {
 }
 
-TradeCancel::TradeCancel(const QString& msg)
+TradeCancel::TradeCancel(const String& msg)
     : GameCommandEvent(MapEventTypes::evTradeCancel)
     , m_msg(msg)
 {

@@ -7,8 +7,10 @@
 
 #pragma once
 
-#include "Components/SEGSEvent.h"
+#include "Components/SEGSEvent_impl.h"
 #include "Components/SEGSTimer.h"
+#include "Containers/HashMap.h"
+#include "EASTL/unique_ptr.h"
 
 #include <ace/Task_Ex_T.h>
 
@@ -25,7 +27,7 @@ public:
 class EventProcessor : public EventSrc
 {
 using super = EventSrc;
-using TimerStorage = std::unordered_map<uint32_t,std::unique_ptr<SEGSTimer>>;
+using TimerStorage = HashMap<uint32_t,eastl::unique_ptr<SEGSTimer>>;
 protected:
         TimerStorage    m_registered_timers;
         uint32_t        m_next_timer_id=1;

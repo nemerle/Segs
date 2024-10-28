@@ -14,12 +14,13 @@
 
 #include "npc_definitions.h"
 #include "Components/Logging.h"
+#include "EASTL/sort.h"
 
 void NPCStorage::prepare_dictionaries()
 {
     // client expects the indices of npcs to be taken from sorted by name array
-    std::sort(std::begin(m_all_npcs),std::end(m_all_npcs),[](const Parse_NPC &a,const Parse_NPC &b)->bool {
-        return QString(a.m_Name).compare(b.m_Name,Qt::CaseInsensitive)<0;
+    eastl::sort(eastl::begin(m_all_npcs),eastl::end(m_all_npcs),[](const Parse_NPC &a,const Parse_NPC &b)->bool {
+        return String(a.m_Name).comparei(b.m_Name)<0;
     });
     // fixup the npc body type,colors, and costume part counts
     for (Parse_NPC & pnpc : m_all_npcs )
@@ -37,13 +38,13 @@ void NPCStorage::prepare_dictionaries()
     }
     for(Parse_NPC &npc : m_all_npcs)
     {
-        auto iter = m_name_to_npc_def.find(npc.m_Name.toLower());
+        auto iter = m_name_to_npc_def.find(npc.m_Name.to_lower());
         if(iter!=m_name_to_npc_def.end())
         {
-            qCWarning(logNPCs) << "Duplicate NPC name" << npc.m_Name << "vs" << iter.value()->m_Name;
+            sCWarning(logNPCs) << "Duplicate NPC name" << npc.m_Name << "vs" << iter->second->m_Name;
             continue;
         }
-        m_name_to_npc_def[npc.m_Name.toLower()] = &npc;
+        m_name_to_npc_def[npc.m_Name.to_lower()] = &npc;
     }
 }
 
@@ -53,16 +54,19 @@ int NPCStorage::npc_idx(const Parse_NPC *npc) const
     return std::distance(m_all_npcs.data(),npc);
 }
 
-int NPCStorage::npc_idx(const QString &name)
+int NPCStorage::npc_idx(const String &name)
 {
-    return npc_idx(m_name_to_npc_def[name.toLower()]);
+    return npc_idx(m_name_to_npc_def[name.to_lower()]);
 }
 
-const Parse_NPC *NPCStorage::npc_by_name(QStringView name) const
+const Parse_NPC *NPCStorage::npc_by_name(StringView name) const
 {
-    auto iter = m_name_to_npc_def.find(name.toString().toLower());
+    auto iter =
+        m_name_to_npc_def.find_as(String(name), m_name_to_npc_def.hash_function(), [](const String &k, const String &ot) -> bool {
+        return StringUtils::compare(k,ot,StringUtils::CaseInsensitive);
+    });
     if(iter!=m_name_to_npc_def.end())
-        return *iter;
+        return iter->second;
     return nullptr;
 }
 

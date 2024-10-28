@@ -13,8 +13,6 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x3.hpp>
 
-class QString;
-
 class TransformStruct
 {
 public:
@@ -43,8 +41,8 @@ class ColorAndPartPacker
 public:
     virtual void packColor(uint32_t c,BitStream &into) const=0;
     virtual void unpackColor(BitStream &from,uint32_t &tgt) const =0;
-    virtual void packPartname(const QString &c,BitStream &into) const =0;
-    virtual void unpackPartname(BitStream &from,QString &tgt) const =0;
+    virtual void packPartname(const String &c,BitStream &into) const =0;
+    virtual void unpackPartname(BitStream &from,String &tgt) const =0;
 };
 ///
 /// \brief The IndexedStringPacker class is responsible for storing a mapping from string to index
@@ -53,9 +51,9 @@ public:
 class IndexedStringPacker
 {
 public:
-    virtual void addString(const QString &) = 0;
+    virtual void addString(const String &) = 0;
     /// return index of a string, or 0 if the string has not been added yet.
-    virtual int getIndex(const QString &) const =0;
+    virtual int getIndex(const String &) const =0;
 };
 extern  void        storeBitsConditional(BitStream &bs, uint8_t numbits, int bits);
 extern  int         getBitsConditional(BitStream &bs, uint32_t numbits);
@@ -63,13 +61,13 @@ extern  void        storePackedBitsConditional(BitStream &bs, uint8_t numbits, i
 extern  void        storeFloatConditional(BitStream &bs,float val);
 extern  void        storeFloatPacked(BitStream &bs,float val);
 extern  int         getPackedBitsConditional(BitStream &bs, uint8_t numbits);
-extern  void        storeStringConditional(BitStream &bs, const QString &str);
+extern  void        storeStringConditional(BitStream &bs, const String &str);
 extern  void        storeVector(BitStream &bs, glm::vec3 &vec);
 extern  void        storeVectorConditional(BitStream &bs, glm::vec3 &vec);
 extern  void        storeTransformMatrix(BitStream &tgt,const glm::mat4x3 &src);
 extern  void        storeTransformMatrix(BitStream &tgt,const TransformStruct &src);
 extern  void        getTransformMatrix(BitStream &bs,glm::mat4x3 &src);
 extern  void        storeCached_Color(BitStream &bs, uint32_t col, ColorHash &color_hash, uint32_t bitcount);
-extern  void        storeCached_String(BitStream &bs, const QString &str,const StringHash &string_hash, uint32_t bitc);
+extern  void        storeCached_String(BitStream &bs, const String &str,const StringHash &string_hash, uint32_t bitc);
 extern  uint32_t    getCached_Color(BitStream &bs,ColorHash &color_hash, uint32_t bitcount);
-extern  QString     getCached_String(BitStream &bs, const StringHash &string_hash, uint32_t bitcount);
+extern  String     getCached_String(BitStream &bs, const StringHash &string_hash, uint32_t bitcount);

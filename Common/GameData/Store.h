@@ -9,7 +9,7 @@
 
 #include "Common/GameData/CommonNetStructures.h"
 #include "Components/Logging.h"
-#include "cereal/cereal.hpp"
+//#include "cereal/cereal.hpp"
 
 class Entity;
 
@@ -19,10 +19,10 @@ public:
     bool                m_is_success = false;
     bool                m_is_sell = false;
     bool                m_is_insp = false;
-    QString             m_item_name;
+    String             m_item_name;
     int                 m_inf_amount;
     uint32_t            m_enhancement_lvl;
-    QString             m_message;
+    String             m_message;
 };
 
 
@@ -30,11 +30,11 @@ class StoreItem
 {
 public:
     enum : uint32_t {class_version       = 1};
-    QString     m_store_name;
+    String     m_store_name;
     int         m_item_count;
 
     StoreItem(){}
-    StoreItem(QString item_name, int item_count)
+    StoreItem(String item_name, int item_count)
     {
         m_store_name = item_name;
         m_item_count = item_count;
@@ -44,7 +44,7 @@ public:
     void serialize(Archive &archive, uint32_t const version);
 
 };
-using vStoreItems = std::vector<StoreItem>;
+using vStoreItems = Vector<StoreItem>;
 
 class Store
 {
@@ -58,9 +58,9 @@ public:
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);
 
-    static StoreTransactionResult buyItem(Entity *e, QString item_name);
-    static StoreTransactionResult sellItem(Entity *e, QString item_name);
-    static int getPrice(Entity *e, QString item_name, bool is_selling);
+    static StoreTransactionResult buyItem(Entity *e, String item_name);
+    static StoreTransactionResult sellItem(Entity *e, String item_name);
+    static int getPrice(Entity *e, String item_name, bool is_selling);
 };
 
 

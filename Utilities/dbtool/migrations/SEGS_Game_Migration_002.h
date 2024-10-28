@@ -55,8 +55,8 @@ public:
 
             QString chardoc = db->saveBlob(char_obj);
             QString entdoc = db->saveBlob(ent_map);
-            qCDebug(logMigration).noquote() << chardoc; // print output for debug
-            qCDebug(logMigration).noquote() << entdoc;  // print output for debug
+            sCDebug(logMigration) << qPrintable(chardoc); // print output for debug
+            sCDebug(logMigration) << qPrintable(entdoc);  // print output for debug
 
             QString querytext = QString("UPDATE characters SET chardata='%1', entitydata='%2'")
                     .arg(chardoc)

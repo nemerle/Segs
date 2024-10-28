@@ -33,7 +33,7 @@ enum class UserRouterError : uint32_t
 
 struct UserRouterInfoData
 {
-    QString m_message;
+    String m_message;
     MessageChannel m_info_channel;
     uint32_t m_sender_id;
     uint32_t m_target_id;
@@ -50,13 +50,13 @@ ONE_WAY_MESSAGE(UserRouterEventTypes,UserRouterInfo)
 
 struct UserRouterOpaqueRequestData
 {
-    std::vector<uint8_t> m_payload;
+    Vector<uint8_t> m_payload;
 
     uint32_t m_sender_id;
-	QString m_sender_name;
+	String m_sender_name;
 
-    std::vector<uint32_t>   m_target_id_list;
-    std::vector<QString>    m_target_name_list;
+    Vector<uint32_t>   m_target_id_list;
+    Vector<String>    m_target_name_list;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -84,7 +84,7 @@ TWO_WAY_MESSAGE(UserRouterEventTypes,UserRouterOpaque)
 struct UserRouterQueryRequestData
 {
     uint32_t m_query_id;
-	QString m_query_name;
+	String m_query_name;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -96,10 +96,10 @@ struct UserRouterQueryRequestData
 struct UserRouterQueryResponseData
 {
     uint32_t m_request_id;
-	QString m_request_name;
+	String m_request_name;
 
     uint32_t m_response_id;
-	QString m_response_name;
+	String m_response_name;
 
     template<class Archive>
     void serialize(Archive &ar)

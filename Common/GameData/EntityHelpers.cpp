@@ -18,6 +18,8 @@
 #include "Components/Logging.h"
 #include "GameData/playerdata_definitions.h"
 
+#include <chrono>
+
 /*
  * Entity Methods
  */
@@ -44,16 +46,17 @@ void setUpdateID(Entity &e, uint8_t val) { e.m_update_id = val;}
 
 void resetSpeed(Entity &e)
 {
+    using namespace magic_enum::bitwise_operators;
+
     e.m_motion_state.m_speed = {e.m_char->m_char_data.m_current_attribs.m_SpeedRunning,
                                 e.m_char->m_char_data.m_current_attribs.m_SpeedJumping,
                                 e.m_char->m_char_data.m_current_attribs.m_SpeedFlying};
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::STATS);
+    e.m_entity_update_flags |= e.UpdateFlag::STATS;
 }
-static QDebug operator<<(QDebug debug, const Team::TeamMember &c)
-{
-    QDebugStateSaver saver(debug);
-    debug.nospace() << '(' << c.tm_idx << ", " << c.tm_map_idx << ", " << c.tm_pending << ')';
 
+static DebugOutput &operator<<(DebugOutput &debug, const Team::TeamMember &c)
+{
+    debug << '(' << c.tm_idx << ", " << c.tm_map_idx << ", " << c.tm_pending << ')';
     return debug;
 }
 
@@ -71,15 +74,16 @@ void setTeamID(Entity &e, uint8_t team_id)
     if(!e.m_team)
         return;
 
-    qDebug().noquote() << "Team Info:"
-                       << "\n  Has Team:" << e.m_has_team
-                       << "\n  ID:" << e.m_team->m_data.m_team_idx
-                       << "\n  Size:" << e.m_team->m_data.m_team_members.size()
-                       << "\n  Members:" << e.m_team->m_data.m_team_members;
+    sDebug() << "Team Info:"
+             << "\n  Has Team:" << e.m_has_team
+             << "\n  ID:" << e.m_team->m_data.m_team_idx
+             << "\n  Size:" << e.m_team->m_data.m_team_members.size()
+             << "\n  Members:" << e.m_team->m_data.m_team_members;
 }
 
-void setSuperGroup(Entity &e, int sg_id, QString sg_name, uint32_t sg_rank)
+void setSuperGroup(Entity &e, int sg_id, StringView sg_name, uint32_t sg_rank)
 {
+    using namespace magic_enum::bitwise_operators;
     // TODO: provide method for updating SuperGroup Colors
     if(sg_id == 0)
     {
@@ -100,8 +104,8 @@ void setSuperGroup(Entity &e, int sg_id, QString sg_name, uint32_t sg_rank)
         e.m_supergroup.m_SG_rank    = sg_rank;
     }
 
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::SUPERGROUP);
-    qDebug().noquote() << "SG Info:"
+    e.m_entity_update_flags |= e.UpdateFlag::SUPERGROUP;
+    sDebug() << "SG Info:"
              << "\n  Has Team:" << e.m_has_supergroup
              << "\n  ID:" << e.m_supergroup.m_SG_id
              << "\n  Name:" << e.m_supergroup.m_SG_name
@@ -112,11 +116,12 @@ void setSuperGroup(Entity &e, int sg_id, QString sg_name, uint32_t sg_rank)
 
 void setTarget(Entity &e, uint32_t target_idx)
 {
+    using namespace magic_enum::bitwise_operators;
     // TODO: set target if enemy, set assist_target if friendly
     e.m_target_idx = target_idx;
     // To trigger update to client
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::TARGET);
-    qCDebug(logTarget) << "Setting Target to" << target_idx;
+    e.m_entity_update_flags |= e.UpdateFlag::TARGET;
+    sCDebug(logTarget) << "Setting Target to" << target_idx;
 }
 
 void setAssistTarget(Entity &e, uint32_t target_idx)
@@ -125,7 +130,7 @@ void setAssistTarget(Entity &e, uint32_t target_idx)
     // not the target of your target, which is derived when using the
     // slash command /assist
     e.m_assist_target_idx = target_idx;
-    qCDebug(logTarget) << "Assist Target is:" << getAssistTargetIdx(e);
+    sCDebug(logTarget) << "Assist Target is:" << getAssistTargetIdx(e);
 }
 
 void setCurrentDestination(Entity &e, int point_idx, glm::vec3 location)
@@ -136,8 +141,9 @@ void setCurrentDestination(Entity &e, int point_idx, glm::vec3 location)
 
 void setStateMode(Entity &e, ClientStates state)
 {
+    using namespace magic_enum::bitwise_operators;
     e.m_state_mode = state;
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::STATEMODE);
+    e.m_entity_update_flags|=e.UpdateFlag::STATEMODE;
 }
 
 // For live debugging
@@ -170,6 +176,7 @@ void toggleTeamBuffs(PlayerData &c) { c.m_gui.m_team_buffs = !c.m_gui.m_team_buf
 
 void toggleCollision(Entity &e)
 {
+    using namespace magic_enum::bitwise_operators;
     e.m_motion_state.m_no_collision = !e.m_motion_state.m_no_collision;
 
     if(e.m_motion_state.m_no_collision)
@@ -177,15 +184,16 @@ void toggleCollision(Entity &e)
     else
         e.m_move_type &= ~MoveType::MOVETYPE_NOCOLL;
 
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::NOCOLLISION);
-    qDebug() << "Collision =" << QString::number(e.m_move_type, 2) << e.m_motion_state.m_no_collision;
+    e.m_entity_update_flags |= e.UpdateFlag::NOCOLLISION;
+    sDebug() << "Collision =" << eastl::to_string(e.m_move_type) << e.m_motion_state.m_no_collision;
 }
 
 void toggleMovementAuthority(Entity &e)
 {
+    using namespace magic_enum::bitwise_operators;
     toggleFullUpdate(e);
     toggleControlId(e);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::MOVEMENT);
+    e.m_entity_update_flags |= e.UpdateFlag::MOVEMENT;
 }
 
 
@@ -230,7 +238,7 @@ bool validTarget(Entity &target_ent, Entity &ent, StoredEntEnum const &target)
 }
 
 // checks a vector of possible targets
-bool validTargets(Entity &target_ent, Entity &ent, std::vector<StoredEntEnum> const & targets)
+bool validTargets(Entity &target_ent, Entity &ent, Vector<StoredEntEnum> const & targets)
 {
     if (targets.empty())
         return false;
@@ -244,7 +252,14 @@ bool validTargets(Entity &target_ent, Entity &ent, std::vector<StoredEntEnum> co
 }
 
 void modifyAttrib(Entity &e, buffset change)
-{//todo: take Parse_CharAttrib as argument, to modify max/current/res/str
+{
+    static const Vector<StringView> unimplementedAttributes={
+        "knockup","knockdown","knockback","xpdebtprotection","translucency","setmode"
+        ,"stealthradiusplayer","stealthradius","threatlevel","combatphase","grantpower","null"
+        ,"untouchable","terrorized","afraid","teleport","repel","setcostume","endurancediscount"
+        ,"taunt","globalchancemod","intangible","mez"  //mez used by powerboost
+};
+    //todo: take Parse_CharAttrib as argument, to modify max/current/res/str
     if (change.m_value_name == "regeneration")
         e.m_char->m_char_data.m_current_attribs.m_Regeneration += change.m_value;
     else if (change.m_value_name == "recovery")
@@ -352,15 +367,11 @@ void modifyAttrib(Entity &e, buffset change)
     {
         e.m_char->m_char_data.m_current_attribs.m_PerceptionRadius += change.m_value;
     }
-    else if (QStringList{"knockup","knockdown","knockback","xpdebtprotection","translucency","setmode"
-            ,"stealthradiusplayer","stealthradius","threatlevel","combatphase","grantpower","null"
-            ,"untouchable","terrorized","afraid","teleport","repel","setcostume","endurancediscount"
-            ,"taunt","globalchancemod","intangible","mez"  //mez used by powerboost
-            }.contains(change.m_value_name))
-        ;//these effects not implimented yet, but will be, so skip error message
+    else if (unimplementedAttributes.contains(change.m_value_name))
+        ;//these effects not implemented yet, but will be, so skip error message
     else
     {
-        qCDebug(logPowers) << change.m_value_name << "found in powers.json, don't know what it is!";
+        sCDebug(logPowers) << change.m_value_name << "found in powers.json, don't know what it is!";
     }
     resetSpeed(e);
     checkMovement(e);
@@ -369,13 +380,15 @@ void modifyAttrib(Entity &e, buffset change)
 //called after movment state might change, makes sure everything is clear before allowing movement
 void checkMovement(Entity &e)
 {
+    using namespace magic_enum::bitwise_operators;
+
     Parse_CharAttrib & temp = e.m_char->m_char_data.m_current_attribs;
     if (temp.m_Immobilized > 1 || temp.m_Sleep > 1 ||temp.m_Held > 1 || temp.m_Afraid > 1 || e.m_is_activating || e.m_char->m_is_dead)
         e.m_motion_state.m_controls_disabled = true;
     else
         e.m_motion_state.m_controls_disabled = false;
 
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::MOVEMENT);
+    e.m_entity_update_flags |= e.UpdateFlag::MOVEMENT;
 }
 
 //return true if any status effect would prevent the use of powers
@@ -390,13 +403,16 @@ bool checkPowerBlock(Entity &e)
 // Misc Methods
 void abortLogout(Entity *e)
 {
+    using namespace magic_enum::bitwise_operators;
     e->m_is_logging_out = false;
-    e->m_entity_update_flags.setFlag(e->UpdateFlag::LOGOUT, false);
+    e->m_entity_update_flags &= ~e->UpdateFlag::LOGOUT;
     e->m_time_till_logout = 0;
 }
 
 void initializeNewPlayerEntity(Entity &e)
 {
+    using namespace magic_enum::bitwise_operators;
+
     e.m_costume_type                    = AppearanceType::WholeCostume;
     e.m_destroyed                       = false;
     e.m_type                            = EntType::PLAYER; // 2
@@ -413,11 +429,11 @@ void initializeNewPlayerEntity(Entity &e)
     e.m_move_type                       = MoveType::MOVETYPE_WALK;
     e.m_motion_state.m_is_falling       = true;
 
-    e.m_char = std::make_unique<Character>();
-    e.m_player = std::make_unique<PlayerData>();
+    e.m_char = eastl::make_unique<Character>();
+    e.m_player = eastl::make_unique<PlayerData>();
     e.m_player->reset();
-    e.m_entity = std::make_unique<EntityData>();
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::FULL);
+    e.m_entity = eastl::make_unique<EntityData>();
+    e.m_entity_update_flags |= e.UpdateFlag::FULL;
 
     std::copy(g_world_surf_params, g_world_surf_params+2, e.m_motion_state.m_surf_mods);
 
@@ -436,6 +452,7 @@ void initializeNewPlayerEntity(Entity &e)
 
 void initializeNewNpcEntity(const GameDataStore &data, Entity &e, const Parse_NPC *src, int idx, int variant)
 {
+    using namespace magic_enum::bitwise_operators;
     e.m_costume_type                    = AppearanceType::NpcCostume;
     e.m_destroyed                       = false;
     e.m_type                            = EntType::NPC; // 2
@@ -454,18 +471,18 @@ void initializeNewNpcEntity(const GameDataStore &data, Entity &e, const Parse_NP
     e.m_move_type                       = MoveType::MOVETYPE_WALK;
     e.m_motion_state.m_is_falling       = true;
 
-    e.m_char = std::make_unique<Character>();
-    e.m_npc = std::make_unique<NPCData>(NPCData{false,src,idx,variant});
+    e.m_char = eastl::make_unique<Character>();
+    e.m_npc  = eastl::make_unique<NPCData>(NPCData{false, src, idx, variant});
     e.m_player.reset();
-    e.m_entity = std::make_unique<EntityData>();
+    e.m_entity = eastl::make_unique<EntityData>();
     e.m_char->m_char_data.m_level       = src->m_Level;
 
     // Flag for updates, but remove pchar_things (FX, CharStats, Buffs, Target Updates)
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::FULL);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::FX, false);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::STATS, false);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::BUFFS, false);
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::TARGET, false);
+    e.m_entity_update_flags |= e.UpdateFlag::FULL;
+    e.m_entity_update_flags &= ~e.UpdateFlag::FX;
+    e.m_entity_update_flags &= ~e.UpdateFlag::STATS;
+    e.m_entity_update_flags &= ~e.UpdateFlag::BUFFS;
+    e.m_entity_update_flags &= ~e.UpdateFlag::TARGET;
 
     std::copy(g_world_surf_params, g_world_surf_params+2, e.m_motion_state.m_surf_mods);
 
@@ -484,6 +501,7 @@ void initializeNewNpcEntity(const GameDataStore &data, Entity &e, const Parse_NP
 
 void initializeNewCritterEntity(const GameDataStore &data, Entity &e, const Parse_NPC *src, int idx, int variant, int level)
 {
+    using namespace magic_enum::bitwise_operators;
     e.m_costume_type                    = AppearanceType::NpcCostume;
     e.m_destroyed                       = false;
     e.m_type                            = EntType::CRITTER;
@@ -502,11 +520,11 @@ void initializeNewCritterEntity(const GameDataStore &data, Entity &e, const Pars
     e.m_move_type                       = MoveType::MOVETYPE_WALK;
     e.m_motion_state.m_is_falling       = true;
 
-    e.m_char = std::make_unique<Character>();
-    e.m_npc = std::make_unique<NPCData>(NPCData{false,src,idx,variant});
+    e.m_char = eastl::make_unique<Character>();
+    e.m_npc  = eastl::make_unique<NPCData>(NPCData{false, src, idx, variant});
     e.m_player.reset();
-    e.m_entity = std::make_unique<EntityData>();
-    e.m_entity_update_flags.setFlag(e.UpdateFlag::FULL);
+    e.m_entity = eastl::make_unique<EntityData>();
+    e.m_entity_update_flags |= e.UpdateFlag::FULL;
 
     e.m_char->m_char_data.m_combat_level = level;
     e.m_char->m_char_data.m_level = level;
@@ -535,8 +553,9 @@ void initializeNewCritterEntity(const GameDataStore &data, Entity &e, const Pars
 
 void fillEntityFromNewCharData(Entity &e, BitStream &src,const GameDataStore &data)
 {
-    QString description;
-    QString battlecry;
+    using namespace magic_enum::bitwise_operators;
+    String description;
+    String battlecry;
     e.m_type = EntType(src.GetPackedBits(1));
     e.m_char->GetCharBuildInfo(src);
     e.m_char->recv_initial_costume(src,data.getPacker());
@@ -545,7 +564,7 @@ void fillEntityFromNewCharData(Entity &e, BitStream &src,const GameDataStore &da
     if(e.m_char->m_char_data.m_has_the_prefix)
     {
         e.m_char->m_char_data.m_has_titles = true;
-        e.m_entity_update_flags.setFlag(e.UpdateFlag::TITLES);
+        e.m_entity_update_flags |= e.UpdateFlag::TITLES;
     }
 
     src.GetString(battlecry);
@@ -572,12 +591,13 @@ void unmarkEntityForDbStore(Entity *e, DbStoreFlags f)
 
 void resetEntityForUpdate(Entity *e)
 {
+    using namespace magic_enum::bitwise_operators;
     // reset update flags to default (movement only)
     e->m_entity_update_flags = e->UpdateFlag::MOVEMENT;
 
     // it seems Players and Critters need to send Stats or they can't move
     if(e->m_type == EntType::PLAYER || e->m_type == EntType::CRITTER)
-        e->m_entity_update_flags.setFlag(e->UpdateFlag::STATS);
+        e->m_entity_update_flags |= e->UpdateFlag::STATS;
 }
 
 void revivePlayer(Entity &e, ReviveLevel lvl)

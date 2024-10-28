@@ -1,13 +1,13 @@
 #include "particle_definitions.h"
 
-void cleanupPSystemName(QByteArray &name)
+void cleanupPSystemName(String &name)
 {
-    int idx = name.indexOf("/FX/",0);
-    if(idx==-1 && name.startsWith("FX/"))
+    auto idx = name.find("/FX/");
+    if(idx==String::npos && name.starts_with("FX/"))
         idx=0;
-    if(idx!=-1)
+    if(idx!=String::npos)
     {
-        name = name.mid(idx+3).toUpper();
+        name = name.substr(idx+3).to_upper();
     }
 }
 

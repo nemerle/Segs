@@ -1,46 +1,43 @@
 #include "seq_definitions.h"
 #include "anim_definitions.h"
-
+#include "Utils/string_utils.h"
 #include "Components/Logging.h"
 
-#include <QDir>
-#include <QMetaEnum>
-#include <set>
-
-int16_t getSeqMoveIdxByName(const QByteArray &name, const SequencerData &seq)
+int16_t getSeqMoveIdxByName(const String &name, const SequencerData &seq)
 {
     int cnt = seq.m_Move.size();
-    QByteArray compare_against=name.toLower();
+    String compare_against=name.to_lower();
     for (int i = 0; i < cnt; ++i )
     {
-        if ( seq.m_Move[i].name.toLower()==compare_against )
+        if ( seq.m_Move[i].name.to_lower()==compare_against )
             return i;
     }
-    qDebug() << "Cannot find move" << name;
+    sDebug() << "Cannot find move" << name;
     return -1;
 }
 
-void cleanSeqFileName(QByteArray &filename)
+void cleanSeqFileName(String &filename)
 {
-    filename = QDir::cleanPath(filename.toUpper()).toLatin1();
-    int loc = filename.indexOf("SEQUENCERS/");
+    filename = PathUtils::simplify_path(filename.to_upper());
+    auto loc = filename.find("SEQUENCERS/");
 
-    if(loc!=-1)
+    if(loc!=String::npos)
     {
-        filename = filename.mid(loc+strlen("SEQUENCERS/"));
+        filename = filename.substr(loc+strlen("SEQUENCERS/"));
     }
 }
-SequencerData *SequencerList::getSequencerData(const QByteArray &seq_name)
+
+SequencerData *SequencerList::getSequencerData(const String &seq_name)
 {
     SequencerData *seq_data=nullptr;
-    QByteArray modifiable_name = seq_name;
+    String modifiable_name = seq_name;
     cleanSeqFileName(modifiable_name);
-    auto iter = m_Sequencers.find(modifiable_name.toLower());
+    auto iter = m_Sequencers.find(modifiable_name.to_lower());
     if(iter!=m_Sequencers.end())
-        seq_data = &sq_list[*iter];
+        seq_data = &sq_list[iter->second];
     if(!seq_data)
     {
-        qWarning()<<"Missing sequencer data for"<<QString(seq_name)<<":"<<QString(modifiable_name);
+        sWarning()<<"Missing sequencer data for"<<seq_name<<":"<<modifiable_name;
         return nullptr;
     }
     return seq_data;

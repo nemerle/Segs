@@ -6,9 +6,8 @@
  */
 
 #pragma once
-#include <string>
-#include <stdint.h>
-class QString;
+#include "Containers/String.h"
+
 class ACE_INET_Addr;
 
-bool parseAddress(const QString &src,ACE_INET_Addr &tgt);
+bool parseAddress(const String &src,ACE_INET_Addr &tgt);

@@ -15,8 +15,8 @@ enum class TeamingError
     OK,
     TEAM_FULL,
     INVITEE_HAS_TEAM,
-	NOT_ON_TEAM,
-	TEAM_DISBANDED,
+    NOT_ON_TEAM,
+    TEAM_DISBANDED,
 };
 
 class Team
@@ -30,8 +30,8 @@ public:
 
         struct TeamMember {
             uint32_t    tm_idx  = 0;
-            QString     tm_name; // stored here for quick lookup.
-            QString     tm_map; // stored here for quick lookup.
+            String     tm_name; // stored here for quick lookup.
+            String     tm_map; // stored here for quick lookup.
             // these values are transient, and should be updated by TeamingService
             uint32_t    tm_map_idx = 0;
             bool        tm_pending = false; // if true, user has not responded to invite yet
@@ -48,7 +48,7 @@ public:
             uint32_t    m_team_idx          = 0;
             bool        m_has_taskforce  = false;    // it's possible that this belongs to entity or char instead
             uint32_t    m_team_leader_idx   = 0;
-            std::vector<TeamMember> m_team_members;
+            Vector<TeamMember> m_team_members;
             template<class Archive>
             void serialize(Archive &ar)
             {
@@ -66,20 +66,20 @@ public:
         // Methods
         void        dump();
         void        dumpAllTeamMembers();
-		bool				isTeamLeader(uint32_t entity_id);
-		bool				isTeamLeader(const QString &name);
+        bool				isTeamLeader(uint32_t entity_id);
+        bool				isTeamLeader(const String &name);
 
-        TeamingError        acceptTeamInvite(const QString &name, uint32_t entity_id);
+        TeamingError        acceptTeamInvite(const String &name, uint32_t entity_id);
 
-        TeamingError        addTeamMember(uint32_t entity_id, const QString &name, bool pending);
+        TeamingError        addTeamMember(uint32_t entity_id, const String &name, bool pending);
 
         TeamingError        removeTeamMember(uint32_t entity_id);
 
         bool                containsEntityID(uint32_t entity_id);
-        bool                containsEntityName(const QString &name);
+        bool                containsEntityName(const String &name);
         bool                isFull();
 
-		bool 				isNamePending(const QString &name);
+        bool 				isNamePending(const String &name);
 
 private:
 static  uint32_t    m_team_idx_counter;

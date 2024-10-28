@@ -5,17 +5,48 @@
  * This software is licensed under the terms of the 3-clause BSD License. See LICENSE.md for details.
  */
 
-#include "playerdata_definitions.h"
+#include "Contact.h"
+
 #include "Components/Logging.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
+
+HashMap<String,uint32_t> contactLinkHash = {
+    {"CONTACTLINK_HELLO"                ,1},
+    {"CONTACTLINK_MAIN"                 ,2},
+    {"CONTACTLINK_BYE"                  ,3},
+    {"CONTACTLINK_MISSIONS"             ,4},
+    {"CONTACTLINK_LONGMISSION"          ,5},
+    {"CONTACTLINK_SHORTMISSION"         ,6},
+    {"CONTACTLINK_ACCEPTLONG"           ,7},
+    {"CONTACTLINK_ACCEPTSHORT"          ,8},
+    {"CONTACTLINK_INTRODUCE"            ,9},
+    {"CONTACTLINK_INTRODUCE_CONTACT1"   ,0x0A},
+    {"CONTACTLINK_INTRODUCE_CONTACT2"   ,0x0B},
+    {"CONTACTLINK_ACCEPT_CONTACT1"      ,0x0C},
+    {"CONTACTLINK_ACCEPT_CONTACT2"      ,0x0D},
+    {"CONTACTLINK_GOTOSTORE"            ,0x0E},
+    {"CONTACTLINK_TRAIN"                ,0x0F},
+    {"CONTACTLINK_WRONGMODE"            ,0x10},
+    {"CONTACTLINK_DONTKNOW"             ,0x11},
+    {"CONTACTLINK_NOTLEADER"            ,0x12},
+    {"CONTACTLINK_BADCELLCALL"          ,0x13},
+    {"CONTACTLINK_ABOUT"                ,0x14},
+    {"CONTACTLINK_IDENTIFYCLUE"         ,0x15},
+    {"CONTACTLINK_NEWPLAYERTELEPORT_AP" ,0x16},
+    {"CONTACTLINK_NEWPLAYERTELEPORT_GC" ,0x17},
+    {"CONTACTLINK_FORMTASKFORCE"        ,0x18},
+    {"CONTACTLINK_CHOOSE_TITLE"         ,0x19},
+    {"CONTACTLINK_GOTOTAILOR"           ,0x1A},
+};
+
 
 template<class Archive>
 void Contact::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Contact::class_version)
     {
-        qCritical() << "Failed to serialize Contact, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Contact, incompatible serialization format version " << version;
         return;
     }
 
@@ -42,7 +73,7 @@ void Destination::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Destination::class_version)
     {
-        qCritical() << "Failed to serialize Destination, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Destination, incompatible serialization format version " << version;
         return;
     }
 

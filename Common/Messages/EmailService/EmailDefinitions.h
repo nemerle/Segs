@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <QtCore/QHash>
-#include <vector>
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
 
@@ -16,9 +14,9 @@ struct EmailData
 {
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_sender_name;          // take this from db during runtime based on sender_id?
-    QString m_subject;
-    QString m_message;
+    String m_sender_name;          // take this from db during runtime based on sender_id?
+    String m_subject;
+    String m_message;
     uint32_t m_timestamp;
     bool m_is_read_by_recipient = false;
 };
@@ -37,8 +35,8 @@ static void serialize(Archive & archive, EmailData & src)
 struct EmailHeaderData
 {
     uint32_t m_email_id;
-    QString m_sender_name;
-    QString m_subject;
+    String m_sender_name;
+    String m_subject;
     uint32_t m_timestamp;
 
     template<class Archive>
@@ -54,7 +52,7 @@ struct EmailResponseData
     uint32_t m_email_id;
     uint32_t m_sender_id;
     uint32_t m_recipient_id;
-    QString m_cerealized_email_data;
+    String m_cerealized_email_data;
 
     template<class Archive>
     void serialize(Archive &ar)

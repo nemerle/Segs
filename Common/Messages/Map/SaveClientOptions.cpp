@@ -18,7 +18,7 @@ using namespace SEGSEvents;
 
 void SaveClientOptions::serializefrom(BitStream & bs)
 {
-    qCDebug(logSettings) << "Serializing options from Client";
+    sCDebug(logSettings) << "Serializing options from Client";
     data.m_mouse_speed          = bs.GetFloat();
     data.m_turn_speed           = bs.GetFloat();
     data.m_mouse_invert         = bs.GetBits(1);
@@ -41,7 +41,7 @@ void SaveClientOptions::serializefrom(BitStream & bs)
 
 void SaveClientOptions::serializeto(BitStream &tgt) const
 {
-    qCDebug(logSettings) << "Serializing to ClientOptions";
+    sCDebug(logSettings) << "Serializing to ClientOptions";
     tgt.StorePackedBits(1,65);
     tgt.StoreFloat(data.m_mouse_speed);
     tgt.StoreFloat(data.m_turn_speed);

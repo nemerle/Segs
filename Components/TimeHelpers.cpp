@@ -11,11 +11,21 @@
  */
 
 #include "TimeHelpers.h"
-#include <QDateTime>
+#include <chrono>
 
 int64_t getSecsSince2000Epoch()
 {
-    QDateTime base_date(QDate(2000,1,1),QTime(0,0),Qt::UTC);
-    return base_date.secsTo(QDateTime::currentDateTimeUtc());
+    using namespace std::chrono;
+
+    // Define the epoch (January 1, 2000 00:00:00 UTC)
+    const auto epoch = sys_days{January/1/2000};
+
+    // Get the current time
+    const auto now = system_clock::now();
+
+    // Calculate the duration since the epoch
+    const auto duration = now - epoch;
+
+    // Convert the duration to seconds
+    return duration_cast<seconds>(duration).count();
 }
-//! @}

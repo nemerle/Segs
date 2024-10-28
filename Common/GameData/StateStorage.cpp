@@ -56,8 +56,8 @@ void TimeState::serializefrom_base(BitStream &bs)
 
 void TimeState::dump()
 {
-    qCDebug(logInput, "CSC: %d,%d, [%f,%f]", m_client_timenow, m_time_res, m_timestep,m_time_rel1C);
-    qCDebug(logInput, "(%lu %lu)", m_perf_cntr_diff, m_perf_freq_diff);
+    sCFDebug(logInput, "CSC: %d,%d, [%f,%f]", m_client_timenow, m_time_res, m_timestep,m_time_rel1C);
+    sCFDebug(logInput, "(%lu %lu)", m_perf_cntr_diff, m_perf_freq_diff);
 }
 
 bool InputStateChange::hasInput() const

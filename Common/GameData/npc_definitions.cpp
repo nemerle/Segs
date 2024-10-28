@@ -1,4 +1,5 @@
 #include "npc_definitions.h"
+#include "Utils/string_utils.h"
 
 namespace
 {
@@ -22,19 +23,19 @@ static const BodyTypeName s_BodyTypes[7] =
 };
 } // end of anonymous namespace
 
-BodyType bodyTypeForEntType(const QString &enttypename)
+BodyType bodyTypeForEntType(const String &enttypename)
 {
     for (const BodyTypeName &bdt : s_BodyTypes  )
     {
-        if ( 0==enttypename.compare(bdt.m_ent_typename,Qt::CaseInsensitive) )
+        if ( 0==StringUtils::compare(enttypename,bdt.m_ent_typename,StringUtils::CaseInsensitive) )
             return bdt.type;
     }
     return BodyType::Male;
 }
 
-QString entTypeFileName(const Parse_Costume *costume)
+String entTypeFileName(const Parse_Costume *costume)
 {
-    if (!costume->m_EntTypeFile.isEmpty())
+    if (!costume->m_EntTypeFile.empty())
     {
         assert(costume->m_BodyType == bodyTypeForEntType(costume->m_EntTypeFile));
         return costume->m_EntTypeFile;
@@ -43,21 +44,21 @@ QString entTypeFileName(const Parse_Costume *costume)
     if (costume->m_BodyType != BodyType::Villain)
         return s_BodyTypes[int(costume->m_BodyType)].m_ent_typename;
 
-    return QString();
+    return String();
 }
-QByteArray bodytype_prefix_fixup(const Parse_Costume *a1, const QByteArray &a2)
+String bodytype_prefix_fixup(const Parse_Costume *a1, const String &a2)
 {
-    QByteArray name;
-    QByteArray str;
+    String name;
+    String str;
 
     if ( a1->m_BodyType == BodyType::Villain )
     {
-        name = entTypeFileName(a1).toLatin1();
+        name = entTypeFileName(a1);
         str = name+"_"+a2+".tga";
     }
     else
     {
-        str = QByteArray(s_BodyTypes[(int)a1->m_BodyType].m_tex_prefix) + "_"+a2+".tga";
+        str = String(s_BodyTypes[(int)a1->m_BodyType].m_tex_prefix) + "_"+a2+".tga";
     }
     return str.left(str.size()-4);
 }

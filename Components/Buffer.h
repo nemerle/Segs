@@ -67,20 +67,20 @@ inline      void            uPutString(const char *t);
                             }
 
                             template<typename T>
-inline      void            uPut(const T &val)
+                            void            uPut(const T &val)
                             {
                                     memcpy(m_buf+m_write_off,&val,sizeof(T)); // we copy the bits directly to avoid alignment warnings from sanitizer
                                     m_write_off+=sizeof(T);
                             }
 
                             template<typename T>
-inline      void            uGet(T &val)
+                            void            uGet(T &val)
                             {
                                     memcpy(&val,m_buf+m_read_off,sizeof(T));
                                     m_read_off += sizeof(T);
                             }
                             template<typename T>
-inline      T               ruGet()
+                            T               ruGet()
                             {
                                     T val;
                                     memcpy(&val,m_buf+m_read_off,sizeof(T));

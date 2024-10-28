@@ -17,7 +17,7 @@ namespace SEGSEvents
 class Shortcuts : public MapLinkEvent
 {
 public:
-explicit Shortcuts():MapLinkEvent(MapEventTypes::evShortcuts) {}
+    explicit Shortcuts():MapLinkEvent(MapEventTypes::evShortcuts) {}
     Shortcuts(MapClientSession *sess):MapLinkEvent(MapEventTypes::evShortcuts),m_session({0,sess})
     {
     }
@@ -46,7 +46,7 @@ explicit Shortcuts():MapLinkEvent(MapEventTypes::evShortcuts) {}
     // [[ev_def:field]]
     SessionReference m_session;
     // [[ev_def:field]]
-    std::vector<QString> m_commands;
+    Vector<String> m_commands;
     EVENT_IMPL(Shortcuts)
 };
 } // end of SEGSEvents namespace

@@ -23,9 +23,6 @@
 #include <cstdint>
 #include <cmath>
 #include <utility>
-#include <array>
-#include <vector>
-#include <bitset>
 
 using namespace glm;
 
@@ -274,7 +271,7 @@ std::array<BinTreeEntry,7> interpolateBinTree(std::array<PosUpdate, 64> vals, fl
 
 void entCalcInterp(Entity *ent, glm::mat4 *mat4, uint32_t time, glm::vec3 *next_pyr)
 {
-    std::array<PosUpdate, 64> posupdate_arr = ent->m_pos_updates;
+    eastl::array<PosUpdate, 64> posupdate_arr = ent->m_pos_updates;
     PosUpdate *last=nullptr;
     PosUpdate *next;
     glm::vec3 pos;

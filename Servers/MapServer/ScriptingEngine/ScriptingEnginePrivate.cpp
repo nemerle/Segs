@@ -21,10 +21,10 @@ ScriptingEnginePrivate::~ScriptingEnginePrivate() = default;
 
 bool ScriptingEnginePrivate::performInclude(const char *path)
 {
-    if(m_restricted_include_dir.isEmpty())
+    if(m_restricted_include_dir.empty())
         return false;
-    QString full_path = QDir(m_restricted_include_dir).filePath(QDir::cleanPath(path));
-    if(m_alread_included_and_ran.contains(full_path))
+    QString full_path = QDir(m_restricted_include_dir.c_str()).filePath(QDir::cleanPath(path));
+    if(m_alread_included_and_ran.contains(qPrintable(full_path)))
         return true;
     QFileInfo include_info(full_path);
     if(!include_info.exists() || !include_info.isReadable() || !include_info.isFile())
@@ -51,6 +51,6 @@ bool ScriptingEnginePrivate::performInclude(const char *path)
         qWarning() << err.what();
         return false;
     }
-    m_alread_included_and_ran.insert(full_path);
+    m_alread_included_and_ran.insert(qPrintable(full_path));
     return true;
 }

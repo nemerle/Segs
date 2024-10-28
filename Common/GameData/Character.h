@@ -18,8 +18,8 @@
 #include "Common/GameData/keybind_definitions.h"
 #include "Common/GameData/other_definitions.h"
 
-#include <QtCore/QString>
-#include <QtCore/QVector>
+#include "Common/Containers/String.h"
+#include <Common/Containers/Vector.h>
 #include <cassert>
 #include <string>
 
@@ -68,8 +68,8 @@ public:
                         Character();
 //////////////////////////////////////////////////////////////////////////
 // Getters and setters
-const   QString &       getName() const { return m_name; }
-        void            setName(const QString &val);
+const   String &        getName() const { return m_name; }
+        void            setName(const String &val);
         float           getHealth() { return m_char_data.m_current_attribs.m_HitPoints; }
         void            setHealth(float val) { m_char_data.m_current_attribs.m_HitPoints = std::max(0.0f, std::min(val, m_max_attribs.m_HitPoints)); }
         uint8_t         getIndex() const { return m_index; }
@@ -85,11 +85,11 @@ const   QString &       getName() const { return m_name; }
         void            serializefrom(BitStream &buffer);
         void            serializeto(BitStream &buffer) const;
         void            serialize_costumes(BitStream &buffer, const ColorAndPartPacker *packer, bool send_all_costumes=true) const;
-        void            serializetoCharsel(BitStream &bs, const QString& entity_map_name);
+        void            serializetoCharsel(BitStream &bs, const String& entity_map_name);
         void            finalizeLevel();
-        void            addStartingInspirations(QStringList &starting_insps);
-        void            addStartingPowers(const QString &pcat_name, const QString &pset_name, const QStringList &power_names);
-        void            addPowersByLevel(const QString &pcat_name, const QString &pset_name, uint32_t level);
+        void            addStartingInspirations(Vector<String> &starting_insps);
+        void            addStartingPowers(const String &pcat_name, const String &pset_name, const Vector<String> &power_names);
+        void            addPowersByLevel(const String &pcat_name, const String &pset_name, uint32_t level);
         void            getPowerFromBuildInfo(BitStream &src);
         void            finalizeCombatLevel();
         void            sendEnhancements(BitStream &bs) const;
@@ -124,7 +124,7 @@ const   QString &       getName() const { return m_name; }
         bool                m_is_dead = false;
 
 protected:
-        QString         m_name;
+        String          m_name;
         vCostumes       m_costumes;
         Costume *       m_sg_costume;
         uint8_t         m_index;

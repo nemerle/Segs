@@ -85,7 +85,7 @@ void sendStateMode(const Entity &src, BitStream &bs)
 {
     // if(state_mode & 2) then RespawnIfDead, AliveEnough==true, close some windows
     PUTDEBUG("before sendStateMode");
-    bool has_state_mode=src.m_entity_update_flags.testFlag(src.UpdateFlag::STATEMODE);
+    bool has_state_mode = src.m_entity_update_flags & Entity::UpdateFlag::STATEMODE;
     bs.StoreBits(1,has_state_mode);
     PUTDEBUG("before sendStateMode 2");
     if(has_state_mode)
@@ -133,15 +133,15 @@ void storeOrientation(const Entity &src,BitStream &bs)
     updates = ((uint8_t)update_rot(src,0)) | (((uint8_t)update_rot(src,1))<<1) | (((uint8_t)update_rot(src,2))<<2);
     storeBitsConditional(bs,3,updates); //frank 7,0,0.1,0
 
-    qCDebug(logOrientation, "updates: %i",updates);
+    sCFDebug(logOrientation, "updates: %i",updates);
     glm::vec3 pyr_angles(0);
     pyr_angles.y = src.m_entity_data.m_orientation_pyr.y;
     // output everything
-    qCDebug(logOrientation, "Player: %d", src.m_idx);
-    qCDebug(logOrientation, "dir: %s", glm::to_string(src.m_direction).c_str());
-    qCDebug(logOrientation, "pyr_angles: farr(%f, %f, %f)", pyr_angles[0], pyr_angles[1], pyr_angles[2]);
-    qCDebug(logOrientation, "orient_p: %f", src.m_entity_data.m_orientation_pyr[0]);
-    qCDebug(logOrientation, "orient_y: %f", src.m_entity_data.m_orientation_pyr[1]);
+    sCFDebug(logOrientation, "Player: %d", src.m_idx);
+    sCFDebug(logOrientation, "dir: %s", glm::to_string(src.m_direction).c_str());
+    sCFDebug(logOrientation, "pyr_angles: farr(%f, %f, %f)", pyr_angles[0], pyr_angles[1], pyr_angles[2]);
+    sCFDebug(logOrientation, "orient_p: %f", src.m_entity_data.m_orientation_pyr[0]);
+    sCFDebug(logOrientation, "orient_y: %f", src.m_entity_data.m_orientation_pyr[1]);
 
     for(int i=0; i<3; i++)
     {
@@ -149,7 +149,7 @@ void storeOrientation(const Entity &src,BitStream &bs)
             continue;
 
         uint32_t v = AngleQuantize(pyr_angles[i],9);
-        qCDebug(logOrientation, "v: %d", v); // does `v` fall between 0...512
+        sCFDebug(logOrientation, "v: %d", v); // does `v` fall between 0...512
         bs.StoreBits(9,v);
     }
 }
@@ -180,7 +180,7 @@ void storePosUpdate(const Entity &src, bool just_created, BitStream &bs)
 void sendSeqMoveUpdate(const Entity &src, BitStream &bs)
 {
     if(src.m_type == EntType::PLAYER)
-        qCDebug(logAnimations, "Sending seq mode update %d", src.m_seq_update);
+        sCFDebug(logAnimations, "Sending seq mode update %d", src.m_seq_update);
 
     PUTDEBUG("before sendSeqMoveUpdate");
     bs.StoreBits(1, src.m_seq_update); // no seq update
@@ -194,7 +194,7 @@ void sendSeqTriggeredMoves(const Entity &src,BitStream &bs)
 {
     PUTDEBUG("before sendSeqTriggeredMoves");
     if(src.m_type == EntType::PLAYER)
-        qCDebug(logAnimations, "Sending seq triggered moves %" PRIu64, src.m_triggered_moves.size());
+        sCFDebug(logAnimations, "Sending seq triggered moves %" PRIu64, src.m_triggered_moves.size());
 
     // client appears to process only the last 20 triggered moves
     bs.StorePackedBits(1, src.m_triggered_moves.size()); // num moves
@@ -339,7 +339,7 @@ void sendOnOddSend(const Entity &src,BitStream &bs)
     // set move change timer to be always 0
     // calculate interpolations using slow timer
     //
-    bs.StoreBits(1, src.m_entity_update_flags.testFlag(src.UpdateFlag::ODDSEND));
+    bs.StoreBits(1, 0!=(src.m_entity_update_flags&Entity::UpdateFlag::ODDSEND));
 }
 
 void sendWhichSideOfTheForce(const Entity &src,BitStream &bs)
@@ -355,13 +355,13 @@ void sendEntCollision(const Entity &src,BitStream &bs)
 
 void sendNoDrawOnClient(const Entity &src,BitStream &bs)
 {
-    bs.StoreBits(1, src.m_entity_update_flags.testFlag(src.UpdateFlag::NODRAWONCLIENT)); // 1/0 only
+    bs.StoreBits(1, 0 != (src.m_entity_update_flags & Entity::UpdateFlag::NODRAWONCLIENT)); // 1/0 only
 }
 
 void sendAFK(const Entity &src, BitStream &bs)
 {
     const CharacterData &cd(src.m_char->m_char_data);
-    bool hasMsg = !cd.m_afk_msg.isEmpty();
+    bool hasMsg = !cd.m_afk_msg.empty();
     bs.StoreBits(1, cd.m_afk); // 1/0 only
     if(cd.m_afk)
     {

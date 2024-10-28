@@ -1,15 +1,11 @@
 #include "Texture.h"
 
+#include "Common/Containers/Set.h"
 #include "RuntimeData.h"
 #include "Components/Logging.h"
 #include "Components/serialization_common.h"
 #include "Common/GameData/GameDataStore.h"
 #include "Common/GameData/trick_definitions.h"
-
-#include <QFileInfo>
-#include <QSet>
-#include <QVector>
-#include <QDebug>
 
 using namespace SEGS;
 
@@ -29,20 +25,20 @@ struct TexFileHdr
 };
 #pragma pack(pop)
 
-QSet<QString>                  s_missing_textures;
+Set<String> s_missing_textures;
 ///
 /// \brief Will split the \arg texpath into directories, and finds the closest TextureModifiers
 /// that matches a directory
 /// \param texpath contains a full path to the texture
 /// \return texture modifier object, if any
 ///
-TextureModifiers *modFromTextureName(const QString &texpath)
+TextureModifiers *modFromTextureName(StringView texpath)
 {
     RuntimeData &rd(getRuntimeData());
-    QVector<QStringView> split = QStringView(texpath).split('/');
+    Vector<StringView> split = StringUtils::split(texpath,"/");
     while(!split.empty())
     {
-        if(0==split.front().compare(QLatin1String("texture_library"))) {
+        if(0==StringUtils::compare(split.front(),"texture_library")) {
             split.pop_front();
             break;
         }
@@ -50,13 +46,17 @@ TextureModifiers *modFromTextureName(const QString &texpath)
     }
     SceneModifiers *mods = rd.m_modifiers;
     assert(mods);
-    const QHash<QString,TextureModifiers *> &texmods(mods->m_texture_path_to_mod);
+    const HashMap<String,TextureModifiers *> &texmods(mods->m_texture_path_to_mod);
     // scan from the back of the texture path, until a modifier is found.
     while(!split.empty())
     {
-        auto val = texmods.value(split.back().toString().toLower(),nullptr);
+        auto lookup_str=StringUtils::to_lower(split.back());
+        auto val = texmods.at(lookup_str,nullptr);
         if(val)
+        {
+            //qDebug() << "located tex mod" << String::joined(split,"/");
             return val;
+        }
         split.pop_back();
     }
     return nullptr;
@@ -66,61 +66,88 @@ TextureModifiers *modFromTextureName(const QString &texpath)
 namespace SEGS
 {
 
-void loadTexHeader(FSWrapper *fs,const QByteArray &fname)
+void loadTexHeader(IFilesystem *fs,StringView fname)
 {
     RuntimeData &rd(getRuntimeData());
     TextureWrapper res;
-    QFileInfo tex_path(fname);
-    QByteArray lookupstring=tex_path.baseName().toLower().toUtf8();
-    const QByteArray &actualPath(rd.m_texture_paths[lookupstring]);
-    if(actualPath.isEmpty())
+    StringView tex_path(fname);
+    String lookupstring=String(PathUtils::get_basename(tex_path)).to_lower();
+    const String &actualPath(rd.m_texture_paths[lookupstring]);
+    if(actualPath.empty())
     {
         if(!s_missing_textures.contains(lookupstring))
         {
-            qCDebug(logSceneGraph) << "Missing texture" << fname;
+            sCDebug(logSceneGraph) << "Missing texture" << fname;
             s_missing_textures.insert(lookupstring);
         }
         return;
     }
-    QFileInfo actualFile(actualPath);
-    QIODevice *src_tex = fs->open(actualPath);
+    IFile *src_tex = fs->open(actualPath);
     if(src_tex)
     {
         TexFileHdr hdr;
         src_tex->read((char *)&hdr, sizeof(TexFileHdr));
         if(0 == memcmp(hdr.magic, "TX2", 3))
         {
-            if(hdr.alpha)
+            if(hdr.alpha) {
                 res.flags |= TextureWrapper::ALPHA;
+            }
         }
         delete src_tex;
     }
-    res.info = modFromTextureName(actualFile.path()+"/"+actualFile.baseName());
+    StringView actualPathView(PathUtils::path(actualPath));
+    auto loc = actualPath.rfind('.');
+    StringView texNameForMods(loc!=String::npos ? StringView(actualPath).substr(0,loc) : actualPathView);
+
+    //qDebug() << "Loading texture" << texNameForMods;
+
+    res.info = modFromTextureName(texNameForMods);
     uint32_t texopt_flags = 0;
     if(res.info)
         texopt_flags = res.info->Flags;
-    QByteArray upper_fname(fname.toUpper());
+    String upper_fname(String(fname).to_upper());
     if(upper_fname.contains("PLAYERS/") || upper_fname.contains("ENEMIES/") || upper_fname.contains("NPCS/"))
-        res.flags |= TextureWrapper::BUMPMAP_MIRROR | TextureWrapper::CLAMP;
+        res.flags |= TextureWrapper::BUMPMAP_MIRROR | TextureWrapper::CLAMP_UV;
 
     if(upper_fname.contains("MAPS/"))
-        res.flags |= TextureWrapper::CLAMP;
+        res.flags |= TextureWrapper::CLAMP_UV;
 
     if(texopt_flags & REPLACEABLE)
         res.flags |= TextureWrapper::REPLACEABLE;
 
     if(texopt_flags & BUMPMAP)
         res.flags |= TextureWrapper::BUMPMAP;
+    if(texopt_flags & CLAMP_U) {
+        res.flags |= TextureWrapper::CLAMP_U;
+    }
+
+    if(texopt_flags & CLAMP_V) {
+        res.flags |= TextureWrapper::CLAMP_V;
+    }
+
+    if(texopt_flags & MIRROR_U) {
+        res.flags |= TextureWrapper::MIRROR_U;
+    }
+    if(texopt_flags & MIRROR_V) {
+        res.flags |= TextureWrapper::MIRROR_V;
+    }
+
+    if(texopt_flags & REPEAT_U) {
+        res.flags |= TextureWrapper::REPEAT_U;
+    }
+    if(texopt_flags & REPEAT_V) {
+        res.flags |= TextureWrapper::REPEAT_V;
+    }
 
     res.scaleUV0 = {1,1};
     res.scaleUV1 = {1,1};
 
-    if(res.info && !res.info->BumpMap.isEmpty())
+    if(res.info && !res.info->BumpMap.empty())
         res.bumpmap = res.info->BumpMap;
-    QByteArray detailname;
+    String detailname;
     if(texopt_flags & DUAL)
     {
-        if(!res.info->Blend.isEmpty())
+        if(!res.info->Blend.empty())
         {
             res.flags |= TextureWrapper::DUAL;
             res.BlendType = CoHBlendMode(res.info->BlendType);
@@ -128,7 +155,7 @@ void loadTexHeader(FSWrapper *fs,const QByteArray &fname)
             res.scaleUV1 = {res.info->ScaleST1.x,res.info->ScaleST1.y};
             res.detailname = res.info->Blend;
 
-            if(res.BlendType == CoHBlendMode::ADDGLOW && 0==res.detailname.compare("grey",Qt::CaseInsensitive))
+            if(res.BlendType == CoHBlendMode::ADDGLOW && 0==StringUtils::compare(res.detailname,"grey",StringUtils::CaseInsensitive))
             {
                 res.detailname = "black";
             }
@@ -136,7 +163,7 @@ void loadTexHeader(FSWrapper *fs,const QByteArray &fname)
             rd.m_loaded_textures[lookupstring] = TextureStorage::instance().create(res);
             return;
         }
-        qCDebug(logSceneGraph) << "Detail texture " << res.info->Blend << " does not exist for texture mod" << res.info->name;
+        sCDebug(logSceneGraph) << "Detail texture " << res.info->Blend << " does not exist for texture mod" << res.info->name;
         detailname = "grey";
     }
     else if(lookupstring.compare("invisible")==0)
@@ -147,7 +174,7 @@ void loadTexHeader(FSWrapper *fs,const QByteArray &fname)
     {
         detailname = "grey";
     }
-    if(res.BlendType == CoHBlendMode::ADDGLOW && 0==detailname.compare("grey",Qt::CaseInsensitive))
+    if(res.BlendType == CoHBlendMode::ADDGLOW && 0==StringUtils::compare(detailname,"grey",StringUtils::CaseInsensitive))
     {
         detailname = "black";
     }

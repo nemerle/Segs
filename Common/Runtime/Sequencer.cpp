@@ -6,25 +6,23 @@
 #include "Prefab.h"
 #include "SceneGraph.h"
 
-#include "GameData/GameDataStore.h"
-#include "GameData/seq_definitions.h"
-#include "GameData/seq_serializers.h"
-#include <QDebug>
-#include <QDir>
-#include <QRegularExpression>
-#include <QMetaEnum>
+#include "Common/GameData/GameDataStore.h"
+#include "Common/GameData/seq_definitions.h"
+#include "Common/GameData/seq_serializers.h"
+#include "Common/Containers/Set.h"
+
+#include "magic_enum/magic_enum.hpp"
 #include <glm/common.hpp>
 #include <glm/ext.hpp>
-#include <set>
 
 using namespace SEGS;
 namespace
 {
-QHash<QString, EntitySequencerData *> s_seq_types;
+HashMap<String, EntitySequencerData *> s_seq_types;
 struct TranslatedMove
 {
-    std::set<uint32_t> irqs; // hash of a Interrupt string representation
-    std::set<uint32_t> members;
+    Set<uint32_t> irqs; // hash of a Interrupt string representation
+    Set<uint32_t> members;
 };
 enum ePredictable : bool // used to 'name' bool values
 {
@@ -402,28 +400,26 @@ bool moveAInterruptsAnyMemberOfB(const TranslatedMove &mvA, const TranslatedMove
     }
     return false;
 }
-void cleanUpFxName(QByteArray &name)
+void cleanUpFxName(String &name)
 {
-    name = QDir::cleanPath(name.toUpper()).toLatin1();
+    name = PathUtils::simplify_path(name.to_upper());
     name.replace("/FX/", "");
-    if (name.startsWith("FX/"))
+    if (name.starts_with("FX/"))
     {
-        name.remove(0, 3);
+        name.erase(0, 3);
     }
 }
-static SeqBitNames seqBitNameToEnum(const QByteArray &src)
+static SeqBitNames seqBitNameToEnum(const String &src)
 {
-    QMetaEnum   metaEnum  = QMetaEnum::fromType<SEGS_Enums::SeqBitNames>();
-    bool        converted = false;
-    SeqBitNames val       = SeqBitNames(metaEnum.keyToValue(src.data(), &converted));
-    if (!converted)
+    auto cast_result=magic_enum::enum_cast<SEGS_Enums::SeqBitNames>(src.data());
+    if (!cast_result.has_value())
     {
         // check for special case
         if (src == "2HAND")
             return SeqBitNames::TWO_HAND;
         return SeqBitNames::NON_EXISTING;
     }
-    return val;
+    return cast_result.value();
 }
 /**
  * @brief sets the SeqBitSet bits based on sequencer bit names.
@@ -431,14 +427,14 @@ static SeqBitNames seqBitNameToEnum(const QByteArray &src)
  * @param bset a SeqBitSet that will be modified.
  * @param move_name only used in case of an error to print debug info.
  */
-void setBitsFromString(std::vector<QByteArray> &names, SeqBitSet &bset, const QByteArray &move_name)
+void setBitsFromString(Vector<String> &names, SeqBitSet &bset, const String &move_name)
 {
-    for (const QByteArray &nm : names)
+    for (const String &nm : names)
     {
-        SeqBitNames seq_bit = seqBitNameToEnum(nm.toUpper());
+        SeqBitNames seq_bit = seqBitNameToEnum(nm.to_upper());
         if (seq_bit == SeqBitNames::NON_EXISTING)
         {
-            qCritical() << "The move" << move_name << " is using a state" << nm << "which we don't process";
+            sCritical() << "The move" << move_name << " is using a state" << nm << "which we don't process";
             assert(false);
         }
         else
@@ -484,7 +480,7 @@ void setPredictability(SeqMoveRawData &raw)
  * @param next_move_data contains the array of names of the next moves
  */
 void setupNextMoveIndices(const SequencerData &seq, SeqMoveRawData &raw,
-                          const std::vector<SeqNextMoveData> &next_move_data)
+                          const Vector<SeqNextMoveData> &next_move_data)
 {
     assert(next_move_data.size() < std::numeric_limits<uint8_t>::max());
 
@@ -509,7 +505,7 @@ void setupNextMoveIndices(const SequencerData &seq, SeqMoveRawData &raw,
  * @param cycle_move_data contains the array of names of the cycle moves
  */
 void setupCycleMoveIndices(const SequencerData &seq, SeqMoveRawData &raw,
-                           const std::vector<SeqCycleMoveData> &cycle_move_data)
+                           const Vector<SeqCycleMoveData> &cycle_move_data)
 {
     assert(cycle_move_data.size() < std::numeric_limits<uint8_t>::max());
 
@@ -541,10 +537,10 @@ void setupSequencerData(SequencerData &seq)
             }
         }
         // normalize the interrupts and member strings
-        for (QByteArray &l : move.Interrupts)
-            l = l.toUpper();
-        for (QByteArray &m : move.Member)
-            m = m.toUpper();
+        for (String &l : move.Interrupts)
+            l = l.to_upper();
+        for (String &m : move.Member)
+            m = m.to_upper();
         // record the move index and pointer to source move
         move.m_raw.idx           = int(i);
         move.m_raw.m_source_data = &move;
@@ -558,56 +554,57 @@ void setupSequencerData(SequencerData &seq)
         setBitsFromString(move.Requires, move.m_raw.requires_bits, move.name);
         setPredictability(move.m_raw);
     }
-    QHash<QByteArray, SeqMoveData *> move_locator;
-    QSet<QByteArray>                 group_locator;
-    QSet<uint32_t>                   all_hashes;
+    HashMap<String, SeqMoveData *> move_locator;
+    Set<String>                 group_locator;
+    Set<uint32_t>                   all_hashes;
     for (SeqMoveData &move : seq.m_Move)
     {
-        move_locator[move.name.toLower()] = &move;
-        uint32_t entry_hash               = qHash(move.name);
+        move_locator[move.name.to_lower()] = &move;
+        uint32_t entry_hash               = eastl::hash<String>()(move.name);
         if (all_hashes.contains(entry_hash))
         {
-            qCritical() << "Hash collision for move/group names";
+            sCritical() << "Hash collision for move/group names";
         }
         else
             all_hashes.insert(entry_hash);
     }
     for (SeqGroupNameData &grp : seq.m_Group)
     {
-        group_locator.insert(grp.name.toLower());
-        uint32_t entry_hash = qHash(grp.name);
+        group_locator.insert(grp.name.to_lower());
+        uint32_t entry_hash = eastl::hash<String>()(grp.name);
         if (all_hashes.contains(entry_hash))
         {
-            qCritical() << "Hash collision for move/group names";
+            sCritical() << "Hash collision for move/group names";
         }
         else
             all_hashes.insert(entry_hash);
     }
     for (SeqMoveData &move : seq.m_Move)
     {
-        for (const QByteArray &name : move.Interrupts)
+        for (const String &name : move.Interrupts)
         {
-            bool interrupts_move  = move_locator.contains(name.toLower());
-            bool interrupts_group = group_locator.contains(name.toLower());
+            bool interrupts_move  = move_locator.contains(name.to_lower());
+            bool interrupts_group = group_locator.contains(name.to_lower());
             if (!interrupts_move && !interrupts_group)
             {
-                qCritical()
-                    << QString("%1 sequencer's %2 move's Interrupt field [%3] must reference either a move or a group")
-                           .arg(QString(seq.name), QString(move.name), QString(name));
+                sCritical()
+                    << StringUtils::fmt("%s sequencer's %s move's Interrupt field [%s] must reference either a move or a group",
+                           seq.name.c_str(),move.name.c_str(),name.c_str());
             }
         }
-        for (const QByteArray &name : move.Member)
+        for (const String &name : move.Member)
         {
-            bool is_member_of_group = group_locator.contains(name.toLower());
+            bool is_member_of_group = group_locator.contains(name.to_lower());
             if (!is_member_of_group)
             {
-                qCritical() << QString("%1 sequencer's %2 move's Group field [%3] must reference a group")
-                                   .arg(QString(seq.name), QString(move.name), QString(name));
+                sCritical() << StringUtils::fmt("%s sequencer's %s move's Group field [%s] must reference a group",
+                                   seq.name.c_str(), move.name.c_str(), name.c_str());
             }
         }
     }
     // collect all move interrupts/members to build interrupted_by relations
     TranslatedMove moves[MAXMOVES];
+    eastl::hash<String> qHash;
     for (size_t i = 0; i < move_count; ++i)
     {
         SeqMoveData &   move = seq.m_Move[i];
@@ -615,9 +612,9 @@ void setupSequencerData(SequencerData &seq)
         assert(move.Interrupts.size() < 20);
         assert(move.Member.size() < 20);
 
-        for (const QByteArray &name : move.Interrupts)
+        for (const String &name : move.Interrupts)
             mt.irqs.insert(qHash(name));
-        for (const QByteArray &name : move.Member)
+        for (const String &name : move.Member)
             mt.members.insert(qHash(name));
         // move itself can be interrupted as well
         mt.members.insert(qHash(move.name));
@@ -647,7 +644,7 @@ bool seqAttachAnAnim(SeqMoveTypeData &movetype)
     movetype.m_anm_track = getOrLoadAnimationTrack(type_anim.name);
     if (!movetype.m_anm_track)
     {
-        qCritical("MISSING ANIMATION %s ", qPrintable(type_anim.name));
+        sCritical()<<StringUtils::fmt("MISSING ANIMATION %s ",type_anim.name.c_str());
         movetype.m_anm_track = getOrLoadAnimationTrack("male/thumbsup");
         success              = false;
     }
@@ -656,7 +653,7 @@ bool seqAttachAnAnim(SeqMoveTypeData &movetype)
         SeqMoveDataTypeAnim &type_anim(movetype.m_Anim.front());
         type_anim.lastFrame = HAnimationTrack(movetype.m_anm_track)->m_length;
         if (type_anim.lastFrame < type_anim.firstFrame)
-            qWarning() << "lastFrame < firstFrame -> need to handle reversed animations";
+            sWarning() << "lastFrame < firstFrame -> need to handle reversed animations";
     }
     return success;
 }
@@ -672,9 +669,9 @@ void setupSequencerAnimationLinks(SequencerData &seq)
         {
             if (!seqAttachAnAnim(atype))
             {
-                QByteArray animname = atype.m_Anim[0].name;
-                qCritical() << QString("Missing animation %s for move/sequencer [%2/%3]")
-                                   .arg(QString(animname), QString(move.name), QString(seq.name));
+                String animname = atype.m_Anim[0].name;
+                sCritical() << StringUtils::fmt("Missing animation %s for move/sequencer [%s/%s]",
+                                   animname.c_str(), move.name.c_str(), seq.name.c_str());
             }
         }
     }
@@ -688,7 +685,7 @@ void prepareSequencer(SequencerData &seq)
 } // end of anonymous namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SequencerData *SEGS::getInitializedSequencerData(const QByteArray &name)
+SequencerData *SEGS::getInitializedSequencerData(const String &name)
 {
     SequencerData *data = getGameData().m_seq_definitions.getSequencerData(name);
     if (!data)
@@ -714,10 +711,10 @@ SequencerInstance::SequencerInstance(SceneTreeNode *node)
         mpc.color2 = {1, 1, 1, 1};
     }
 }
-EntitySequencerData *seqLoadSeqType(const QString &a1)
+EntitySequencerData *seqLoadSeqType(const String &a1)
 {
     GameDataStore &gd(getGameData());
-    auto iter = gd.m_seq_types.find(QFileInfo(a1).fileName().toLatin1().toLower());
+    auto iter = gd.m_seq_types.find(String(PathUtils::get_file(a1)).to_lower());
     if (gd.m_seq_types.end() == iter)
         return nullptr;
     return &(iter->second);
@@ -725,41 +722,41 @@ EntitySequencerData *seqLoadSeqType(const QString &a1)
 
 void convertCollisionType(EntitySequencerData *esd)
 {
-    static const QList<QByteArray> col_type_names = {"repulsion", "rubberball",   "bounceup", "bouncefacing",
+    static const Vector<String> col_type_names = {"repulsion", "rubberball",   "bounceup", "bouncefacing",
                                                      "steadyup",  "steadyfacing", "door"};
     static constexpr CollisionType types[]        = {
         CollisionType::None,         CollisionType::Repulsion, CollisionType::Rubberball,   CollisionType::BounceUp,
         CollisionType::BounceFacing, CollisionType::SteadyUp,  CollisionType::SteadyFacing, CollisionType::Door
     };
 
-    int idx                         = col_type_names.indexOf(esd->m_collision_type.toLower());
+    auto idx = col_type_names.index_of(esd->m_collision_type.to_lower());
     // if name wasn't found, the CollisionType::None is selected.
     esd->m_converted_collision_type = types[idx + 1];
 }
 
 void convertSelectionMode(EntitySequencerData *esd)
 {
-    const static QList<QByteArray> sel_mode_names = {"collision", "worldgroup"};
+    const static Vector<String> sel_mode_names = {"collision", "worldgroup"};
     static constexpr SelectionMode types[]        = {
         SelectionMode::Collision, SelectionMode::Worldgroup, SelectionMode::Bones
     };
 
-    int idx            = sel_mode_names.indexOf(esd->m_selection.toLower());
+    auto idx = sel_mode_names.index_of(esd->m_selection.to_lower());
     esd->m_converted_selection_mode               = types[idx + 1];
 }
-int seqSetStateFromString(SeqBitSet *tgt, const QByteArray &src)
+int seqSetStateFromString(SeqBitSet *tgt, const String &src)
 {
     using namespace SEGS_Enums;
-    if (!tgt || src.isEmpty())
+    if (!tgt || src.empty())
         return 1;
 
-    QStringList bitnames = QString(src).split(QRegularExpression("[ ,\t\n]"));
+    Vector<StringView> bitnames = StringUtils::split_any(src," ,\t\n");
     int         result   = 1;
-    for (const QString &bitname : bitnames)
+    for (const StringView &bitname : bitnames)
     {
-        QMetaEnum   metaEnum = QMetaEnum::fromType<SEGS_Enums::SeqBitNames>();
-        int         enumval  = metaEnum.keyToValue(qPrintable(bitname));
-        SeqBitNames val      = enumval == -1 ? SeqBitNames::NON_EXISTING : SeqBitNames(enumval);
+        auto cast_result=magic_enum::enum_cast<SEGS_Enums::SeqBitNames>(bitname);
+
+        SeqBitNames val      = !cast_result.has_value() ? SeqBitNames::NON_EXISTING : cast_result.value();
         if (val == SeqBitNames::NON_EXISTING)
             result = 0; // BUG: should this return at this point ?
         else
@@ -768,9 +765,9 @@ int seqSetStateFromString(SeqBitSet *tgt, const QByteArray &src)
     return result;
 }
 
-void seqGetSeqType(EntitySequencerData &tgt, const QByteArray &type_name)
+void seqGetSeqType(EntitySequencerData &tgt, const String &type_name)
 {
-    EntitySequencerData *esd = s_seq_types.value(type_name, nullptr);
+    EntitySequencerData *esd = s_seq_types.at(type_name, nullptr);
     if (esd)
     {
         tgt = *esd;
@@ -795,10 +792,10 @@ void seqGetSeqType(EntitySequencerData &tgt, const QByteArray &type_name)
         esd->m_lod_dists[2] = esd->m_lod_dists[3];
     if (esd->m_lod_dists[1] == 0.0f)
         esd->m_lod_dists[1] = esd->m_lod_dists[2];
-    for (QByteArray &lod_name : esd->m_lod_names)
+    for (String &lod_name : esd->m_lod_names)
     { // BUG: this code is likely incorrect, since farther LODs are set to
         // esd->m_graphics even if lower lods are available, but original client is doing that
-        if (lod_name.isEmpty())
+        if (lod_name.empty())
             lod_name = esd->m_graphics;
     }
     // Default collision box size.
@@ -828,8 +825,8 @@ void seqGetSeqType(EntitySequencerData &tgt, const QByteArray &type_name)
         esd->m_fade_out_start = 350.0f;
     if (esd->m_fade_out_finish == 0.0f)
         esd->m_fade_out_finish = esd->m_fade_out_start + 100.0f;
-    QByteArray shadow_type    = esd->m_shadow_type.toLower();
-    QByteArray shadow_quality = esd->m_shadow_quality.toLower();
+    String shadow_type    = esd->m_shadow_type.to_lower();
+    String shadow_quality = esd->m_shadow_quality.to_lower();
     if ("stencil" == shadow_type)
         esd->m_converted_shadow_type = 3; //SEQ_STENCIL_SHADOW
     else if ("none" == shadow_type)
@@ -845,7 +842,7 @@ void seqGetSeqType(EntitySequencerData &tgt, const QByteArray &type_name)
     else
         esd->m_converted_shadow_quality = 2;
     esd->m_converted_flags   = 0;
-    QByteArray lowered_flags = esd->m_flags.toLower();
+    String lowered_flags   = esd->m_flags.to_lower();
     if (lowered_flags.contains("noshallowsplash"))
         esd->m_converted_flags |= 1;
     if (lowered_flags.contains("nodeepsplash"))
@@ -866,22 +863,22 @@ void seqGetSeqType(EntitySequencerData &tgt, const QByteArray &type_name)
         default: assert(false);
         }
     }
-    if (esd->m_shadow_texture.isEmpty())
+    if (esd->m_shadow_texture.empty())
     {
         esd->m_shadow_texture = "PlayerShadowCircle";
     }
-    if (esd->m_placement.toLower() == "deadon") // DeadOn
+    if (esd->m_placement.to_lower() == "deadon") // DeadOn
         esd->m_converted_placement = 2;
     else
         esd->m_converted_placement = 1;
     convertCollisionType(esd);
     convertSelectionMode(esd);
 
-    if (!esd->m_constant_state.isEmpty())
+    if (!esd->m_constant_state.empty())
         seqSetStateFromString(&esd->m_converted_constant_bits, esd->m_constant_state);
-    if (esd->m_seq_type.isEmpty())
+    if (esd->m_seq_type.empty())
     {
-        esd->m_seq_type = esd->m_sequencer_name.mid(0, esd->m_sequencer_name.lastIndexOf("."));
+        esd->m_seq_type = esd->m_sequencer_name.substr(0, esd->m_sequencer_name.rfind('.'));
     }
     tgt = *esd;
 }
@@ -948,14 +945,14 @@ SeqMoveData *seqClientStep(SeqMove *state, SequencerData *dat, float advance, in
     seqCycleFrame(&state->frame, &state->prev_frame, first_frame, last_frame);
     return nullptr;
 }
-SeqMoveTypeData *seqGetTypeGfx(SequencerData *data, SeqMoveData *md, const QByteArray &typeName)
+SeqMoveTypeData *seqGetTypeGfx(SequencerData *data, SeqMoveData *md, const String &typeName)
 {
-    if (typeName.isEmpty() || typeName.toLower() == "none")
+    if (typeName.empty() || typeName.to_lower() == "none")
         return nullptr;
 
     for (SeqMoveTypeData &mtd : md->m_Type)
     {
-        if (mtd.name.toLower() == typeName.toLower())
+        if (mtd.name.to_lower() == typeName.to_lower())
             return &mtd;
     }
     SeqTypeDefData *seq_typedef = getSeqTypedefByName(data, typeName);
@@ -974,9 +971,9 @@ static void seqSetMove(HSequencerInstance seq, SeqMoveData *move_data, bool is_o
         if (!seq->m_anim.type)
         {
 
-            qCritical() << QString("Invalid sequencer data: %1 sequencer %2 missing sequencer move type %3 in move %4.")
-                               .arg(QString(seq->m_seq_type_info.m_name), QString(seq->m_template->name),
-                                    QString(seq->m_seq_type_info.m_seq_type), QString(move_data->name));
+            sCritical() << StringUtils::fmt("Invalid sequencer data: %s sequencer %s missing sequencer move type %s in move %s.",
+                               seq->m_seq_type_info.m_name.c_str(), seq->m_template->name.c_str(),
+                                    seq->m_seq_type_info.m_seq_type.c_str(), move_data->name.c_str());
             seq->m_anim.type = &move_data->m_Type.front();
         }
         firstframe = seq->m_anim.type->m_Anim.front().firstFrame;
@@ -1021,7 +1018,7 @@ int seqProcessClientInst(HSequencerInstance seq, float step_size, int idx, bool 
 
 namespace SEGS
 {
-void seqResetSeqType(HSequencerInstance seq_handle, FSWrapper &fs, const char *entType_filename, int seed)
+void seqResetSeqType(HSequencerInstance seq_handle, IFilesystem &fs, const char *entType_filename, int seed)
 {
     float bonescale_ratio;
     SequencerInstance &seq(seq_handle.get());
@@ -1045,22 +1042,22 @@ void seqResetSeqType(HSequencerInstance seq_handle, FSWrapper &fs, const char *e
     seq.m_template = getInitializedSequencerData(seq.m_seq_type_info.m_sequencer_name);
     if (!seq.m_template)
     {
-        qCritical() << "Server side sequencer" << seq.m_seq_type_info.m_sequencer_name << "missing for"
+        sCritical() << "Server side sequencer" << seq.m_seq_type_info.m_sequencer_name << "missing for"
                     << entType_filename;
     }
     seq.m_current_state_bits.bits.reset();
     seq.m_anim.prev_frame = 0;
     seqProcessClientInst(seq_handle, 0.0, 0, true);
     // load skinny/fat bodytype animations
-    if (!seq.m_seq_type_info.m_bone_scale_fat.isEmpty())
+    if (!seq.m_seq_type_info.m_bone_scale_fat.empty())
     {
-        GeoSet *anim_lst = animLoad(fs, seq.m_seq_type_info.m_bone_scale_fat);
+        GeoSet *anim_lst = animLoad(seq.m_seq_type_info.m_bone_scale_fat);
         if (anim_lst)
             seq.m_fat_bodytype_animation = anim_lst;
     }
-    if (!seq.m_seq_type_info.m_bone_scale_skinny.isEmpty())
+    if (!seq.m_seq_type_info.m_bone_scale_skinny.empty())
     {
-        GeoSet *anim_lst = animLoad(fs, seq.m_seq_type_info.m_bone_scale_skinny);
+        GeoSet *anim_lst = animLoad(seq.m_seq_type_info.m_bone_scale_skinny);
         if (anim_lst)
             seq.m_skinny_bodytype_animation = anim_lst;
     }
@@ -1068,18 +1065,18 @@ void seqResetSeqType(HSequencerInstance seq_handle, FSWrapper &fs, const char *e
     assert(bonescale_ratio >= -1.0f && bonescale_ratio <= 1.0f);
     changeBoneScale(seq_handle, bonescale_ratio);
     // TODO: if custom per-character lighting is in use, reset it here.
-    for (const QByteArray &fxname : seq.m_seq_type_info.m_effect_names)
+    for (const String &fxname : seq.m_seq_type_info.m_effect_names)
     {
         // TODO: handle effects attached to a sequencer ?
-        qDebug() << "TODO: not applying FX" << fxname;
+        sDebug() << "TODO: not applying FX" << fxname;
     }
-    assert(seq.m_seq_type_info.m_world_group.isEmpty());
+    assert(seq.m_seq_type_info.m_world_group.empty());
 }
-SeqTypeDefData *getSeqTypedefByName(SequencerData *data, const QByteArray &name)
+SeqTypeDefData *getSeqTypedefByName(SequencerData *data, const String &name)
 {
     for (SeqTypeDefData &entr : data->m_TypeDef)
     {
-        if (0 == qstricmp(entr.name.data(), name.data()))
+        if (0 == StringUtils::compare(entr.name.data(), name.data(),StringUtils::CaseInsensitive))
             return &entr;
     }
     return nullptr;
@@ -1096,8 +1093,8 @@ bool changeSequencerScale(HSequencerInstance seq, const glm::vec3 &scale)
         seq->m_current_animation_scale = seq->m_seq_type_info.m_anim_scale;
     else
         seq->m_current_animation_scale = seq->m_seq_type_info.m_anim_scale * (1.0f / seq->m_current_geom_scale.y);
-    seq->m_updated_appearance = 1;
-    return 1;
+    seq->m_updated_appearance = true;
+    return true;
 }
 Model *findBoneInGeoSet(GeoSet *g_set, int id)
 {

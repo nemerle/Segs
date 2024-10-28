@@ -3,14 +3,10 @@
 #include "RuntimeData.h"
 #include "Texture.h"
 
+#include "Common/Utils/IServiceLocator.h"
 #include "Common/GameData/trick_definitions.h"
 #include "Common/GameData/GameDataStore.h"
 #include "Common/GameData/trick_definitions.h"
-
-#include <QStringList>
-#include <QHash>
-#include <QDebug>
-#include <QFile>
 
 using namespace SEGS;
 
@@ -22,16 +18,18 @@ enum UnpackMode
     UNPACK_INTS=1,
 };
 
-inline QByteArray uncompr_zip(char *comp_data,int size_comprs,uint32_t size_uncom)
+inline Vector<char> uncompr_zip(char *comp_data,int size_comprs,uint32_t size_uncom)
 {
-    QByteArray compressed_data;
-    compressed_data.reserve(size_comprs+4);
-    compressed_data.append( char((size_uncom >> 24) & 0xFF));
-    compressed_data.append( char((size_uncom >> 16) & 0xFF));
-    compressed_data.append( char((size_uncom >> 8) & 0xFF));
-    compressed_data.append( char((size_uncom >> 0) & 0xFF));
-    compressed_data.append(comp_data,size_comprs);
-    return qUncompress(compressed_data);
+    auto compr=getCompressionService();
+    assert(compr);
+    auto res=compr->uncompressZip(comp_data,size_comprs,size_uncom);
+    if(res && res->size>=size_uncom) {
+        Vector<char> vec(res->data,res->data+res->size);
+        delete res;
+        return vec;
+    }
+    delete res;
+    return {};
 }
 
 struct GeosetHeader32
@@ -167,7 +165,7 @@ void geoUnpackDeltas(const DeltaPack *src, uint8_t *target, uint32_t entry_size,
     ptrdiff_t consumed_bytes;
     if(src->compressed_size)
     {
-        QByteArray unpacked = uncompr_zip((char *)src->compressed_data, src->compressed_size, src->uncomp_size);
+        Vector<char> unpacked = uncompr_zip((char *)src->compressed_data, src->compressed_size, src->uncomp_size);
         consumed_bytes = unpackDeltaPack((int *)target, (uint8_t *)unpacked.data(), entry_size, num_entries, type);
     }
     else
@@ -193,7 +191,7 @@ inline void geoUnpack(const DeltaPack *src, char *dest)
     if (src->compressed_size)
     {
         assert(src->uncomp_size != 0);
-        QByteArray unc = uncompr_zip((char *)src->compressed_data, src->compressed_size, src->uncomp_size);
+        Vector<char> unc = uncompr_zip((char *)src->compressed_data, src->compressed_size, src->uncomp_size);
         memcpy(dest, unc.data(), unc.size());
     }
     else
@@ -217,7 +215,7 @@ void  addModelStubs(GeoSet *geoset)
     RuntimeData &rd(getRuntimeData());
     for(Model * m : geoset->subs)
     {
-        GeometryModifiers *gmod = findGeomModifier(*rd.m_modifiers, m->name, QString());
+        GeometryModifiers *gmod = findGeomModifier(*rd.m_modifiers, m->name, {});
         if(gmod)
         {
             if(!m->trck_node)
@@ -227,9 +225,9 @@ void  addModelStubs(GeoSet *geoset)
         }
     }
 }
-static std::vector<TextureBind> convertTexBinds(int cnt, const uint8_t *data)
+static Vector<TextureBind> convertTexBinds(int cnt, const uint8_t *data)
 {
-    std::vector<TextureBind> res;
+    Vector<TextureBind> res;
     res.assign((const TextureBind *)data,((const TextureBind *)data)+cnt);
     return res;
 }
@@ -260,7 +258,7 @@ static Model *convertAndInsertModel(GeoSet &tgt, const Model32 *v)
     return z;
 }
 
-static void convertTextureNames(const int *a1, std::vector<QByteArray> &a2)
+static void convertTextureNames(const int *a1, Vector<String> &a2)
 {
     int   num_textures          = a1[0];
     const int * indices         = a1 + 1;
@@ -273,7 +271,7 @@ static void convertTextureNames(const int *a1, std::vector<QByteArray> &a2)
     }
 }
 
-void geosetLoadHeader(QIODevice *fp, GeoSet *geoset)
+void geosetLoadHeader(IFile *fp, GeoSet *geoset)
 {
     unsigned int anm_hdr_size;
     const uint8_t * stream_pos_0;
@@ -283,8 +281,8 @@ void geosetLoadHeader(QIODevice *fp, GeoSet *geoset)
     anm_hdr_size -= 4;
     fp->read((char *)&headersize, sizeof(uint32_t));
 
-    QByteArray zipmem = fp->read(anm_hdr_size);
-    QByteArray unc_arr = uncompr_zip(zipmem.data(), anm_hdr_size, headersize);
+    auto zipmem = IFile_read(fp,anm_hdr_size);
+    auto unc_arr = uncompr_zip(zipmem.data(), anm_hdr_size, headersize);
 
     const uint8_t * mem = (const uint8_t *)unc_arr.data();
 
@@ -301,7 +299,7 @@ void geosetLoadHeader(QIODevice *fp, GeoSet *geoset)
     for(int idx = 0; idx < header32->num_subs; ++idx)
     {
         const Model32 *sub_model = &ptr_subs[idx];
-        std::vector<TextureBind> binds;
+        Vector<TextureBind> binds;
         if(info->tex_binds_size)
             binds = convertTexBinds(sub_model->num_textures, sub_model->texture_bind_offsets + stream_pos_1);
 
@@ -310,13 +308,13 @@ void geosetLoadHeader(QIODevice *fp, GeoSet *geoset)
         Model *m    = convertAndInsertModel(*geoset, sub_model);
         m->texture_bind_info = binds;
         m->geoset       = geoset;
-        m->name         = QByteArray((const char *)stream_pos_0 + sub_model->bone_name_offset);
+        m->name         = String((const char *)stream_pos_0 + sub_model->bone_name_offset);
     }
 
     if(!geoset->subs.empty())
         addModelStubs(geoset);
     if (has_alt_pivot)
-        qDebug() << "Alternate model pivots were not converted";
+        sDebug() << "Alternate model pivots were not converted";
 }
 
 void modelFixup(const Model &model,VBOPointers &vbo)
@@ -359,7 +357,7 @@ void modelFixup(const Model &model,VBOPointers &vbo)
     if(!texture_scaling_used)
         return;
 
-    std::vector<bool> vertex_uv_was_scaled(model.vertex_count);
+    Vector<bool> vertex_uv_was_scaled(model.vertex_count);
     uint32_t triangle_offset = 0;
     for(uint32_t j = 0; j < model.num_textures; ++j )
     {
@@ -380,10 +378,10 @@ void modelFixup(const Model &model,VBOPointers &vbo)
                     continue;
 
                 vertex_uv_was_scaled[vert_idx] = true;
-                vbo.uv2[vert_idx].x *= scaletex0.x;
-                vbo.uv2[vert_idx].y *= scaletex0.y;
                 vbo.uv1[vert_idx].x *= scaletex1.x;
                 vbo.uv1[vert_idx].y *= scaletex1.y;
+                vbo.uv2[vert_idx].x *= scaletex0.x;
+                vbo.uv2[vert_idx].y *= scaletex0.y;
             }
         }
         triangle_offset += bind_tri_count;
@@ -399,10 +397,10 @@ static bool bumpMapped(const Model &model)
     return model.flags & (OBJ_DRAW_AS_ENT | OBJ_BUMPMAP);
 }
 
-std::unique_ptr<VBOPointers> fillVbo(const Model &model)
+eastl::unique_ptr<VBOPointers> fillVbo(const Model &model)
 {
-    std::unique_ptr<VBOPointers> vbo = std::make_unique<VBOPointers>();
-    std::vector<int> &triangles(vbo->triangles);
+    eastl::unique_ptr<VBOPointers> vbo = eastl::make_unique<VBOPointers>();
+    Vector<int> &triangles(vbo->triangles);
     triangles.resize(model.model_tri_count*3);//, 1, ".\\render\\model_cache.c", 138);
     geoUnpackDeltas(&model.packed_data.tris, triangles.data(), model.model_tri_count);
     uint32_t total_size = 0;
@@ -430,8 +428,8 @@ std::unique_ptr<VBOPointers> fillVbo(const Model &model)
     }
     if(model.hasBoneWeights())
     {
-        std::vector<uint8_t> weights;
-        std::vector<std::pair<uint8_t,uint8_t>> indices;
+        Vector<uint8_t> weights;
+        Vector<std::pair<uint8_t,uint8_t>> indices;
         weights.resize(model.vertex_count);
         indices.resize(model.vertex_count);
 
@@ -455,9 +453,9 @@ std::unique_ptr<VBOPointers> fillVbo(const Model &model)
 
 void fillVBO(Model & model)
 {
-    std::unique_ptr<VBOPointers> databuf(fillVbo(model));
+    eastl::unique_ptr<VBOPointers> databuf(fillVbo(model));
     modelFixup(model,*databuf);
-    model.vbo = std::move(databuf);
+    model.vbo = eastl::move(databuf);
 }
 static void convertModelBones(Model *m, ModelBones_32 *src)
 {
@@ -468,7 +466,7 @@ static void convertModelBones(Model *m, ModelBones_32 *src)
     for (int i = 0; i < src->cnt; ++i)
         tgt->bone_ID[i] = src->bone_ID[i];
 }
-void geosetLoadData(QIODevice *fp, GeoSet *geoset)
+void geosetLoadData(IFile *fp, GeoSet *geoset)
 {
     int buffer;
     fp->seek(0);
@@ -495,22 +493,22 @@ void geosetLoadData(QIODevice *fp, GeoSet *geoset)
     geoset->data_loaded = true;
 }
 
-void initLoadedModel(std::function<HTexture (const QString &)> funcloader,Model *model,const std::vector<HTexture> &textures)
+void initLoadedModel(std::function<HTexture (const String &)> funcloader,Model *model,const Vector<HTexture> &textures)
 {
     model->blend_mode = CoHBlendMode::MULTIPLY_REG;
     bool isgeo=false;
-    if(model->name.toUpper().startsWith("GEO_"))
+    if(model->name.to_upper().starts_with("GEO_"))
     {
         model->flags |= OBJ_DRAW_AS_ENT;
         isgeo = true;
-        if(model->name.toLower().contains("eyes") )
+        if(model->name.to_lower().contains("eyes") )
         {
             if(!model->trck_node)
                 model->trck_node = new ModelModifiers;
             model->trck_node->_TrickFlags |= DoubleSided;
         }
     }
-    assert(model->num_textures==model->texture_bind_info.size());
+    //assert(model->num_textures==model->texture_bind_info.size());
     for(TextureBind tbind : model->texture_bind_info)
     {
         HTexture seltex = textures[tbind.tex_idx];
@@ -538,7 +536,7 @@ void initLoadedModel(std::function<HTexture (const QString &)> funcloader,Model 
                 model->blend_mode = base_tex.BlendType;
         }
 
-        if( !base_tex.bumpmap.isEmpty() )
+        if( !base_tex.bumpmap.empty() )
         {
             HTexture wrap = funcloader(base_tex.bumpmap);
             if( wrap->flags & TextureWrapper::BUMPMAP )
@@ -590,6 +588,17 @@ void toSafeModelName(char *inp, int cnt)
     for(int i=0; i<cnt; ++i)
         if(inp[i]=='?')
             inp[i] = '^';
+}
+
+Model::Model()
+{
+
+}
+
+Model::~Model()
+{
+    delete bone_info_data;
+    delete trck_node;
 }
 
 } // end SEGS namespace

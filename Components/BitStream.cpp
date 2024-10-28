@@ -12,11 +12,10 @@
 
 #include "Components/BitStream.h"
 
-#include <QtCore/QByteArray>
-#include <QtCore/QString>
+#include "Common/Containers/String.h"
+#include "Common/Utils/IServiceLocator.h"
 #include <cstring>
 #include <cassert>
-#include <algorithm>
 
 //  Constants
 
@@ -172,6 +171,19 @@ void BitStream::StorePackedBits(uint32_t nBits, uint32_t dataBits)
 
     StoreBits(nBits, dataBits);
 }
+
+void BitStream::appendBitStream(BitStream &src)
+{
+    //TODO: optimize this to partial memcopy in special cases ?
+    uint32_t bits_to_store =src.GetReadableBits();
+    while(bits_to_store>32)
+    {
+        StoreBits(32,src.uGetBits(32));
+        bits_to_store-=32;
+    }
+    StoreBits(bits_to_store,src.uGetBits(bits_to_store));
+}
+
 /**
  * @brief BitStream::StoreBitArray
  * Stores an array of bits in the bit stream buffer.  The
@@ -201,11 +213,13 @@ Description: Stores a NULL terminated C-style string in the bit stream
                          buffer.  It includes the NULL terminator.
 ************************************************************************/
 
-void BitStream::StoreString(const char *str)
+void BitStream::StoreString(const char *str,int len)
 {
     if(!str) // nothing to do ?
         return;
 
+    if(len==-1)
+        len = strlen(str)+1;
     //strlen(str) + 1, because we want to include
     //the NULL byte.
     if(IsByteAligned())
@@ -213,7 +227,6 @@ void BitStream::StoreString(const char *str)
         PutString(str);
         return;
     }
-    size_t len = strlen(str)+1;
     uint32_t idx;
     uint8_t rshift = 8-m_write_bit_off;
     if(len>GetAvailSize())
@@ -236,16 +249,10 @@ void BitStream::StoreString(const char *str)
     m_write_off  += idx;
 }
 
-void BitStream::StoreString(const QByteArray &str)
+void BitStream::StoreString(StringView str)
 {
-    StoreString(str.constData());
+    StoreString(str.data(),str.size());
 }
-
-void BitStream::StoreString(const QString &str)
-{
-    StoreString(qPrintable(str));
-}
-
 
 /************************************************************************
 *************************************************************************
@@ -328,7 +335,7 @@ void BitStream::GetBitArray(uint8_t *tgt, uint32_t nBits)
 \brief  Retrieves a null-terminated C-style string from the bit stream
 \note will set stream error status in case of stream exhaustion
 */
-void BitStream::GetString(QString &str)
+void BitStream::GetString(String &str)
 {
     if(GetReadableBits()<8)
     {
@@ -342,7 +349,7 @@ void BitStream::GetString(QString &str)
         chr  = m_buf[m_read_off]  >> m_read_bit_off;
         chr |= m_buf[++m_read_off] << bitsLeft;
         if(chr)
-            str += char(chr);
+            str.push_back(char(chr));
 
         if((chr!='\0') && GetReadableBits()<8)
         {
@@ -436,29 +443,34 @@ void BitStream::ByteAlign( bool read_part,bool write_part )
 void BitStream::CompressAndStoreString(const char *str)
 {
     uint32_t decompLen = strlen(str) + 1;
-    QByteArray ba = qCompress(reinterpret_cast<const uint8_t *>(str),decompLen,5);
-    ba.remove(0,sizeof(uint32_t)); // qt includes uncompressed size as a first 4 bytes of QByteArray
-    uint32_t len = ba.size();
+    auto cs = SEGS::getCompressionService();
+    assert(cs);
+    auto res = cs->compressData(str,decompLen);
+    //QByteArray ba = qCompress(reinterpret_cast<const uint8_t *>(str),decompLen,5);
+    //ba.remove(0,sizeof(uint32_t)); // qt includes uncompressed size as a first 4 bytes of QByteArray
+    uint32_t len = res->size;
     StorePackedBits(1, len);        //  Store compressed len
     StorePackedBits(1, decompLen);  //  Store decompressed len
-    StoreBitArray((const uint8_t *)ba.data(),len << 3);    //  Store compressed string
+    StoreBitArray((const uint8_t *)res->data,len << 3);    //  Store compressed string
+    delete res;
 }
+/*
 static QByteArray uncompr_zip(QByteArray &compressed_data,uint32_t size_uncom)
 {
-    compressed_data.prepend( char((size_uncom >> 0) & 0xFF));
-    compressed_data.prepend( char((size_uncom >> 8) & 0xFF));
-    compressed_data.prepend( char((size_uncom >> 16) & 0xFF));
-    compressed_data.prepend( char((size_uncom >> 24) & 0xFF));
-    return qUncompress(compressed_data);
 }
-void BitStream::GetAndDecompressString(QString &tgt)
+*/
+void BitStream::GetAndDecompressString(String &tgt)
 {
+    auto cs = SEGS::getCompressionService();
+    assert(cs);
     uint32_t len = GetPackedBits(1);     //  Store compressed len
     uint32_t decompLen = GetPackedBits(1);     //  decompressed len
     uint8_t *src = new uint8_t[len]; // FixMe: GetPackedBits() returns signed values which can cause len to be high if wrapped.
     GetBitArray(src,len<<3);
-    QByteArray compr_data((const char *)src,len);
-    tgt = uncompr_zip(compr_data,decompLen);
+
+    auto *res = cs->uncompressZip((const char *)src,len,decompLen);
+    tgt = String((const char *)res->data,res->size);
+    delete res;
     delete [] src;
 }
 

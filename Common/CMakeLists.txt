@@ -1,5 +1,7 @@
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} .)
 
+add_subdirectory(Containers)
+add_subdirectory(Utils)
 ADD_SUBDIRECTORY(CRUDP_Protocol)
 ADD_SUBDIRECTORY(Servers)
 ADD_SUBDIRECTORY(GameData)

@@ -15,11 +15,9 @@
 #include "DataStorage.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
-#include <cereal/types/unordered_map.hpp>
-
-#include <QtCore/QFileInfo>
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
+#include <cereal/eastl/unordered_map.hpp>
+#include <cereal/eastl/string.hpp>
+#include <cereal/eastl/utility.hpp>
 
 namespace
 {
@@ -90,7 +88,7 @@ namespace
         if(s->end_encountered())
             return ok;
 
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -135,7 +133,7 @@ namespace
         if(s->end_encountered())
             return ok;
 
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -200,7 +198,7 @@ namespace
         if(s->end_encountered())
             return ok;
 
-        QByteArray _name;
+        String _name;
         while(s->nesting_name(_name))
         {
             s->nest_in();
@@ -243,7 +241,7 @@ bool loadFrom(BinStore *s, SequencerList &target)
     if(s->end_encountered())
         return ok;
 
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -253,7 +251,7 @@ bool loadFrom(BinStore *s, SequencerList &target)
             ok &= loadFrom(s,&nt);
             cleanSeqFileName(nt.name);       // this was done after reading, no reason to not do this now.
             target.sq_list.push_back(nt);
-            target.m_Sequencers[nt.name.toLower()] = target.sq_list.size()-1;
+            target.m_Sequencers[nt.name.to_lower()] = target.sq_list.size()-1;
             s->nest_out();
         }
         else
@@ -341,9 +339,9 @@ void serialize(Archive & archive, SequencerData & m)
     archive(cereal::make_nvp("Move",m.m_Move));
 }
 
-void saveTo(const SequencerList & target, const QString & baseName, bool text_format)
+void saveTo(const SequencerList & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target.sq_list,"SequencerList",baseName,text_format);
+    SEGS::commonSaveTo(target.sq_list,"SequencerList",baseName,text_format);
 }
 
 template<class Archive>
@@ -415,17 +413,19 @@ static void serialize(Archive & archive, EntitySequencerData & m)
     serialize_as_optional(archive,"ReticleWidthBias",m.m_reticle_mod.x);
 }
 
-bool loadFrom(const QString &path, SequencerTypeMap &target)
+bool loadFrom(const String &path, SequencerTypeMap &target)
 {
-    QFile ifl(path);
-    if(path.endsWith("json") || path.endsWith("crl_json"))
+    auto fs = SEGS::getServiceLocator()->getFS();
+
+    if(path.ends_with("json") || path.ends_with("crl_json"))
     {
-        if(!ifl.open(QFile::ReadOnly|QFile::Text))
+        auto ifl = fs->open(path,SEGS::IFile::ReadOnly);
+        if(!ifl)
         {
-            qWarning() << "Failed to open" << path;
+            sWarning() << "Failed to open" << path;
             return false;
         }
-        std::istringstream istr(ifl.readAll().toStdString());
+        std::istringstream istr(ifl->readAll().data());
 
         cereal::JSONInputArchive arc(istr);
         arc(cereal::make_nvp("SequencerTypes", target));
@@ -444,15 +444,15 @@ bool loadFrom(const QString &path, SequencerTypeMap &target)
 //    }
     else
     {
-        qWarning() << "Invalid serialized data extension in" <<path;
+        sWarning() << "Invalid serialized data extension in" <<path;
         return false;
     }
 
     return true;
 }
-void saveTo(const SequencerTypeMap &target, const QString & baseName, bool text_format)
+void saveTo(const SequencerTypeMap &target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"SequencerTypes",baseName,text_format);
+    SEGS::commonSaveTo(target,"SequencerTypes",baseName,text_format);
 }
 
 //! @}

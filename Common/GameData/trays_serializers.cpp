@@ -19,26 +19,26 @@
 
 #include "Components/Logging.h"
 
-void saveTo(const PowerTrayGroup &target, const QString &baseName, bool text_format)
+void saveTo(const PowerTrayGroup &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"PowerTrayGroups",baseName,text_format);
+    SEGS::commonSaveTo(target,"PowerTrayGroups",baseName,text_format);
 }
-void serializeToDb(const PowerTrayGroup &data, QString &tgt)
+void serializeToDb(const PowerTrayGroup &data, String &tgt)
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar(ostr);
         ar(data);
     }
-    tgt = QString::fromStdString(ostr.str());
+    tgt = String(ostr.str().c_str());
 }
 
-void serializeFromDb(PowerTrayGroup &data, const QString &src)
+void serializeFromDb(PowerTrayGroup &data, const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(src.c_str());
     {
         cereal::JSONInputArchive ar(istr);
         ar(data);

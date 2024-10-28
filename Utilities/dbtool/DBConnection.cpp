@@ -30,7 +30,7 @@ void DBConnection::open()
     if(m_db != nullptr)
         close();
 
-    qCDebug(logDB) << "Opening database connection at:" << m_config.m_db_name;
+    sCDebug(logDB) << "Opening database connection at:" << qPrintable(m_config.m_db_name);
 
     m_db = std::make_unique<QSqlDatabase>(QSqlDatabase::addDatabase(m_config.m_driver, m_config.m_db_name));
     m_db->setDatabaseName(m_config.m_db_name); // must be path

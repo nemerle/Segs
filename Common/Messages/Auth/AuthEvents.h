@@ -69,9 +69,9 @@ public:
         buf.uGet(op);
         if(op != 3)
         {
-            qWarning() << op << "in ReconnectAttempt serializefrom";
+            sWarning() << op << "in ReconnectAttempt serializefrom";
             for (auto i : m_arr)
-                qWarning() << i;
+                sWarning() << i;
         }
         buf.uGetBytes(m_arr,8);
     }

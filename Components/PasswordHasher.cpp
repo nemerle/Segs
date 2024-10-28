@@ -11,27 +11,57 @@
  */
 
 #include "PasswordHasher.h"
-#include <QTime>
-#include <QRandomGenerator>
 
-PasswordHasher::PasswordHasher() : m_hasher(QCryptographicHash::Sha256)
+#include "Utils/string_utils.h"
+
+#include <chrono>
+#include <cmath>
+
+int64_t msecsSinceStartOfDay() {
+    using namespace std::chrono;
+
+    // Get current time point
+    auto now = system_clock::now();
+
+    // Convert to time_t for easier date manipulation
+    auto current_time = system_clock::to_time_t(now);
+
+    // Convert to tm struct to get individual time components
+    std::tm* local_tm = std::localtime(&current_time);
+
+    // Reset hours, minutes, seconds to get start of day
+    local_tm->tm_hour = 0;
+    local_tm->tm_min = 0;
+    local_tm->tm_sec = 0;
+
+    // Convert back to time_point
+    auto start_of_day = system_clock::from_time_t(std::mktime(local_tm));
+
+    // Calculate duration since start of day
+    auto duration = now - start_of_day;
+
+    // Convert to milliseconds
+    return duration_cast<milliseconds>(duration).count();
+}
+
+PasswordHasher::PasswordHasher()
 {
 
 }
 
-QString PasswordHasher::getRandomString(int length) const
+String PasswordHasher::getRandomString(int length) const
 {
-    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    const String possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     const int randomStringLength = length;
-    QRandomGenerator generator;
-    generator.seed(static_cast<quint64>(QTime::currentTime().msecsSinceStartOfDay()));
+    srand(static_cast<uint64_t>(msecsSinceStartOfDay()));
 
-    QString randomString;
+    String randomString;
+    randomString.reserve(randomStringLength);
     for(int i = 0; i < randomStringLength; ++i)
     {
-        int index = generator.generate() % possibleCharacters.length();
-        QChar nextChar = possibleCharacters.at(index);
-        randomString.append(nextChar);
+        int index = rand() % possibleCharacters.length();
+        char nextChar = possibleCharacters.at(index);
+        randomString.push_back(nextChar);
     }
     return randomString;
 }
@@ -40,10 +70,9 @@ QString PasswordHasher::getRandomString(int length) const
  * \brief Generates a random salt of length 16.
  * \return A QByteArray of length 16 containing the generated salt.
  */
-QByteArray PasswordHasher::generateSalt()
+String PasswordHasher::generateSalt()
 {
-    QString salt = getRandomString(16);
-    return salt.toUtf8();
+    return getRandomString(16);
 }
 
 /*!
@@ -52,11 +81,10 @@ QByteArray PasswordHasher::generateSalt()
  * \param salt The salt to be appended to the password.
  * \return A QByteArray containing the salted and hashed password.
  */
-QByteArray PasswordHasher::hashPassword(const QByteArray &pass, const QByteArray &salt)
+Vector<uint8_t> PasswordHasher::hashPassword(const String &pass, const String &salt)
 {
-    QByteArray pass_array(pass+salt);
-    QByteArray hashed_pass_array = QCryptographicHash::hash(pass_array, QCryptographicHash::Sha256);
-    return hashed_pass_array;
+    String pass_array(pass+salt);
+    return StringUtils::sha256_buffer(pass_array);
 }
 
 //! @}

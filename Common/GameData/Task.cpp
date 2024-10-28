@@ -16,7 +16,7 @@ void Task::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Task::class_version)
     {
-        qCritical() << "Failed to serialize Task, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Task, incompatible serialization format version " << version;
         return;
     }
 
@@ -50,7 +50,7 @@ void TaskEntry::serialize(Archive &archive, uint32_t const version)
 {
    if(version != Task::class_version)
     {
-        qCritical() << "Failed to serialize TaskEntry, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize TaskEntry, incompatible serialization format version " << version;
         return;
     }
 

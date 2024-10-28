@@ -9,7 +9,8 @@ ExternalProject_Add(
    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
 )
 add_library(cereal_IMP INTERFACE IMPORTED GLOBAL)
+target_link_libraries(cereal_IMP INTERFACE EASTL_Import)
 add_dependencies(cereal_IMP cereal_BUILD)
 #TODO: cmake workaround
-file(MAKE_DIRECTORY ${ThirdParty_Install_Dir}/include) 
+file(MAKE_DIRECTORY ${ThirdParty_Install_Dir}/include)
 set_property(TARGET cereal_IMP PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ThirdParty_Install_Dir}/include)

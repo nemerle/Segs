@@ -10,8 +10,6 @@
 
 #include <QEventLoop>
 #include <QJsonDocument>
-#include <QtCore/QSettings>
-#include <QtCore/QString>
 #include <QTimer>
 
 using namespace jcon;
@@ -64,18 +62,18 @@ bool AdminRPC::ReadConfig()
     ACE_Guard<ACE_Thread_Mutex> guard(m_mutex);
 
     qInfo() << "Loading AdminRPC settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    Settings config(Settings::getSettingsPath());
 
-    config.beginGroup(QStringLiteral("AdminRPC"));
-    if(!config.contains(QStringLiteral("location_addr")))
-        qCDebug(logRPC) << "Config file is missing 'location_addr' entry in AdminRPC group, will try to use default";
+    config.beginGroup(("AdminRPC"));
+    if(!config.contains(("location_addr")))
+        sCDebug(logRPC) << "Config file is missing 'location_addr' entry in AdminRPC group, will try to use default";
 
-    QString location_addr = config.value(QStringLiteral("location_addr"),"127.0.0.1:6001").toString();
+    String location_addr = config.value<String>(("location_addr"),"127.0.0.1:6001");
 
-    if(!config.contains(QStringLiteral("server_type")))
-        qCDebug(logRPC) << "Config file is missing 'server_type' entry in AdminRPC group, will try to use default";
+    if(!config.contains(("server_type")))
+        sCDebug(logRPC) << "Config file is missing 'server_type' entry in AdminRPC group, will try to use default";
 
-    QString server_type = config.value(QStringLiteral("server_type"),"tcp").toString();
+    String server_type = config.value<String>(("server_type"),"tcp");
 
     if(server_type == "websocket")
         m_socket_type     = SocketType::websocket;
@@ -86,10 +84,10 @@ bool AdminRPC::ReadConfig()
 
     if(!parseAddress(location_addr,m_location))
     {
-        qCritical() << "Badly formed IP address '" << location_addr << "' in AdminRPC.";
+        sCritical() << "Badly formed IP address '" << location_addr << "' in AdminRPC.";
         return false;
     }
-    qCInfo(logRPC) << "Loading AdminRPC settings complete...";
+    sCInfo(logRPC) << "Loading AdminRPC settings complete...";
     return true;
 }
 
@@ -99,7 +97,7 @@ bool AdminRPC::ReadConfig()
  */
 bool AdminRPC::heyServer()
 {
-    qCDebug(logRPC) << "Someone said hey...";
+    sCDebug(logRPC) << "Someone said hey...";
     return true;
 }
 
@@ -109,7 +107,7 @@ bool AdminRPC::heyServer()
  */
 QString AdminRPC::helloServer()
 {
-    qCDebug(logRPC) << "Someone said hello...";
+    sCDebug(logRPC) << "Someone said hello...";
     QString response = "Hello Web Browser!";
     return response;
 }
@@ -120,7 +118,7 @@ QString AdminRPC::helloServer()
  */
 QString AdminRPC::getVersion()
 {
-    qCDebug(logRPC) << "Someone requested the version...";
+    sCDebug(logRPC) << "Someone requested the version...";
     return VersionInfo::getAuthVersionNumber();
 }
 
@@ -130,7 +128,7 @@ QString AdminRPC::getVersion()
  */
 QString AdminRPC::getVersionName()
 {
-    qCDebug(logRPC) << "Someone requested the versions name...";
+    sCDebug(logRPC) << "Someone requested the versions name...";
     return VersionInfo::getVersionName();
 }
 
@@ -140,7 +138,7 @@ QString AdminRPC::getVersionName()
  */
 QString AdminRPC::ping()
 {
-    qCDebug(logRPC) << "Someone sent a ping...";
+    sCDebug(logRPC) << "Someone sent a ping...";
     QString response = "pong";
     return response;
 }
@@ -151,7 +149,7 @@ QString AdminRPC::ping()
  */
 QString AdminRPC::getStartTime()
 {
-    qCDebug(logRPC) << "Someone requested the server start time...";
+    sCDebug(logRPC) << "Someone requested the server start time...";
     return m_start_time;
 }
 
@@ -171,10 +169,10 @@ QString AdminRPC::addUser(const QString &username, const QString &password, int 
     // Create and insert a record of this request into m_completion_state
     m_completion_state.insert(token, "");
 
-    qCDebug(logRPC) << "addUser call in progress";
+    sCDebug(logRPC) << "addUser call in progress";
 
     EventProcessor *tgt = HandlerLocator::getAuthDB_Handler();
-    tgt->putq(new CreateAccountMessage({username, password, access_level}, fake_session_token, this));
+    tgt->putq(new CreateAccountMessage({qPrintable(username), qPrintable(password), access_level}, fake_session_token, this));
 
     QTimer response_timer;
     QTimer timeout;
@@ -215,7 +213,7 @@ QString AdminRPC::addUser(const QString &username, const QString &password, int 
 
 void AdminRPC::on_db_error(AuthDbStatusMessage *ev)
 {
-    m_completion_state[static_cast<int>(ev->session_token())] = ev->m_data.message;
+    m_completion_state[static_cast<int>(ev->session_token())] = ev->m_data.message.c_str();
 }
 
 /*
@@ -224,7 +222,7 @@ void AdminRPC::on_db_error(AuthDbStatusMessage *ev)
  */
 QVariantMap AdminRPC::getWebUIData(QString const& version)
 {
-    qCDebug(logRPC) << "Someone requested WebUI information...";
+    sCDebug(logRPC) << "Someone requested WebUI information...";
     QMap<QString,QVariant> ret;
     if (version.compare("0.7.0") == 0)
     {
@@ -236,7 +234,7 @@ QVariantMap AdminRPC::getWebUIData(QString const& version)
       // Default to v0.7.0 format
       ret.insert("version", VersionInfo::getAuthVersionNumber());
       ret.insert("starttime", m_start_time);
-    }      
+    }
     return ret;
 }
 
@@ -248,12 +246,12 @@ void startRPCServer()
     {
         if (m_adminrpc->m_socket_type == SocketType::tcp)
         {
-            qCDebug(logRPC) << "Creating RPC server using TCP...";
+            sCDebug(logRPC) << "Creating RPC server using TCP...";
             m_server = new jcon::JsonRpcTcpServer();
         }
         else
         {
-            qCDebug(logRPC) << "Creating RPC server using WebSocket...";
+            sCDebug(logRPC) << "Creating RPC server using WebSocket...";
             m_server = new jcon::JsonRpcWebSocketServer();
         }
     }

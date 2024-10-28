@@ -42,7 +42,7 @@ struct EmailHeaderRequestData
 
 struct EmailHeaderResponseData
 {
-    std::vector<EmailHeaderData> m_email_headers;
+    Vector<EmailHeaderData> m_email_headers;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -55,7 +55,7 @@ TWO_WAY_MESSAGE(EmailEventTypes,EmailHeader)
 
 struct EmailHeadersToClientData
 {
-    std::vector<EmailHeaderData> m_email_headers;
+    Vector<EmailHeaderData> m_email_headers;
     int m_unread_emails_count;
 
     template<class Archive>
@@ -70,8 +70,8 @@ ONE_WAY_MESSAGE(EmailEventTypes,EmailHeadersToClient)
 struct EmailHeaderToClientData
 {
     uint32_t m_email_id;
-    QString m_sender_name;
-    QString m_subject;
+    String m_sender_name;
+    String m_subject;
     uint32_t m_timestamp;
 
     template<class Archive>
@@ -98,8 +98,8 @@ struct EmailReadRequestData
 struct EmailReadResponseData
 {
     uint32_t m_email_id;
-    QString m_message;
-    QString m_sender_name;
+    String m_message;
+    String m_sender_name;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -113,10 +113,10 @@ TWO_WAY_MESSAGE(EmailEventTypes,EmailRead)
 struct EmailSendData
 {
     uint32_t m_sender_id;
-    QString m_sender_name;
-    QString m_recipient_name;
-    QString m_subject;
-    QString m_message;
+    String m_sender_name;
+    String m_recipient_name;
+    String m_subject;
+    String m_message;
     uint32_t m_timestamp;
 
     template<class Archive>
@@ -130,7 +130,7 @@ ONE_WAY_MESSAGE(EmailEventTypes,EmailSend)
 
 struct EmailSendErrorData
 {
-    QString m_error_message;
+    String m_error_message;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -156,7 +156,7 @@ ONE_WAY_MESSAGE(EmailEventTypes,EmailDelete)
 
 struct EmailWasReadByRecipientData
 {
-    QString m_message;
+    String m_message;
 
     template<class Archive>
     void serialize(Archive &ar)
@@ -170,7 +170,7 @@ ONE_WAY_MESSAGE(EmailEventTypes,EmailWasReadByRecipient)
 struct EmailCreateStatusData
 {
     bool m_status;
-    QString m_recipient_name;
+    String m_recipient_name;
 
     template<class Archive>
     void serialize(Archive &ar)

@@ -16,7 +16,7 @@ void PlayerStatistics::serialize(Archive &archive, uint32_t const version)
  {
      if(version != PlayerStatistics::class_version)
      {
-         qCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
+         sCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
          return;
      }
      archive(cereal::make_nvp("HideAndSeek",m_hide_seek));
@@ -32,7 +32,7 @@ void PlayerStatistics::serialize(Archive &archive, uint32_t const version)
   {
       if(version != HideAndSeek::class_version)
       {
-          qCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
+          sCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
           return;
       }
       archive(cereal::make_nvp("Count",m_found_count));
@@ -46,7 +46,7 @@ void PlayerStatistics::serialize(Archive &archive, uint32_t const version)
    {
        if(version != RelayRaceResult::class_version)
        {
-           qCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
+           sCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
            return;
        }
        archive(cereal::make_nvp("Segment",m_segment));
@@ -63,7 +63,7 @@ void PlayerStatistics::serialize(Archive &archive, uint32_t const version)
     {
         if(version != Hunt::class_version)
         {
-            qCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
+            sCritical() << "Failed to serialize Souvenir, incompatible serialization format version " << version;
             return;
         }
         archive(cereal::make_nvp("Type",m_type));

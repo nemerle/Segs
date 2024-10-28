@@ -12,7 +12,6 @@
 #include "Servers/InternalEvents.h"
 #include "GameDatabase/GameDBSyncHandler.h"
 #include "Messages/EmailService/EmailDefinitions.h"
-#include <map>
 
 namespace SEGSEvents
 {
@@ -30,9 +29,9 @@ namespace SEGSEvents
 struct PlayerEmailState
 {
     // this uint32_t that are keys for m_received_emails and m_sent_emails is email id
-    std::set<uint32_t> m_sent_email_ids;
-    std::set<uint32_t> m_received_email_ids;
-    std::set<uint32_t> m_unread_email_ids;
+    Set<uint32_t> m_sent_email_ids;
+    Set<uint32_t> m_received_email_ids;
+    Set<uint32_t> m_unread_email_ids;
 };
 
 struct ClientSessionData
@@ -46,8 +45,8 @@ struct ClientSessionData
 struct EmailHandlerState
 {
     // the uint32_t is character db id
-    std::map<uint32_t, ClientSessionData> m_stored_client_datas;
-    std::map<uint32_t, EmailData> m_stored_email_datas;
+    Map<uint32_t, ClientSessionData> m_stored_client_datas;
+    Map<uint32_t, EmailData> m_stored_email_datas;
     int m_game_server_id;
 };
 
@@ -71,7 +70,7 @@ private:
     void on_fill_email_recipient_id_error(SEGSEvents::FillEmailRecipientIdErrorMessage* msg);
 
     void fill_email_state(PlayerEmailState& emailState, uint32_t char_id);
-    void fill_email_headers(std::vector<EmailHeaderData>& emailHeaders, uint32_t char_id, int &unread_emails_count);
+    void fill_email_headers(Vector<EmailHeaderData>& emailHeaders, uint32_t char_id, int &unread_emails_count);
 protected:
     MessageBusEndpoint m_message_bus_endpoint;
     void serialize_from(std::istream &is) override;

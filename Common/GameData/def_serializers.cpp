@@ -19,11 +19,12 @@
 #include "Components/serialization_types.h"
 
 #include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
+#include <cereal/eastl/vector.hpp>
 #include <cereal/cereal.hpp>
 #include <streambuf>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDebug>
+//#include <QtCore/QFileInfo>
+//#include <QtCore/QDebug>
+
 namespace cereal
 {
     template<class Archive>
@@ -136,9 +137,9 @@ bool loadFrom(BinStore *s, LevelExpAndDebt & target)
     return ok;
 }
 
-void saveTo(const LevelExpAndDebt & target, const QString & baseName, bool text_format)
+void saveTo(const LevelExpAndDebt & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"LevelExpAndDebt",baseName,text_format);
+    SEGS::commonSaveTo(target,"LevelExpAndDebt",baseName,text_format);
 }
 
 bool loadFrom(BinStore * s, Parse_Combining &target)
@@ -151,9 +152,9 @@ bool loadFrom(BinStore * s, Parse_Combining &target)
     return ok;
 }
 
-void saveTo(const Parse_Combining & target, const QString & baseName, bool text_format)
+void saveTo(const Parse_Combining & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"CombiningChances",baseName,text_format);
+    SEGS::commonSaveTo(target,"CombiningChances",baseName,text_format);
 }
 
 bool loadFrom(BinStore * s, Parse_Effectiveness &target)
@@ -167,9 +168,9 @@ bool loadFrom(BinStore * s, Parse_Effectiveness &target)
 
 }
 
-void saveTo(const Parse_Effectiveness & target, const QString & baseName, bool text_format)
+void saveTo(const Parse_Effectiveness & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"BoostEffectiveness",baseName,text_format);
+    SEGS::commonSaveTo(target,"BoostEffectiveness",baseName,text_format);
 
 }
 
@@ -181,7 +182,7 @@ bool loadFrom(BinStore * s, Parse_AllOrigins &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -195,9 +196,9 @@ bool loadFrom(BinStore * s, Parse_AllOrigins &target)
     return ok;
 }
 
-void saveTo(const Parse_AllOrigins & target, const QString & baseName, bool text_format)
+void saveTo(const Parse_AllOrigins & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"Origins",baseName,text_format);
+    SEGS::commonSaveTo(target,"Origins",baseName,text_format);
 }
 
 bool loadFrom(BinStore * s, Parse_PI_Schedule &target)
@@ -216,9 +217,9 @@ bool loadFrom(BinStore * s, Parse_PI_Schedule &target)
     return ok;
 }
 
-void saveTo(const Parse_PI_Schedule & target, const QString & baseName, bool text_format)
+void saveTo(const Parse_PI_Schedule & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"PiSchedule",baseName,text_format);
+    SEGS::commonSaveTo(target,"PiSchedule",baseName,text_format);
 }
 
 //! @}

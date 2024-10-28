@@ -7,26 +7,26 @@
 
 #pragma once
 
+#include "Containers/Deque.h"
 #include "GameData/Entity.h"
 #include "GameData/EntityHelpers.h"
 
 #include <ace/Thread_Mutex.h>
 #include <ace/Guard_T.h>
-#include <array>
-#include <set>
-#include <deque>
+#include <Containers/Set.h>
+#include <EASTL/array.h>
 
 struct MapClientSession;
 class MapInstance;
-class Entity;
 class BitStream;
 
 class EntityStore
 {
 public:
     EntityStore();
-    std::deque<uint32_t> m_free_entries;
-    std::array<Entity,10240> m_map_entities;
+    ~EntityStore();
+    Deque<uint32_t> m_free_entries;
+    eastl::array<Entity,10240> m_map_entities;
     Entity *get();
     void release(Entity *src);
 };
@@ -40,7 +40,7 @@ class EntityManager
             return getIdx(*a) < getIdx(*b);
         }
     };
-    using lEntity = std::set<Entity *,EntityIdxCompare>;
+    using lEntity = Set<Entity *,EntityIdxCompare>;
 public:
     EntityStore     m_store;
     lEntity         m_live_entlist;

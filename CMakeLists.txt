@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 project(SEGS)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Tell cmake to honor CXX_VISIBILITY_PRESET and ignore it
@@ -64,7 +64,7 @@ if(MSVC)
     endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wuseless-cast")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra") # -Wuseless-cast -pedantic
     if(MINGW)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
     endif()
@@ -205,7 +205,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(Components)
 add_subdirectory(Common)
 if(BUILD_EDITOR)
-	add_subdirectory(Editor) 
+    add_subdirectory(Editor)
 endif()
 add_subdirectory(Servers)
 add_subdirectory(Clients)

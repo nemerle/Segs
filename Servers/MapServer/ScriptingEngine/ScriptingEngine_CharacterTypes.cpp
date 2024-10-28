@@ -136,8 +136,7 @@ void ScriptingEngine::register_CharacterTypes()
 
       m_private->m_lua["Player"]["GiveEnhancement"] = [this](const char* name, int level)
       {
-          QString e_name = QString::fromUtf8(name);
-          giveEnhancement(*cl, e_name, level);
+          giveEnhancement(*cl, name, level);
       };
 
       m_private->m_lua["Player"]["GiveEnd"] = [this](const float end)
@@ -172,8 +171,7 @@ void ScriptingEngine::register_CharacterTypes()
 
       m_private->m_lua["Player"]["GiveInsp"] = [this](const char* name)
       {
-          QString e_name = QString::fromUtf8(name);
-          giveInsp(*cl, e_name);
+          giveInsp(*cl, name);
       };
 
       m_private->m_lua["Player"]["SetXp"] = [this](const uint32_t xp)
@@ -249,8 +247,7 @@ void ScriptingEngine::register_CharacterTypes()
 
       m_private->m_lua["Player"]["StartMissionTimer"] = [this](const char* message, float timer)
       {
-          QString mess = QString::fromUtf8(message);
-          sendMissionObjectiveTimer(*cl, mess, timer);
+          sendMissionObjectiveTimer(*cl, message, timer);
       };
 
       m_private->m_lua["Player"]["SetWaypoint"] = [this](const int point_idx, glm::vec3 loc)
@@ -265,7 +262,7 @@ void ScriptingEngine::register_CharacterTypes()
 
       m_private->m_lua["Player"]["OpenTitleMenu"] = [this]()
       {
-          QString origin = getOriginTitle(*cl->m_ent->m_char);
+          String origin = getOriginTitle(*cl->m_ent->m_char);
           setTitle(*cl, origin);
       };
 

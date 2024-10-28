@@ -18,9 +18,9 @@ class ForceLogout final : public MapLinkEvent
 {
 public:
     // [[ev_def:field]]
-    QString reason;
+    String reason;
     ForceLogout() :MapLinkEvent(evForceLogout) {}
-    ForceLogout(const QString &_reason) :MapLinkEvent(evForceLogout),reason(_reason)
+    ForceLogout(const String &_reason) :MapLinkEvent(evForceLogout),reason(_reason)
     {}
     void serializeto(BitStream &bs) const override
     {
@@ -29,7 +29,7 @@ public:
     }
     void serializefrom(BitStream &/*bs*/) override
     {
-        qWarning() << "Server does not receive ForceLogout packet from Client.";
+        sWarning() << "Server does not receive ForceLogout packet from Client.";
     }
     EVENT_IMPL(ForceLogout)
 };

@@ -31,11 +31,6 @@
 #include <ace/Event_Handler.h>
 #include <ace/Svc_Handler.h>
 
-#include <QtCore/QSettings>
-#include <QtCore/QString>
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
-
 using namespace SEGSEvents;
 namespace
 {
@@ -142,29 +137,29 @@ bool GameServer::ReadConfigAndRestart()
     static ServerReconfigured reconfigured_msg;
     // TODO: consider properly closing all open sessions ?
     delete d->m_endpoint;
-    qInfo() << "Loading GameServer settings...";
-    QSettings config(Settings::getSettingsPath(),QSettings::IniFormat,nullptr);
+    sInfo() << "Loading GameServer settings...";
+    Settings config(Settings::getSettingsPath());
 
-    config.beginGroup(QStringLiteral("GameServer"));
-    if(!config.contains(QStringLiteral("listen_addr")))
-        qWarning() << "Config file is missing 'listen_addr' entry in GameServer group, will try to use default";
-    if(!config.contains(QStringLiteral("location_addr")))
-        qWarning() << "Config file is missing 'location_addr' entry in GameServer group, will try to use default";
+    config.beginGroup(("GameServer"));
+    if(!config.contains(("listen_addr")))
+        sWarning() << "Config file is missing 'listen_addr' entry in GameServer group, will try to use default";
+    if(!config.contains(("location_addr")))
+        sWarning() << "Config file is missing 'location_addr' entry in GameServer group, will try to use default";
 
-    QString listen_addr = config.value(QStringLiteral("listen_addr"),"127.0.0.1:7002").toString();
-    QString location_addr = config.value(QStringLiteral("location_addr"),"127.0.0.1:7002").toString();
+    String listen_addr = config.value<String>(("listen_addr"),"127.0.0.1:7002");
+    String location_addr = config.value<String>(("location_addr"),"127.0.0.1:7002");
 
-    d->m_max_players = config.value(QStringLiteral("max_players"),600).toUInt();
-    d->m_max_character_slots = config.value(QStringLiteral("max_character_slots"),MaxCharacterSlots).toInt();
+    d->m_max_players = config.value(("max_players"),600);
+    d->m_max_character_slots = config.value(("max_character_slots"),MaxCharacterSlots);
 
     if(!parseAddress(listen_addr,d->m_listen_point))
     {
-        qCritical() << "Badly formed IP address" << listen_addr;
+        sCritical() << "Badly formed IP address" << listen_addr;
         return false;
     }
     if(!parseAddress(location_addr,d->m_location))
     {
-        qCritical() << "Badly formed IP address" << location_addr;
+        sCritical() << "Badly formed IP address" << location_addr;
         return false;
     }
 
@@ -184,7 +179,7 @@ bool GameServer::ReadConfigAndRestart()
     if(d->m_endpoint->open() == -1) // will register notifications with current reactor
         ACE_ERROR_RETURN ((LM_ERROR, "(%P|%t) GameServer: ServerEndpoint::open\n"),false);
 
-    qInfo() << "Configurations loaded";
+    sInfo() << "Configurations loaded";
     d->m_online = true;
     d->m_handler->putq(reconfigured_msg.shallow_copy());
     return true;
@@ -220,7 +215,7 @@ int GameServer::handle_close(ACE_HANDLE /*handle*/, ACE_Reactor_Mask /*close_mas
     // after evfinish some other messages could have been added to the queue, release them
     d->ShutDown();
     assert(d->m_handler->msg_queue()->is_empty());
-    qWarning() << "Shutting down game server";
+    sWarning() << "Shutting down game server";
     return 0;
 }
 

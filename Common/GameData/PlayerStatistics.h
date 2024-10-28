@@ -6,9 +6,10 @@
  */
 
 #pragma once
-#include <QString>
-#include "cereal/cereal.hpp"
+#include <Common/Containers/StringView.h>
+#include "Common/Containers/String.h"
 #include "Components/Logging.h"
+#include "cereal/cereal.hpp"
 
 struct HideAndSeek
 {
@@ -37,19 +38,19 @@ class Hunt
 public:
     enum : uint32_t {class_version       = 1};
 
-    QString m_type; // Skulls, hellions, etc?
+    String m_type; // Skulls, hellions, etc?
     uint32_t m_count;
 
     //For scripting access
-    std::string getTypeString() const { return m_type.toStdString();}
+    const String &getTypeString() const { return m_type;}
     void setTypeString(const char *n) { m_type = n; }
 
     template<class Archive>
     void serialize(Archive &archive, uint32_t const version);
 };
 
-using vRelayRace = std::vector<RelayRaceResult>;
-using vHunt = std::vector<Hunt>;
+using vRelayRace = Vector<RelayRaceResult>;
+using vHunt = Vector<Hunt>;
 
 //Generic for all statistics. Racing, enemies defeated, inf count, etc.
 struct PlayerStatistics

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <QtCore/QString>
+#include "Common/Containers/String.h"
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
 

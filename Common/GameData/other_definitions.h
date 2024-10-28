@@ -6,32 +6,32 @@
  */
 
 #pragma once
-#include <vector>
 #include <stdint.h>
+#include "Common/Containers/Vector.h"
 
 struct Parse_Combining
 {
-    std::vector<float> CombineChances;
+    Vector<float> CombineChances;
 };
 
 struct Parse_Effectiveness
 {
-    std::vector<float> Effectiveness;
+    Vector<float> Effectiveness;
 };
 
 struct LevelExpAndDebt
 {
-    std::vector<uint32_t> m_ExperienceRequired;
-    std::vector<uint32_t> m_DefeatPenalty;
+    Vector<uint32_t> m_ExperienceRequired;
+    Vector<uint32_t> m_DefeatPenalty;
 };
 
 struct Parse_PI_Schedule
 {
-    std::vector<uint32_t> m_FreeBoostSlotsOnPower;
-    std::vector<uint32_t> m_PoolPowerSet;
-    std::vector<uint32_t> m_Power;
-    std::vector<uint32_t> m_AssignableBoost;
-    std::vector<uint32_t> m_InspirationCol;
-    std::vector<uint32_t> m_InspirationRow;
-    std::vector<uint32_t> m_BoostSlot;
+    Vector<uint32_t> m_FreeBoostSlotsOnPower;
+    Vector<uint32_t> m_PoolPowerSet;
+    Vector<uint32_t> m_Power;
+    Vector<uint32_t> m_AssignableBoost;
+    Vector<uint32_t> m_InspirationCol;
+    Vector<uint32_t> m_InspirationRow;
+    Vector<uint32_t> m_BoostSlot;
 };

@@ -7,35 +7,33 @@
 
 #pragma once
 
+#include "Containers/HashMap.h"
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 #include "glm/mat4x4.hpp"
-
-#include <QtCore/QString>
-#include <QtCore/QHash>
-
-#include <vector>
 
 enum class EntType : uint8_t;
 struct NpcTemplate
 {
-    QString m_costume_name;
+    String m_costume_name;
     EntType m_type;
-    std::vector<glm::mat4> m_initial_positions;
+    Vector<glm::mat4> m_initial_positions;
     // attributes/powers ?
 };
 
 struct NpcGenerator
 {
-    QString m_generator_name;
-    EntType m_type;
-    std::vector<glm::mat4> m_initial_positions;
-    std::vector<NpcTemplate> m_possible_npcs;
-    void generate(class MapInstance *);
+    String              m_generator_name;
+    EntType             m_type;
+    Vector<glm::mat4>   m_initial_positions;
+    Vector<NpcTemplate> m_possible_npcs;
+    void                generate(class MapInstance *);
 };
 
 struct NpcGeneratorStore
 {
-    QHash<QString, NpcGenerator> m_generators;
+    HashMap<String, NpcGenerator> m_generators;
     void generate(class MapInstance *instance);
 };
 
-QString makeReadableName(QString &name);
+String makeReadableName(const String &name);

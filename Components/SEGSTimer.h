@@ -1,7 +1,7 @@
 /*
  * SEGS - Super Entity Game Server
  * http://www.segs.dev/
- * Copyright (c) 2006 - 2019 SEGS Team (see AUTHORS.md)
+ * Copyright (c) 2006 - 2024 SEGS Team (see AUTHORS.md)
  * This software is licensed under the terms of the 3-clause BSD License. See LICENSE.md for details.
  */
 
@@ -13,13 +13,13 @@
 #include <ace/Timer_Hash.h>
 #include <ace/Activation_Queue.h>
 
-#include <functional>
+#include "EASTL/functional.h"
 #include <cassert>
 
 class EventProcessor;
 class SEGSTimer
 {
-    using CallbackFunction = std::function<void(const ACE_Time_Value &)>;
+    using CallbackFunction = eastl::function<void(const ACE_Time_Value &)>;
     friend EventProcessor; // allow EventProcessor to set itself as our target when this timer is added to it.
 protected:
     long                m_id = -1;

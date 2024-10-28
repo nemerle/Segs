@@ -6,9 +6,10 @@
  */
 
 #pragma once
-#include <algorithm>
 #include "CoXHash.h"
 #include "DataStorage.h"
+
+#include <EASTL/algorithm.h>
 
 struct TreeStore
 {
@@ -24,7 +25,7 @@ struct TreeStore
     {
         return ~0UL;
     }
-    virtual std::string to_string() const
+    virtual String to_string() const
     {
         return "";
     }
@@ -45,23 +46,23 @@ namespace MapStructs
     struct Group;
     struct Def : public TreeStore
     {
-        std::vector<Lod *> m_lods;
-        std::vector<Fog *> m_fogs;
-        std::vector<Beacon *> m_beacons;
-        std::vector<Sound *> m_sounds;
-        std::vector<TexReplace *> m_texture_replacements;
-        std::vector<Omni *> m_omni;
-        std::vector<Ambient *> m_ambients;
-        std::vector<TintColor *> m_tint_colors;
-        std::vector<Property *> m_properties;
-        std::vector<Group *> m_groups;
+        Vector<Lod *> m_lods;
+        Vector<Fog *> m_fogs;
+        Vector<Beacon *> m_beacons;
+        Vector<Sound *> m_sounds;
+        Vector<TexReplace *> m_texture_replacements;
+        Vector<Omni *> m_omni;
+        Vector<Ambient *> m_ambients;
+        Vector<TintColor *> m_tint_colors;
+        Vector<Property *> m_properties;
+        Vector<Group *> m_groups;
 
-        std::string m_src_name;
-        std::string m_obj_name;
-        std::string m_type_name;
+        String m_src_name;
+        String m_obj_name;
+        String m_type_name;
         uint32_t m_flags;
         static void build_schema();
-        virtual std::string to_string() const
+        virtual String to_string() const
         {
             return "Def["+m_src_name+"]";
         }
@@ -77,11 +78,11 @@ namespace MapStructs
     };
     struct Ref : public TreeStore
     {
-        std::string m_src_name;
+        String m_src_name;
         Vec3 m_pos;
         Vec3 m_rot;
         static void build_schema();
-        virtual std::string to_string() const
+        virtual String to_string() const
         {
             return "Ref["+m_src_name+"]";
         }
@@ -90,7 +91,7 @@ namespace MapStructs
     struct TexReplace : public TreeStore
     {
         uint32_t m_src;
-        std::string m_name_tgt;
+        String m_name_tgt;
         static void build_schema();
     };
     struct Ambient : public TreeStore
@@ -109,14 +110,14 @@ namespace MapStructs
     struct Beacon : public TreeStore
     {
         DECL_READABLE(Beacon)
-        std::string m_name;
+        String m_name;
         float m_val; //radius?
         static void build_schema();
     };
     struct Sound : public TreeStore
     {
         DECL_READABLE(Sound)
-        std::string m_name;
+        String m_name;
         float m_a;
         float m_b;
         float m_c;
@@ -150,14 +151,14 @@ namespace MapStructs
     };
     struct Property : public TreeStore
     {
-        std::string m_txt1;
-        std::string m_txt2;
+        String m_txt1;
+        String m_txt2;
         uint32_t m_val3;
         static void build_schema();
     };
     struct Group : public TreeStore
     {
-        std::string m_name; // this is reference to a model name or def name
+        String m_name; // this is reference to a model name or def name
         Vec3 m_pos;
         Vec3 m_rot;
         static void build_schema();
@@ -165,12 +166,12 @@ namespace MapStructs
 }
 struct SceneStorage : public TreeStore
 {
-    typedef std::vector<MapStructs::Def *> vDef;
-    typedef std::vector<MapStructs::Ref *> vRef;
+    typedef Vector<MapStructs::Def *> vDef;
+    typedef Vector<MapStructs::Ref *> vRef;
     vDef m_defs;
     vRef m_refs;
     vDef m_root;
-    std::string m_scene_file;
+    String m_scene_file;
     uint32_t m_version;
     static void build_schema();
     size_t num_children() const
@@ -191,12 +192,12 @@ struct SceneStorage : public TreeStore
     }
     virtual size_t idx_of_child(TreeStore *child) const
     {
-        vDef::const_iterator itr=std::find(m_defs.begin(),m_defs.end(),child);
+        vDef::const_iterator itr=eastl::find(m_defs.begin(),m_defs.end(),child);
         if(itr!=m_defs.end())
             return itr-m_defs.begin();
         return ~0UL;
     }
-    virtual std::string to_string() const
+    virtual String to_string() const
     {
         return m_scene_file;
     }

@@ -11,17 +11,29 @@
  */
 
 #include "ConfigExtension.h"
-#include <ace/INET_Addr.h>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
+#include "Common/Containers/String.h"
+#include "Common/Containers/StringView.h"
+#include "Common/Containers/Vector.h"
+#include "Utils/string_utils.h"
+
 #include <ace/INET_Addr.h>
 
-bool parseAddress(const QString &src,ACE_INET_Addr &tgt)
+bool parseAddress(const String &src,ACE_INET_Addr &tgt)
 {
-    QStringList parts = src.trimmed().split(':');
+    // input is hostname:port
+    FixedVector<StringView,2,true> parts;
+    String trim=src.trimmed();
+    String::split_ref(parts,trim,':');
     if(parts.size()!=2)
         return false;
-    tgt.set(parts[1].toUShort(),qPrintable(parts[0]));
+    bool ok_port=false;
+    int port=StringUtils::to_int(parts[1],&ok_port);
+    if(!ok_port) {
+        return false;
+    }
+    // set the ':' char to const char * terminating '\0' to allow us to use string view as a plain text pointer
+    trim[parts[0].size()] = 0;
+    tgt.set(port,parts[0].data());
     return true;
 }
 

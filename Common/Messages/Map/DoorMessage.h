@@ -10,8 +10,6 @@
 #include "MapEventTypes.h"
 #include "Components/BitStream.h"
 
-#include <QtCore/QString>
-
 enum DoorMessageStatus
 {
     WAIT = 0,
@@ -28,10 +26,10 @@ public:
     // [[ev_def:field]]
     DoorMessageStatus m_delay_status;
     // [[ev_def:field]]
-    QString m_msg;
+    String m_msg;
 
     explicit DoorMessage() : GameCommandEvent(MapEventTypes::evDoorMessage) {}
-    DoorMessage(DoorMessageStatus delay, QString msg) : GameCommandEvent(MapEventTypes::evDoorMessage),
+    DoorMessage(DoorMessageStatus delay, const String &msg) : GameCommandEvent(MapEventTypes::evDoorMessage),
         m_delay_status(delay),
         m_msg(msg)
     {

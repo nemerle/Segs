@@ -19,85 +19,83 @@
 #include "MessageHelpers.h"
 #include "Components/Settings.h"
 
-#include <QtCore/QString>
-#include <QtCore/QDebug>
-
 using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 2 Commands
-uint cmdHandler_AddNPC(const QStringList &params, MapClientSession &sess)
+void cmdHandler_AddNPC(const Vector<String> &params, MapClientSession &sess)
 {
     if(params.size() < 1)
     {
-        qCDebug(logSlashCommand) << "Bad invocation:" << params.join(" ");
-        sendInfoMessage(MessageChannel::USER_ERROR, "Bad invocation:" + params.join(" "), sess);
-        return 0;
+        String err = "Bad invocation:" + String::joined(params," ");
+        sCDebug(logSlashCommand) << err;
+        sendInfoMessage(MessageChannel::USER_ERROR, err, sess);
+        return;
     }
-    QString name = params.at(0);
+    String name = params.at(0);
     // Variation may not be supplied, so default to 0
-    int variation = params.value(1).toInt();
+    int variation = StringUtils::to_int(params.at(1));
 
     glm::vec3 offset = glm::vec3 {2,0,1};
     glm::vec3 gm_loc = sess.m_ent->m_entity_data.m_pos + offset;
-    return addNpc(sess, name, gm_loc, variation, name);
+    addNpc(sess, name, gm_loc, variation, name);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 1 Commands
-void cmdHandler_WhoAll(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_WhoAll(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     MapInstance *     mi  = sess.m_current_map;
 
-    QString msg = "Players on this map:\n";
+    String msg = "Players on this map:\n";
 
     for (MapClientSession *cl : mi->m_session_store)
     {
         Character &c(*cl->m_ent->m_char);
-        QString    name      = cl->m_ent->name();
-        QString    lvl       = QString::number(getLevel(c)+1);         //+1 as the server stores these values
-        QString    clvl      = QString::number(getCombatLevel(c)+1);  //with a 0 index, issue #831
-        QString    origin    = getOrigin(c);
-        QString    archetype = QString(getClass(c)).remove("Class_");
+        String    name      = cl->m_ent->name();
+        String    lvl       = eastl::to_string(getLevel(c)+1);         //+1 as the server stores these values
+        String     clvl     = eastl::to_string(getCombatLevel(c) + 1); // with a 0 index, issue #831
+        String    origin    = getOrigin(c);
+        String    archetype = String(getClass(c)).replaced("Class_","");
 
         // Format: character_name "lvl" level "clvl" combat_level origin archetype
-        msg += QString("%1 lvl %2 clvl %3 %4 %5\n").arg(name,lvl,clvl,origin,archetype);
+        msg += String(String::CtorSprintf(), "%s lvl %s clvl %s %s %s\n", name.c_str(), lvl.c_str(), clvl.c_str(),
+                      origin.c_str(), archetype.c_str());
     }
 
-    qCDebug(logSlashCommand).noquote() << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::SERVER, msg, sess);
 }
 
-void cmdHandler_MOTD(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_MOTD(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     sendServerMOTD(&sess);
-    QString msg = "Opening Server MOTD";
-    qCDebug(logSlashCommand).noquote() << msg;
+    String msg = "Opening Server MOTD";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::SERVER, msg, sess);
 }
 
-void cmdHandler_Tailor(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Tailor(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     sendTailorOpen(sess);
 }
 
-void cmdHandler_CostumeChange(const QStringList &params, MapClientSession &sess)
+void cmdHandler_CostumeChange(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t costume_idx = params.value(0).toUInt();
+    uint32_t costume_idx = StringUtils::to_int(params.at(0));
 
     setCurrentCostumeIdx(*sess.m_ent->m_char, costume_idx);
 
-    QString msg = "Changing costume to: " + QString::number(costume_idx);
-    qCDebug(logTailor) << msg;
+    sCDebug(logTailor) << "Changing costume to: " << costume_idx;
 }
 
-void cmdHandler_Train(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Train(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     playerTrain(sess);
 }
 
-void cmdHandler_Kiosk(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Kiosk(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     sendKiosk(sess);
 }

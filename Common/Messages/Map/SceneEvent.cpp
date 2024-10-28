@@ -50,7 +50,7 @@ void Scene::groupnetrecv_5(BitStream &src,int /*a*/,int /*b*/)
     if(!src.GetBits(1))
         return;
     assert(0);
-    QString def_filename;
+    String def_filename;
     src.GetString(def_filename);
 }
 

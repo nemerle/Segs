@@ -7,12 +7,14 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <vector>
-#include <array>
-#include <cassert>
+#include "Components/Logging.h"
+#include "Common/Containers/Vector.h"
 
-#include <QDebug>
+#include <EASTL/array.h>
+#include <cassert>
+#include <stdint.h>
+
+//#include <QDebug>
 #include <cereal/cereal.hpp>
 
 enum WindowIDX : uint32_t {
@@ -97,7 +99,7 @@ public:
 
         void                guiWindowDump() const
                             {
-                                qDebug().noquote() << "GUIWindow:" << m_idx
+                                sDebug() << "GUIWindow:" << m_idx
                                          << "\n\t" << "posx:" << m_posx
                                          << "\n\t" << "posy:" << m_posy
                                          << "\n\t" << "width:" << m_width
@@ -135,7 +137,7 @@ public:
         enum : uint32_t { class_version = 1 };
 
         // List of Windows
-        std::array<GUIWindow, 35> m_wnds;
+        eastl::array<GUIWindow, 35> m_wnds;
 
         // Other GUI flags
         bool        m_team_buffs        = false;
@@ -151,17 +153,17 @@ public:
 
         void guiDump() const
         {
-            qDebug().noquote() << "Debugging GUISettings:"
-                               << "\n\t" << "TeamBuffs:" << m_team_buffs
-                               << "\n\t" << "ChatChannel:" << m_cur_chat_channel
-                               << "\n\t" << "PowersTray Mode:" << m_powers_tray_mode
-                               << "\n\t" << "InspTray Mode:" << m_insps_tray_mode
-                               << "\n\t" << "Tray1 Page:" << m_tray1_number
-                               << "\n\t" << "Tray2 Page:" << m_tray2_number
-                               << "\n\t" << "Tray3 Page:" << m_tray3_number
-                               << "\n\t" << "Chat Window Masks Top:" << m_chat_top_flags
-                               << "\n\t" << "Chat Window Masks Bottom:" << m_chat_bottom_flags
-                               << "\n\t" << "Chat Divider Position:" << m_chat_divider_pos;
+            sDebug() << "Debugging GUISettings:"
+                   << "\n\t" << "TeamBuffs:" << m_team_buffs
+                   << "\n\t" << "ChatChannel:" << m_cur_chat_channel
+                   << "\n\t" << "PowersTray Mode:" << m_powers_tray_mode
+                   << "\n\t" << "InspTray Mode:" << m_insps_tray_mode
+                   << "\n\t" << "Tray1 Page:" << m_tray1_number
+                   << "\n\t" << "Tray2 Page:" << m_tray2_number
+                   << "\n\t" << "Tray3 Page:" << m_tray3_number
+                   << "\n\t" << "Chat Window Masks Top:" << m_chat_top_flags
+                   << "\n\t" << "Chat Window Masks Bottom:" << m_chat_bottom_flags
+                   << "\n\t" << "Chat Divider Position:" << m_chat_divider_pos;
 
             for(const auto &wnd : m_wnds)
                 wnd.guiWindowDump();

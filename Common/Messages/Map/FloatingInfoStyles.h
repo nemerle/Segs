@@ -38,7 +38,7 @@ enum FloatingInfoStyle : int
     FloatingInfo_Count          = 9,
 };
 
-static const QMap<FloatingInfoMsgKey, QString> FloatingInfoMsg = {
+static const Map<FloatingInfoMsgKey, String> FloatingInfoMsg = {
     {FloatingMsg_NotEnoughEndurance,"FloatNotEnoughEndurance"}, // FloatingInfo_Info
     {FloatingMsg_OutOfRange,        "FloatOutOfRange"},         // FloatingInfo_Info
     {FloatingMsg_Recharging,        "FloatRecharging"},         // FloatingInfo_Info

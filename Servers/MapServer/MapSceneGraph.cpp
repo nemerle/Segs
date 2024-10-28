@@ -42,10 +42,10 @@ MapSceneGraph::~MapSceneGraph()
 
 }
 
-bool MapSceneGraph::loadFromFile(const QByteArray &filename)
+bool MapSceneGraph::loadFromFile(const String &filename)
 {
-    QFSWrapper wrap;
-    m_scene_graph.reset(loadWholeMap(&wrap, filename));
+    auto fs = SEGS::getServiceLocator()->getFS();
+    m_scene_graph.reset(loadWholeMap(fs, filename));
     if(!m_scene_graph)
         return false;
     for(SceneNode *def : m_scene_graph->all_converted_defs)
@@ -82,7 +82,7 @@ void walkSceneNode( SceneNode *self, const glm::mat4 &accumulated, std::function
     }
 }
 
-static bool checkCostumeExists(const QString &n)
+static bool checkCostumeExists(const String &n)
 {
     const NPCStorage &npc_store(getGameData().getNPCDefinitions());
     for(const Parse_NPC &npc : npc_store.m_all_npcs)
@@ -94,7 +94,7 @@ static bool checkCostumeExists(const QString &n)
     return false;
 }
 
-QString getCostumeFromName(const QString &n)
+String getCostumeFromName(const String &n)
 {
     // A lot of costumes are the object name
     if(checkCostumeExists(n))
@@ -114,10 +114,10 @@ QString getCostumeFromName(const QString &n)
 
     // Most costumes are the object's name without spaces
     // and with Model_ prepended. Assume this as fallback
-    QString result = n;
+    String result = n;
     result = makeReadableName(result);
-    result.remove(" ");
-    result.prepend("Model_");
+    result.replace(" ",StringView());
+    result = "Model_"+result;
     if(checkCostumeExists(result))
         return result;
 
@@ -141,13 +141,13 @@ struct NpcCreator
             if(prop.propName=="PersistentNPC")
             {
                 SpawnerNode snNode;
-                QString persName = QString::fromStdString(prop.propValue.toStdString());
+                String      persName = prop.propValue;
                 persName = makeReadableName(persName);
                 if(persName.contains(" "))
                     persName.replace(" ", "_");
 
                 snNode.m_name = persName;         // Persistents use node name to store the NPC name instead
-                qCDebug(logNpcSpawn) << "Persistent parsed: " << persName;
+                sCDebug(logNpcSpawn) << "Persistent parsed: " << persName;
                 snNode.m_position = glm::vec3(v[3]);
                 snNode.m_rotation = FindOrientation(v);
                 map_instance->m_map_scenegraph->m_persNodes.push_back(snNode);
@@ -203,12 +203,12 @@ struct NpcCreator
         if(!generators)
             return false;
 
-        QString generator_type;
+        String generator_type;
         for (GroupProperty_Data &prop : *n->m_properties)
         {
             if(prop.propName=="Generator")
             {
-                QString propValue = prop.propValue;
+                String propValue = prop.propValue;
                 SpawnerNode snNode;
                 snNode.m_position = glm::vec3(v[3]);
                 snNode.m_rotation = FindOrientation(v);
@@ -230,7 +230,7 @@ struct NpcCreator
             }
         }
 
-        if(generator_type.isEmpty())
+        if(generator_type.empty())
             return true;
 
         if(!generators->m_generators.contains(generator_type))
@@ -280,8 +280,8 @@ void MapSceneGraph::spawn_npcs(MapInstance *instance)
 
 struct SpawnPointLocator
 {
-    QMultiHash<QString, glm::mat4> *m_targets;
-    SpawnPointLocator(QMultiHash<QString, glm::mat4> *targets) :
+    eastl::hash_multimap<String, glm::mat4> *m_targets;
+    SpawnPointLocator(eastl::hash_multimap<String, glm::mat4> *targets) :
         m_targets(targets)
     {}
     bool operator()(SceneNode *n, const glm::mat4 &v)
@@ -294,7 +294,7 @@ struct SpawnPointLocator
             if(prop.propName == "SpawnLocation")
             {
                 //qCDebug(logPlayerSpawn) << "Spawner:" << prop.propValue << prop.propertyType;
-                m_targets->insert(prop.propValue, v);
+                m_targets->emplace(prop.propValue, v);
                 return false;
             }
         }
@@ -302,9 +302,9 @@ struct SpawnPointLocator
     }
 };
 
-QMultiHash<QString, glm::mat4> MapSceneGraph::getSpawnPoints() const
+eastl::hash_multimap<String, glm::mat4> MapSceneGraph::getSpawnPoints() const
 {
-    QMultiHash<QString, glm::mat4> res;
+    eastl::hash_multimap<String, glm::mat4> res;
     SpawnPointLocator locator(&res);
     for(auto v : m_scene_graph->roots)
         walkSceneNode(v->node, v->mat, locator);
@@ -315,8 +315,8 @@ QMultiHash<QString, glm::mat4> MapSceneGraph::getSpawnPoints() const
 
 struct MapXferLocator
 {
-    QHash<QString, MapXferData> *m_targets;
-    MapXferLocator(QHash<QString, MapXferData> *targets):
+    HashMap<String, MapXferData> *m_targets;
+    MapXferLocator(HashMap<String, MapXferData> *targets):
         m_targets(targets)
     {}
     bool operator()(SceneNode *n, const glm::mat4 &v)
@@ -360,7 +360,7 @@ struct MapXferLocator
                         glm::vec3 pos3 = glm::vec3(pos4);
 
                         map_transfer.m_position = pos3;
-                        m_targets->insert(map_transfer.m_node_name, map_transfer);
+                        m_targets->emplace(map_transfer.m_node_name, map_transfer);
                         return false;
                     }
                 }
@@ -371,9 +371,9 @@ struct MapXferLocator
     }
 };
 
-QHash<QString, MapXferData> MapSceneGraph::get_map_transfers() const
+HashMap<String, MapXferData> MapSceneGraph::get_map_transfers() const
 {
-    QHash<QString, MapXferData> res;
+    HashMap<String, MapXferData> res;
     MapXferLocator locator(&res);
     for (auto v : m_scene_graph->roots)
     {

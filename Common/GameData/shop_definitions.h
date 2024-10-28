@@ -6,29 +6,29 @@
  */
 
 #pragma once
-#include <QtCore/QString>
-#include <vector>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 
 struct ItemPower_Data
 {
-    QByteArray m_PowerCategory;
-    QByteArray m_PowerSet;
-    QByteArray m_Power;
+    String m_PowerCategory;
+    String m_PowerSet;
+    String m_Power;
     int m_Level;
     int m_Remove;
 };
 
 struct ShopItemInfo_Data
 {
-    QByteArray m_Name;
+    String m_Name;
     ItemPower_Data m_Power;
     int m_Sell;
     int m_Buy;
     int m_CountPerStore;
-    std::vector<uint32_t> m_Departments;
+    Vector<uint32_t> m_Departments;
     struct Power_Data *power_tpl; // looked up by using entries in m_Power
 };
-using AllShopItems_Data = std::vector<ShopItemInfo_Data>;
+using AllShopItems_Data = Vector<ShopItemInfo_Data>;
 
 struct ShopBuySell_Data
 {
@@ -38,20 +38,20 @@ struct ShopBuySell_Data
 
 struct ShopItem_Data
 {
-    QByteArray m_Name;
+    String m_Name;
 };
 
 struct Shop_Data
 {
-    QByteArray m_Name;
-    std::vector<ShopBuySell_Data> m_Sells;
-    std::vector<ShopBuySell_Data> m_Buys;
-    std::vector<ShopItem_Data> m_Items;
+    String m_Name;
+    Vector<ShopBuySell_Data> m_Sells;
+    Vector<ShopBuySell_Data> m_Buys;
+    Vector<ShopItem_Data> m_Items;
 };
-using AllShops_Data = std::vector<Shop_Data>;
+using AllShops_Data = Vector<Shop_Data>;
 
 struct ShopDeptName_Data
 {
-    QByteArray m_Names;
+    String m_Names;
 };
-using AllShopDepts_Data = std::vector<ShopDeptName_Data>;
+using AllShopDepts_Data = Vector<ShopDeptName_Data>;

@@ -17,17 +17,17 @@ class EntityInfoResponse final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    QString m_info_text;
+    String m_info_text;
     explicit EntityInfoResponse () : GameCommandEvent(MapEventTypes::evEntityInfoResponse)
     {
     }
-    EntityInfoResponse (const QString &txt) : GameCommandEvent(MapEventTypes::evEntityInfoResponse),m_info_text(txt)
+    EntityInfoResponse (const String &txt) : GameCommandEvent(MapEventTypes::evEntityInfoResponse),m_info_text(txt)
     {
     }
 
     void serializeto(BitStream &bs) const override
     {
-        qCDebug(logMapEvents) << "Info Response: " << m_info_text;
+        sCDebug(logMapEvents) << "Info Response: " << m_info_text;
         bs.StorePackedBits(1, 69);
         bs.StoreString(m_info_text);
     }

@@ -28,8 +28,8 @@
 void toggleFriendList(Entity &src)
 {
     GUIWindow *friendlist = &src.m_player->m_gui.m_wnds.at(WindowIDX::wdw_Friends);
-    QString msg = "Toggling FriendList visibility.";
-    msg += " " + QString::number(friendlist->m_mode);
+    String msg = "Toggling FriendList visibility.";
+    msg += " " + eastl::to_string(friendlist->m_mode);
 
     // TODO: How to actually change window visibility?
     if(friendlist->m_mode != WindowVisibility::wv_Visible)
@@ -37,18 +37,14 @@ void toggleFriendList(Entity &src)
     else
         friendlist->setWindowVisibility(WindowVisibility::wv_DockedOrHidden);
 
-    msg += " to " + QString::number(friendlist->m_mode);
-    qCDebug(logFriends).noquote() << msg;
+    msg += " to " + eastl::to_string(friendlist->m_mode);
+    sCDebug(logFriends) << msg;
 }
 
 void dumpFriends(const Entity &src)
 {
     const FriendsList *fl(&src.m_char->m_char_data.m_friendlist);
-    QString msg = QString("FriendsList\n  has_friends: %1 \n friends_count: %2 ")
-            .arg(fl->m_has_friends)
-            .arg(fl->m_friends_count);
-
-    qDebug().noquote() << msg;
+    sDebug() << String(String::CtorSprintf(),"FriendsList\n  has_friends: %d \n friends_count: %d ",fl->m_has_friends,fl->m_friends_count);
 
     for(const auto &f : fl->m_friends)
         dumpFriendsList(f);
@@ -56,7 +52,7 @@ void dumpFriends(const Entity &src)
 
 void dumpFriendsList(const Friend &f)
 {
-    qDebug().noquote() << "Friend:" << f.m_name
+    sDebug() << "Friend:" << f.m_name
              << "\n\t" << "online:" << f.m_online_status
              << "\n\t" << "db_id:" << f.m_db_id
              << "\n\t" << "class_id:" << f.m_class_idx
@@ -65,9 +61,9 @@ void dumpFriendsList(const Friend &f)
              << "\n\t" << "mapname:" << f.m_mapname;
 }
 
-FriendListChangeStatus addFriend(Entity &src, const Entity &tgt,const QString &mapname)
+FriendListChangeStatus addFriend(Entity &src, const Entity &tgt, const String &mapname)
 {
-    QString msg;
+    String msg;
     FriendsList &src_data(src.m_char->m_char_data.m_friendlist);
 
     if(src_data.m_friends_count >= g_max_friends)
@@ -89,23 +85,23 @@ FriendListChangeStatus addFriend(Entity &src, const Entity &tgt,const QString &m
 
     // add to friendlist
     src_data.m_friends.emplace_back(f);
-    qCDebug(logFriends) << "friendslist size:" << src_data.m_friends_count << src_data.m_friends.size();
+    sCDebug(logFriends) << "friendslist size:" << src_data.m_friends_count << src_data.m_friends.size();
 
     if(logFriends().isDebugEnabled())
         dumpFriends(src);
     return FriendListChangeStatus::FRIEND_ADDED;
 }
 
-FriendListChangeStatus removeFriend(Entity &src, const QString& friend_name)
+FriendListChangeStatus removeFriend(Entity &src, const String& friend_name)
 {
-    QString msg;
+    String msg;
     FriendsList &src_data(src.m_char->m_char_data.m_friendlist);
 
-    qCDebug(logFriends) << "Searching for friend" << friend_name << "to remove them.";
+    sCDebug(logFriends) << "Searching for friend" << friend_name << "to remove them.";
 
-    QString lower_name = friend_name.toLower();
-    auto iter = std::find_if( src_data.m_friends.begin(), src_data.m_friends.end(),
-                              [lower_name](const Friend& f)->bool {return lower_name==f.m_name.toLower();});
+    String lower_name = friend_name.to_lower();
+    auto iter = eastl::find_if( src_data.m_friends.begin(), src_data.m_friends.end(),
+                              [lower_name](const Friend& f)->bool {return 0==lower_name.comparei(f.m_name);});
 
     if(iter==src_data.m_friends.end())
         return FriendListChangeStatus::FRIEND_NOT_FOUND;
@@ -113,7 +109,7 @@ FriendListChangeStatus removeFriend(Entity &src, const QString& friend_name)
     msg = "Removing " + iter->m_name + " from your friends list.";
     iter = src_data.m_friends.erase(iter);
 
-    qCDebug(logFriends) << msg;
+    sCDebug(logFriends) << msg;
     if(logFriends().isDebugEnabled())
         dumpFriends(src);
 
@@ -122,7 +118,7 @@ FriendListChangeStatus removeFriend(Entity &src, const QString& friend_name)
 
     src_data.m_friends_count = src_data.m_friends.size();
 
-    qCDebug(logFriends).noquote() << msg;
+    sCDebug(logFriends) << msg;
     return FriendListChangeStatus::FRIEND_REMOVED;
 }
 
@@ -139,7 +135,7 @@ void Friend::serialize(Archive &archive, uint32_t const version)
 {
     if(version != Friend::class_version)
     {
-        qCritical() << "Failed to serialize Friend, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Friend, incompatible serialization format version " << version;
         return;
     }
 
@@ -160,7 +156,7 @@ void serialize(Archive &archive, FriendsList &fl, uint32_t const version)
 {
     if(version != FriendsList::class_version)
     {
-        qCritical() << "Failed to serialize FriendsList, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize FriendsList, incompatible serialization format version " << version;
         return;
     }
 

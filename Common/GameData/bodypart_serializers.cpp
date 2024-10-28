@@ -60,7 +60,7 @@ bool loadFrom(BinStore * s, BodyPartsStorage &target)
     if(s->end_encountered())
         return ok;
 
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -79,9 +79,9 @@ bool loadFrom(BinStore * s, BodyPartsStorage &target)
     return ok;
 }
 
-void saveTo(const BodyPartsStorage & target, const QString & baseName, bool text_format)
+void saveTo(const BodyPartsStorage & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target.m_parts,"BodyParts",baseName,text_format);
+    SEGS::commonSaveTo(target.m_parts,"BodyParts",baseName,text_format);
 }
 
 //! @}

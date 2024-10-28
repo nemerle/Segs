@@ -18,11 +18,11 @@ struct Friend
 
         bool        m_online_status;
         uint32_t    m_db_id;           // m_db_id
-        QString     m_name;
+        String      m_name;
         uint8_t     m_class_idx;
         uint8_t     m_origin_idx;
         int         m_map_idx;         // if online, then these Packed Bits
-        QString     m_mapname;         // field_18, probably mapname
+        String      m_mapname;         // field_18, probably mapname
         template<class Archive>
         void        serialize(Archive &archive, uint32_t const version);
 };
@@ -33,7 +33,7 @@ struct FriendsList
 
     bool                m_has_friends   = false;
     int                 m_friends_count = 0;
-    std::vector<Friend> m_friends;
+    Vector<Friend> m_friends;
 };
 template<class Archive>
 void serialize(Archive &archive, FriendsList &fl, uint32_t const version);
@@ -53,7 +53,7 @@ void toggleFriendList(Entity &src);
 void dumpFriends(const Entity &src);
 void dumpFriendsList(const Friend &f);
 
-FriendListChangeStatus addFriend(Entity &src, const Entity &tgt, const QString &mapname);
-FriendListChangeStatus removeFriend(Entity &src, const QString& friendName);
+FriendListChangeStatus addFriend(Entity &src, const Entity &tgt, const String &mapname);
+FriendListChangeStatus removeFriend(Entity &src, const String& friendName);
 
-const QString &getFriendDisplayMapName(const Friend &f);
+const String &getFriendDisplayMapName(const Friend &f);

@@ -110,7 +110,7 @@ int EventProcessor::putq(Event *ev,ACE_Time_Value *timeout)
 uint32_t EventProcessor::addTimer(const ACE_Time_Value &fire_delta_time,bool one_shot)
 {
     uint32_t tmr_id = m_next_timer_id++;
-    m_registered_timers.emplace(tmr_id,std::make_unique<SEGSTimer>(tmr_id,fire_delta_time,one_shot));
+    m_registered_timers.emplace(tmr_id,eastl::make_unique<SEGSTimer>(tmr_id,fire_delta_time,one_shot));
     return tmr_id;
 }
 /**

@@ -6,16 +6,17 @@
  */
 
 #pragma once
-#include <QtCore/QtContainerFwd>
+#include "Containers/String.h"
+#include "Containers/Vector.h"
 
 struct MapClientSession;
 
 // Slash Commands related to Friends and Friendslist
 
 // Access Level 9 Commands (GMs)
-void cmdHandler_FriendsListDebug(const QStringList &params, MapClientSession &sess);
+void cmdHandler_FriendsListDebug(const Vector<String> &params, MapClientSession &sess);
 
 // Access Level 1 Commands
-void cmdHandler_Friend(const QStringList &params, MapClientSession &sess);
-void cmdHandler_Unfriend(const QStringList &params, MapClientSession &sess);
-void cmdHandler_FriendList(const QStringList &params, MapClientSession &sess);
+void cmdHandler_Friend(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_Unfriend(const Vector<String> &params, MapClientSession &sess);
+void cmdHandler_FriendList(const Vector<String> &params, MapClientSession &sess);

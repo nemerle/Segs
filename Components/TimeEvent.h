@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "Components/SEGSEvent.h"
+#include "Components/SEGSEvent_impl.h"
 
 #include <ace/Time_Value.h>
 namespace SEGSEvents

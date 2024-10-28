@@ -7,14 +7,13 @@
 
 #pragma once
 #include <stdint.h>
-
-class QString;
+#include "Common/Containers/String.h"
 struct EntityData;
 
 template<class Archive>
 void serialize(Archive & archive, EntityData & m, uint32_t const version);
 
-void saveTo(const EntityData &target,const QString &baseName,bool text_format=false);
+void saveTo(const EntityData &target, const String &baseName, bool text_format=false);
 
-void serializeToDb(const EntityData &data, QString &tgt);
-void serializeFromDb(EntityData &data, const QString &src);
+void serializeToDb(const EntityData &data, String &tgt);
+void serializeFromDb(EntityData &data, const String &src);

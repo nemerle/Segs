@@ -12,6 +12,7 @@
 
 #include "Components/SEGSEvent.h"
 #include "SEGSEventFactory.h"
+#include "SEGSEvent_impl.h"
 
 using namespace SEGSEvents;
 Finish *Finish::s_instance(new Finish());

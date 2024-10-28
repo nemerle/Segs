@@ -20,9 +20,9 @@ class ConsoleOutput final : public GameCommandEvent
     public:
 
     // [[ev_def:field]
-    QString m_msg;
+    String m_msg;
     explicit ConsoleOutput() : GameCommandEvent(MapEventTypes::evConsoleOutput){}
-    ConsoleOutput(QString msg) : GameCommandEvent(MapEventTypes::evConsoleOutput)
+    ConsoleOutput(const String &msg) : GameCommandEvent(MapEventTypes::evConsoleOutput)
     {
         m_msg = msg;
     }
@@ -42,9 +42,9 @@ class ConsolePrint final : public GameCommandEvent
     public:
 
     // [[ev_def:field]
-    QString m_msg;
+    String m_msg;
     explicit ConsolePrint() : GameCommandEvent(MapEventTypes::evConsolePrint){}
-    ConsolePrint(QString msg) : GameCommandEvent(MapEventTypes::evConsolePrint)
+    ConsolePrint(const String &msg) : GameCommandEvent(MapEventTypes::evConsolePrint)
     {
         m_msg = msg;
     }

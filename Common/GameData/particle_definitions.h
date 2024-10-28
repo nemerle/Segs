@@ -10,13 +10,10 @@
 #include "Common/GameData/fx_definitions.h"
 #include <glm/vec2.hpp>
 
-#include <QtCore/QSet>
-#include <array>
-#include <vector>
 struct Texture;
 struct ParticleTextureData
 {
-    QByteArray m_TextureName;
+    String    m_TextureName;
     glm::vec3 m_TexScroll;
     glm::vec3 m_TexScrollJitter;
     float     m_AnimFrames;
@@ -30,15 +27,15 @@ struct ParticleSystemInfo
     uint32_t               m_FrontOrLocalFacing;
     float                  m_TimeToFull;
     uint32_t               m_KickStart;
-    std::vector<float>     m_NewPerFrame;
-    std::vector<uint32_t>  m_Burst;
+    Vector<float>          m_NewPerFrame;
+    Vector<uint32_t>       m_Burst;
     float                  m_MoveScale;
     uint32_t               m_BurbleType;
     float                  m_BurbleFrequency;
-    std::vector<float>     m_BurbleAmplitude;
+    Vector<float>          m_BurbleAmplitude;
     float                  m_BurbleThreshold;
     uint32_t               m_EmissionType;
-    std::vector<glm::vec3> m_EmissionStartJitter;
+    Vector<glm::vec3>      m_EmissionStartJitter;
     float                  m_EmissionRadius;
     float                  m_EmissionHeight;
     int                    m_Spin;
@@ -48,23 +45,23 @@ struct ParticleSystemInfo
     float                  m_Gravity;
     uint32_t               m_KillOnZero;
     uint32_t               m_Terrain;
-    std::vector<glm::vec3> m_InitialVelocity;
-    std::vector<glm::vec3> m_InitialVelocityJitter;
+    Vector<glm::vec3>      m_InitialVelocity;
+    Vector<glm::vec3>      m_InitialVelocityJitter;
     glm::vec3              m_VelocityJitter;
     float                  m_TightenUp;
     float                  m_SortBias;
     float                  m_Drag;
     float                  m_Stickiness;
-    std::vector<uint32_t>  m_Alpha;
+    Vector<uint32_t>  m_Alpha;
     uint32_t               m_ColorChangeType;
-    std::array<ColorFx, 5> m_StartColor; // colornavpoint
+    eastl::array<ColorFx, 5> m_StartColor; // colornavpoint
     float                  m_FadeInBy;
     float                  m_FadeOutStart;
     float                  m_FadeOutBy;
     uint32_t               m_Blend_mode;
-    std::vector<float>     m_StartSize;
+    Vector<float>          m_StartSize;
     float                  m_StartSizeJitter;
-    std::vector<float>     m_EndSize;
+    Vector<float>          m_EndSize;
     float                  m_ExpandRate;
     enum
     {
@@ -78,9 +75,9 @@ struct ParticleSystemInfo
     uint32_t                          m_StreakOrient;
     uint32_t                          m_StreakDirection;
     float                             m_StreakScale;
-    std::array<ParticleTextureData, 2> particleTexture;
-    QByteArray                        m_Name;
-    QByteArray                        m_DieLikeThis;
+    eastl::array<ParticleTextureData, 2> particleTexture;
+    String                            m_Name;
+    String                            m_DieLikeThis;
     uint32_t                          m_DeathAgeToZero;
     uint32_t                          m_Flags;
     float                             m_VisRadius;
@@ -88,7 +85,7 @@ struct ParticleSystemInfo
 };
 struct Parse_AllPSystems
 {
-    std::vector<ParticleSystemInfo> m_Systems;
-    QMap<QString,size_t> m_NameToIdx;
+    Vector<ParticleSystemInfo> m_Systems;
+    Map<String,size_t> m_NameToIdx;
 };
-void cleanupPSystemName(QByteArray &name);
+void cleanupPSystemName(String &name);

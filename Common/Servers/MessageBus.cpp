@@ -27,7 +27,7 @@ namespace
         Statistics_Timer = 1,
     };
 
-    void removeEndpointFromUnorderedVector(std::vector<MessageBusEndpoint *> &vec,const MessageBusEndpoint *to_remove)
+    void removeEndpointFromUnorderedVector(Vector<MessageBusEndpoint *> &vec,const MessageBusEndpoint *to_remove)
     {
         for(int i=0,total=vec.size(); i<total; ++i)
         {

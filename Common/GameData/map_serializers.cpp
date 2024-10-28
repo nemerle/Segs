@@ -38,7 +38,7 @@ bool loadFrom(BinStore *s, AllMaps_Data &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -62,9 +62,9 @@ static void serialize(Archive & archive, Map_Data & m)
     archive(cereal::make_nvp("TextLocation",m.TextLocation));
 }
 
-void saveTo(const AllMaps_Data &target, const QString &baseName, bool text_format)
+void saveTo(const AllMaps_Data &target, const String &baseName, bool text_format)
 {
-    commonSaveTo(target,"AllZones",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllZones",baseName,text_format);
 }
 
 //! @}

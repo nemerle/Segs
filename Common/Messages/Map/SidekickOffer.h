@@ -28,7 +28,7 @@ explicit        SidekickOffer() : GameCommandEvent(MapEventTypes::evSidekickOffe
                 {
                     bs.StorePackedBits(1,type()-MapEventTypes::evFirstServerToClient); // 28
                     bs.StoreBits(32,m_db_id);
-                    qCDebug(logTeams) << "Sidekick Offer db_id:" << m_db_id;
+                    sCDebug(logTeams) << "Sidekick Offer db_id:" << m_db_id;
                 }
     EVENT_IMPL(SidekickOffer)
 };

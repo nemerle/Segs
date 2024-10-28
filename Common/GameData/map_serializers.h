@@ -7,13 +7,13 @@
 
 #pragma once
 #include <stdint.h>
-#include <vector>
+#include "Common/Containers/Vector.h"
+#include "Common/Containers/String.h"
 
 class BinStore;
-class QString;
 
-typedef std::vector<struct Map_Data> AllMaps_Data;
+typedef Vector<struct Map_Data> AllMaps_Data;
 
 static constexpr uint32_t zones_i0_requiredCrc=0x520EE128;
 bool loadFrom(BinStore *s,AllMaps_Data &target);
-void saveTo(const AllMaps_Data &target,const QString &baseName,bool text_format=false);
+void saveTo(const AllMaps_Data &target,const String &baseName,bool text_format=false);

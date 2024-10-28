@@ -27,50 +27,50 @@ using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 9 Commands
-void cmdHandler_SettingsDump(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_SettingsDump(const Vector<String> &/*params*/, MapClientSession &sess)
 {
-    QString msg = "Sending settings config dump to console output.";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Sending settings config dump to console output.";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     settingsDump(); // Send settings dump
 }
 
-void cmdHandler_GUIDebug(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_GUIDebug(const Vector<String> &/*params*/, MapClientSession &sess)
 {
-    QString msg = "Sending GUISettings dump to console output.";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Sending GUISettings dump to console output.";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     sess.m_ent->m_player->m_gui.guiDump(); // Send GUISettings dump
 }
 
-void cmdHandler_SetWindowVisibility(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetWindowVisibility(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t idx = params.value(0).toUInt();
-    WindowVisibility val = (WindowVisibility)params.value(1).toInt();
+    uint32_t idx = StringUtils::to_int(params.at(0));
+    WindowVisibility val = (WindowVisibility)StringUtils::to_int(params.at(1));
 
-    QString msg = "Toggling " + QString::number(idx) +  " GUIWindow visibility: " + QString::number(val);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggling " + eastl::to_string(idx) + " GUIWindow visibility: " + eastl::to_string(val);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     sess.m_ent->m_player->m_gui.m_wnds.at(idx).setWindowVisibility(val); // Set WindowVisibility
     sess.m_ent->m_player->m_gui.m_wnds.at(idx).guiWindowDump(); // for debugging
 }
 
-void cmdHandler_KeybindDebug(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_KeybindDebug(const Vector<String> &/*params*/, MapClientSession &sess)
 {
-    QString msg = "Sending Keybinds dump to console output.";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Sending Keybinds dump to console output.";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     sess.m_ent->m_player->m_keybinds.keybindsDump(); // Send GUISettings dump
 }
 
-void cmdHandler_ToggleLogging(const QStringList &params, MapClientSession &sess)
+void cmdHandler_ToggleLogging(const Vector<String> &params, MapClientSession &sess)
 {
-    QString msg = "Toggle logging of categories: " + params.join(" ");
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggle logging of categories: " + String::joined(params," ");
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 
     for (auto category : params)

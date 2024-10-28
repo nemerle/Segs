@@ -59,7 +59,7 @@ namespace
         assert(ok);
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         // Only one entry per Item
         while(s->nesting_name(_name))
         {
@@ -116,7 +116,7 @@ namespace
         assert(ok);
         if(s->end_encountered())
             return ok;
-        QByteArray _name;
+        String _name;
         // Only one entry per Item
         if(s->nesting_name(_name))
         {
@@ -139,7 +139,7 @@ bool loadFrom(BinStore *s, AllShops_Data &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -164,7 +164,7 @@ bool loadFrom(BinStore *s, AllShopItems_Data &target)
     if(s->end_encountered())
         return ok;
 
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -191,7 +191,7 @@ bool loadFrom(BinStore * s, AllShopDepts_Data &target)
     assert(ok);
     if(s->end_encountered())
         return ok;
-    QByteArray _name;
+    String _name;
     while(s->nesting_name(_name))
     {
         s->nest_in();
@@ -231,9 +231,9 @@ static void serialize(Archive & archive, Shop_Data & m)
     archive(cereal::make_nvp("Items",m.m_Items));
 }
 
-void saveTo(const AllShops_Data & target, const QString & baseName, bool text_format)
+void saveTo(const AllShops_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"AllShops",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllShops",baseName,text_format);
 }
 
 template<class Archive>
@@ -257,9 +257,9 @@ static void serialize(Archive & archive, ShopItemInfo_Data & m)
     archive(cereal::make_nvp("Power",m.m_Power));
 }
 
-void saveTo(const std::vector<struct ShopItemInfo_Data> & target, const QString & baseName, bool text_format)
+void saveTo(const Vector<struct ShopItemInfo_Data> & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"AllShopItems",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllShopItems",baseName,text_format);
 }
 
 template<class Archive>
@@ -268,9 +268,9 @@ static void serialize(Archive & archive, ShopDeptName_Data & m)
     archive(cereal::make_nvp("Name",m.m_Names));
 }
 
-void saveTo(const AllShopDepts_Data & target, const QString & baseName, bool text_format)
+void saveTo(const AllShopDepts_Data & target, const String & baseName, bool text_format)
 {
-    commonSaveTo(target,"AllShopDepts",baseName,text_format);
+    SEGS::commonSaveTo(target,"AllShopDepts",baseName,text_format);
 }
 
 //! @}

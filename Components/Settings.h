@@ -6,31 +6,50 @@
  */
 
 #pragma once
-#include <QSettings>
-#include <QString>
+
+#include "Common/Containers/String.h"
+#include "Common/Containers/StringView.h"
+#include "Common/Containers/Vector.h"
+
+class SettingsImpl;
 
 class Settings
 {
 public:
-    static void         setSettingsPath(const QString &path);
-    static QString      getSettingsPath();
-    static void         setSEGSDir();
-    static QString      getSEGSDir();
-    static QString      getSettingsTplPath();
-    static QString      getTemplateDirPath();
-    static void         createSettingsFile(const QString &new_file_path);
+    static void        setSettingsPath(const String &path);
+    static String      getSettingsPath();
+    static void        discoverSEGSDir();
+    static String      getSEGSDir(); //!< Returns the absolute path to the SEGS installation directory
+    static String      getSettingsTplPath();
+    static String      getTemplateDirPath();
+    static void        createSettingsFile(const String &new_file_path);
+
+    template<typename T>
+    T value(StringView key,const T &default_value, bool *ok=nullptr);
+
+    StringView value(StringView key);
+
+    void                       beginGroup(StringView);
+    void                       endGroup();
+    [[nodiscard]] Vector<String> childGroups() const;
+    [[nodiscard]] Vector<String> allKeys() const;
+    bool contains(StringView str);
+
+    explicit Settings(StringView);
+    ~Settings();
+    Settings(const Settings&) = delete;
+    Settings& operator=(const Settings&) = delete;
 
 private:
-    Settings();
-    Settings(Settings const&);
-    Settings& operator=(Settings const&);
 
-    static QString      s_segs_dir;
-    static QString      s_settings_path;
-    static QString      s_default_tpl_dir;
-    static QString      s_default_settings_path;
+    SettingsImpl* m_impl;
+
+    static String      s_segs_dir;
+    static String      s_settings_path;
+    static String      s_default_tpl_dir;
+    static String      s_default_settings_path;
 };
 
 void settingsDump();
-void settingsDump(QSettings *s);
-bool fileExists(const QString &path);
+void settingsDump(Settings *s);
+bool fileExists(const String &path);

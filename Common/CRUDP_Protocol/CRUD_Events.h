@@ -7,12 +7,10 @@
 
 #pragma once
 #include "Common/CRUDP_Protocol/CRUDP_Packet.h"
+
 #include "Components/Logging.h"
 #include "Components/EventProcessor.h"
 #include "Components/LinkLevelEvent.h"
-
-#include <memory>
-
 namespace SEGSEvents
 {
 
@@ -35,11 +33,11 @@ class Packet : public Event
 {
 public:
     Packet() : Event(CRUD_EventTypes::evPacket,nullptr) {}
-    Packet(EventSrc *evsrc, std::unique_ptr<CrudP_Packet> &&pkt, const ACE_INET_Addr &tgt)
-        : Event(evPacket, evsrc), m_pkt(std::move(pkt)), target(tgt)
+    Packet(EventSrc *evsrc, eastl::unique_ptr<CrudP_Packet> &&pkt, const ACE_INET_Addr &tgt)
+        : Event(evPacket, evsrc), m_pkt(eastl::move(pkt)), target(tgt)
     {
     }
-    std::unique_ptr<CrudP_Packet> m_pkt;
+    eastl::unique_ptr<CrudP_Packet> m_pkt;
     ACE_INET_Addr  target;
     const uint8_t *bytes() const;
     size_t         size() const;

@@ -16,7 +16,7 @@
 #include "Components/BitStream.h"
 #include "Components/serialization_common.h"
 #include "Components/serialization_types.h"
-#include <QtCore/QDebug>
+//#include <QtCore/QDebug>
 
 int g_max_num_costume_slots = 4; // client UI cannot handle more than 4 slots
 
@@ -57,11 +57,11 @@ void serializeto(const CostumePart &part, BitStream &bs,const ColorAndPartPacker
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 }
 
@@ -83,11 +83,11 @@ void serializefrom(CostumePart &part,BitStream &bs,const ColorAndPartPacker *pac
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 }
 
@@ -113,7 +113,7 @@ void serialize(Archive &arc, CostumePart &cp, uint32_t const version)
 {
     if (version != cp.class_version)
     {
-        qCritical() << "Failed to serialize CostumePart, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize CostumePart, incompatible serialization format version " << version;
         return;
     }
 
@@ -136,7 +136,7 @@ void Costume::serialize(Archive &archive, uint32_t const version)
 {
     if (version != Costume::class_version)
     {
-        qCritical() << "Failed to serialize Costume, incompatible serialization format version " << version;
+        sCritical() << "Failed to serialize Costume, incompatible serialization format version " << version;
         return;
     }
 
@@ -153,23 +153,23 @@ void Costume::serialize(Archive &archive, uint32_t const version)
 CEREAL_CLASS_VERSION(Costume, Costume::class_version)   // register Costume class version
 SPECIALIZE_CLASS_VERSIONED_SERIALIZATIONS(Costume)
 
-void Costume::serializeToDb(QString &tgt) const
+void Costume::serializeToDb(String &tgt) const
 {
     std::ostringstream ostr;
     {
         cereal::JSONOutputArchive ar( ostr );
         ar(*this);
     }
-
-    tgt = QString::fromStdString(ostr.str());
+    auto res=ostr.str();
+    tgt = String(res.c_str(),res.size());
 }
 
-void Costume::serializeFromDb(const QString &src)
+void Costume::serializeFromDb(const String &src)
 {
-    if(src.isEmpty())
+    if(src.empty())
         return;
     std::istringstream istr;
-    istr.str(src.toStdString());
+    istr.str(std::string(src.c_str()));
     {
         cereal::JSONInputArchive ar(istr);
         ar(*this);
@@ -183,22 +183,22 @@ void Costume::serializeFromDb(const QString &src)
 
 void Costume::dump() const
 {
-    qDebug().noquote() << "Costume: " << m_character_id << ":" << m_index;
-    qDebug().noquote() << "  Body Type: " << m_body_type;
-    qDebug().noquote() << "  Skin Color: " << m_skin_color;
-    qDebug().noquote() << "  Height: " << m_height;
-    qDebug().noquote() << "  Physique: " << m_physique;
-    qDebug().noquote() << "****** " << m_num_parts << " Parts ******";
+    sDebug() << "Costume: " << m_character_id << ":" << m_index;
+    sDebug() << "  Body Type: " << m_body_type;
+    sDebug() << "  Skin Color: " << m_skin_color;
+    sDebug() << "  Height: " << m_height;
+    sDebug() << "  Physique: " << m_physique;
+    sDebug() << "****** " << m_num_parts << " Parts ******";
 
     for(int i=0; i < m_num_parts; i++)
     {
         const CostumePart &cp(m_parts[i]);
         if(cp.m_full_part)
-            qDebug().noquote() << cp.m_geometry << cp.m_texture_1 << cp.m_texture_2 <<
+            sDebug() << cp.m_geometry << cp.m_texture_1 << cp.m_texture_2 <<
                         cp.m_colors[0] << cp.m_colors[1] <<
                         cp.name_3 << cp.name_4 << cp.name_5;
         else
-            qDebug().noquote() << cp.m_geometry << cp.m_texture_1 << cp.m_texture_2 <<
+            sDebug() << cp.m_geometry << cp.m_texture_1 << cp.m_texture_2 <<
                         cp.m_colors[0] << cp.m_colors[1];
     }
 
@@ -233,11 +233,11 @@ void serializeto(const Costume &costume,BitStream &bs, const ColorAndPartPacker 
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 }
 
@@ -265,11 +265,11 @@ void serializefrom(Costume &tgt, BitStream &src, const ColorAndPartPacker *packe
     }
     catch(cereal::RapidJSONException &e)
     {
-        qWarning() << e.what();
+        sWarning() << e.what();
     }
     catch(std::exception &e)
     {
-        qCritical() << e.what();
+        sCritical() << e.what();
     }
 }
 

@@ -20,10 +20,6 @@
 #include "GameServer/ClientOptionService/ClientOptionService.h"
 #include "Messages/TeamService/TeamEvents.h"
 
-#include <map>
-#include <memory>
-#include <vector>
-
 class MapServer;
 class SEGSTimer;
 class World;
@@ -126,9 +122,9 @@ class MapLinkEndpoint;
 class MapInstance final : public EventProcessor
 {
         using SessionStore = ClientSessionStore<MapClientSession>;
-        using ScriptEnginePtr = std::unique_ptr<ScriptingEngine>;
-        QString                        m_data_path;
-        QMultiHash<QString, glm::mat4> m_all_spawners;
+        using ScriptEnginePtr = eastl::unique_ptr<ScriptingEngine>;
+        String                        m_data_path;
+        eastl::hash_multimap<String, glm::mat4> m_all_spawners;
         uint32_t                       m_world_update_timer;
         uint32_t                       m_resend_timer;
         uint32_t                       m_link_timer;
@@ -143,18 +139,18 @@ class MapInstance final : public EventProcessor
         uint32_t                       m_index          = 1; // what does client expect this to store, and where do we send it?
         uint8_t                        m_game_server_id = 255; // 255 is `invalid` id
 
-        EmailService                    m_email_service;
-        ClientOptionService             m_client_option_service;
+        EmailService                   m_email_service;
+        ClientOptionService            m_client_option_service;
 
         // I think there's probably a better way to do this..
         // We load all transfers for the map to map_transfers, then on first access to zones or doors, we
         // then copy the relevant transfers to another hash which is then used for those specific transfers.
         // This means we only need to traverse the scenegraph once to get all transfers, but need to copy once
         // as well, rather than having to walk the scenegraph twice (once for each type).
-        QHash<QString, MapXferData> m_map_transfers;
-        QHash<QString, MapXferData> m_map_door_transfers;
+        HashMap<String, MapXferData> m_map_transfers;
+        HashMap<String, MapXferData> m_map_door_transfers;
         bool                    m_door_transfers_checked = false;
-        QHash<QString, MapXferData> m_map_zone_transfers;
+        HashMap<String, MapXferData> m_map_zone_transfers;
         bool                    m_zone_transfers_checked = false;
         const bool              m_is_mission_map;
 
@@ -168,29 +164,29 @@ public:
         NpcGeneratorStore       m_npc_generators;
         CritterGeneratorStore   m_critter_generators;
         SpawnDefinitions        m_enemy_spawn_definitions;
-        std::vector<LuaTimer>   m_lua_timers;
+        Vector<LuaTimer>        m_lua_timers;
         const ACE_Time_Value    m_world_update_interval;
 
 public:
                                 IMPL_ID(MapInstance)
-                                MapInstance(const QString &name,const ListenAndLocationAddresses &listen_addr, bool is_mission_map);
+                                MapInstance(const String &name,const ListenAndLocationAddresses &listen_addr, bool is_mission_map);
                                 ~MapInstance() override;
         void                    dispatch(SEGSEvents::Event *ev) override;
 
-        const QString &         name() const { return m_data_path; }
+        const String &          name() const { return m_data_path; }
         void                    load_map_lua();
         bool                    spin_up_for(uint8_t game_server_id, uint32_t owner_id, uint32_t instance_id);
-        void                    start(const QString &scenegraph_path);
+        void                    start(const String &scenegraph_path);
         void                    setPlayerSpawn(Entity &e);
-        void                    setSpawnLocation(Entity &e, const QString &spawnLocation);
+        void                    setSpawnLocation(Entity &e, const String &spawnLocation);
         glm::vec3               closest_safe_location(glm::vec3 v) const;
-        QMultiHash<QString, glm::mat4> getSpawners() const { return m_all_spawners; }
-        QHash<QString, MapXferData> get_map_door_transfers();
-        QHash<QString, MapXferData> get_map_zone_transfers();
-        QString                 getNearestDoor(glm::vec3 location);
+        eastl::hash_multimap<String, glm::mat4> getSpawners() const { return m_all_spawners; }
+        const HashMap<String, MapXferData> &get_map_door_transfers();
+        const HashMap<String, MapXferData> &get_map_zone_transfers();
+        String                 getNearestDoor(glm::vec3 location);
 
         void send_player_update(Entity *e);
-        void                    add_chat_message(Entity *sender, QString &msg_text);
+        void                    add_chat_message(Entity *sender, String &msg_text);
         void                    startLuaTimer(uint32_t entity_idx);
         void                    stopLuaTimer(uint32_t entity_idx);
         void                    clearLuaTimer(uint32_t entity_idx);
@@ -207,7 +203,7 @@ protected:
         uint32_t                index() const { return m_index; }
         void                    reap_stale_links();
         void                    on_client_connected_to_other_server(SEGSEvents::ClientConnectedMessage *ev);
-        void                    process_chat(Entity *sender, QStringView msg_text);
+        void                    process_chat(Entity *sender, StringView msg_text);
 
         // DB -> Server messages
         void                    on_name_clash_check_result(SEGSEvents::WouldNameDuplicateResponse *ev);
@@ -268,7 +264,7 @@ protected:
         void on_activate_inspiration(SEGSEvents::ActivateInspiration *ev);
         void on_powers_dockmode(SEGSEvents::PowersDockMode *ev);
         void on_switch_tray(SEGSEvents::SwitchTray *ev);
-        void on_emote_command(const QString &command, Entity *ent);
+        void on_emote_command(const String &command, Entity *ent);
         void on_interact_with(SEGSEvents::InteractWithEntity *ev);
         void on_move_inspiration(SEGSEvents::MoveInspiration *ev);
         void on_recv_selected_titles(SEGSEvents::RecvSelectedTitles *ev);

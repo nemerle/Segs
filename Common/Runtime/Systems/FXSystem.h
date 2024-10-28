@@ -2,8 +2,8 @@
 #include "Common/Runtime/Handle.h"
 
 #include <glm/vec3.hpp>
-#include <QString>
-#include <vector>
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 
 struct FxInfo;
 
@@ -25,7 +25,7 @@ struct CreationParams
     int   m_debris   = 0;
     int   m_power    = 10;
     int   m_net_id   = 0;
-    std::vector<LocusEntry> m_loci; // this should be something like a eastl::fixed_vector<LocusEntry,4>
+    Vector<LocusEntry> m_loci; // this should be something like a eastl::fixed_vector<LocusEntry,4>
 };
 enum State
 {
@@ -54,7 +54,7 @@ struct Data
 using Handle = HandleT<20,12,Data>;
 
 
-Handle create(const QByteArray &name, const CreationParams &params);
+Handle create(const String &name, const CreationParams &params);
 Data & get(Handle h);
 bool valid(Handle h);
 

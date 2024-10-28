@@ -9,37 +9,38 @@
 #include "Common/Runtime/AxisAlignedBox.h"
 #include "Common/Runtime/Handle.h"
 #include "Common/Runtime/HandleBasedStorage.h"
+#include "Common/Containers/Vector.h"
+#include "Common/Containers/String.h"
 
-#include <QString>
-
-#include <vector>
-#include <memory>
+#include <EASTL/vector.h>
+#include <EASTL/string.h>
+#include <EASTL/map.h>
+#include <EASTL/unique_ptr.h>
 #include <functional>
-#include <qiodevice.h>
 
 struct ModelModifiers;
 struct TextureModifiers;
-class QFile;
 
 template <int idx_bits, int gen_bits, typename T>
 struct SingularStoreHandleT;
 
 namespace SEGS
 {
+struct IFile;
 struct GeoSet;
 enum class CoHBlendMode : uint8_t;
 using HTexture = SingularStoreHandleT<20,12,struct TextureWrapper>;
 
 struct VBOPointers
 {
-    std::vector<glm::vec3> pos;
-    std::vector<glm::vec3> norm;
-    std::vector<glm::vec2> uv1;
-    std::vector<glm::vec2> uv2;
-    std::vector<int> triangles;
-    std::vector<HTexture> assigned_textures;
-    std::vector<glm::vec2> bone_weights;
-    std::vector<std::pair<uint16_t,uint16_t>> bone_indices;
+    Vector<glm::vec3> pos;
+    Vector<glm::vec3> norm;
+    Vector<glm::vec2> uv1;
+    Vector<glm::vec2> uv2;
+    Vector<int> triangles;
+    Vector<HTexture> assigned_textures;
+    Vector<glm::vec2> bone_weights;
+    Vector<std::pair<uint16_t,uint16_t>> bone_indices;
     bool needs_tangents=false;
 };
 enum ModelFlags : uint32_t
@@ -97,12 +98,12 @@ struct BoneInfo
 struct Model
 {
     AxisAlignedBoundingBox   box;
-    QByteArray               name;
+    String                   name;
     uint32_t                 flags;
     float                    visibility_radius;
     uint32_t                 num_textures;
     PackBlock                packed_data;
-    std::vector<TextureBind> texture_bind_info;
+    Vector<TextureBind>      texture_bind_info;
     ptrdiff_t                boneinfo_offset = 0;
     BoneInfo *               bone_info_data = nullptr;
     GeoSet *                 geoset;
@@ -111,15 +112,18 @@ struct Model
     uint32_t                 vertex_count;
     uint32_t                 model_tri_count;
     CoHBlendMode             blend_mode;
-    std::unique_ptr<VBOPointers> vbo;
+    eastl::unique_ptr<VBOPointers> vbo;
     int                      m_id;
     bool                     hasBoneWeights() const { return flags & OBJ_DRAW_AS_ENT; }
+    bool initialized=false;
+    Model();
+    ~Model();
 
 };
-void geosetLoadHeader(QIODevice *fp, GeoSet *geoset);
-void geosetLoadData(QIODevice *fp, GeoSet *geoset);
+void geosetLoadHeader(IFile *fp, GeoSet *geoset);
+void geosetLoadData(IFile *fp, GeoSet *geoset);
 
-void initLoadedModel(std::function<HTexture (const QString &)> funcloader,Model *model,const std::vector<HTexture> &textures);
+void initLoadedModel(std::function<HTexture (const String &)> funcloader,Model *model,const Vector<HTexture> &textures);
 void fillVBO(Model & model);
 void toSafeModelName(char *inp,int cnt);
 

@@ -7,6 +7,7 @@
 
 #include "DataHelpers.h"
 #include "MapInstance.h"
+#include "MessageHelpers.h"
 #include "ScriptingEngine.h"
 #include "ScriptingEnginePrivate.h"
 
@@ -44,16 +45,16 @@ void ScriptingEngine::register_SpawnerTypes()
     m_private->m_lua["MapInstance"]["GetSpawnerName"] = [this](uint index)
     {
         auto sg = &mi->m_map_scenegraph->m_csNodes;
-        QString sName = sg->at(index).m_name;
-        return sName.toStdString();
+        String sName = sg->at(index).m_name;
+        return sName;
     };
 
     // Returns the name of the child spawner at the specified indexes
     m_private->m_lua["MapInstance"]["GetSpawnerChildName"] = [this](uint index, uint cindex)
     {
         auto sg = &mi->m_map_scenegraph->m_csNodes;
-        QString sName = sg->at(index).m_markers.at(cindex).m_name;
-        return sName.toStdString();
+        String sName = sg->at(index).m_markers.at(cindex).m_name;
+        return sName;
     };
 
     // Returns the position of the spawner at the specified index
@@ -114,8 +115,8 @@ void ScriptingEngine::register_SpawnerTypes()
     m_private->m_lua["MapInstance"]["GetPersistentName"] = [this](uint index)
     {
         auto sg = &mi->m_map_scenegraph->m_persNodes;
-        QString pName = sg->at(index).m_name;
-        return pName.toStdString();
+        String pName = sg->at(index).m_name;
+        return pName;
     };
 
     // Returns the position of the persistent NPC at the specified index
@@ -184,17 +185,12 @@ void ScriptingEngine::register_SpawnerTypes()
 
     m_private->m_lua["MapInstance"]["AddNpc"] = [this](const char* npc_def, glm::vec3 &loc, glm::vec3 &ori, int variation, const char* npc_name)
     {
-        QString npc_def_name = QString::fromUtf8(npc_def);
-        QString name = QString::fromUtf8(npc_name);
-        return addNpcWithOrientation(*mi, npc_def_name, loc, variation, ori, name);
+        return addNpcWithOrientation(*mi, npc_def, loc, variation, ori, npc_name);
     };
 
     m_private->m_lua["MapInstance"]["AddEnemy"] = [this](const char* npc_def, glm::vec3 &loc, glm::vec3 &ori, int variation, const char* npc_name, int level, const char* faction_name, int rank)
     {
-        QString npc_def_name = QString::fromUtf8(npc_def);
-        QString name = QString::fromUtf8(npc_name);
-        QString faction = QString::fromUtf8(faction_name);
-        return addEnemy(*mi, npc_def_name, loc, variation, ori, name, level, faction, rank);
+        return addEnemy(*mi, npc_def, loc, variation, ori, npc_name, level, faction_name, rank);
     };
 
 

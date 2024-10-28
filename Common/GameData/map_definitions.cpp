@@ -1,14 +1,13 @@
 #include "map_definitions.h"
 #include "entitydata_definitions.h"
 
+#include "Utils/string_utils.h"
 #include "Components/Logging.h"
-#include <QtCore/QFileInfoList>
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
+#include "Common/Utils/IServiceLocator.h"
 
 const uint32_t DEFAULT_MAP_IDX = 24; // Outbreak
 
-static std::vector<MapData> g_defined_map_datas =
+static Vector<MapData> g_defined_map_datas =
 {
     // City_Zones
     {24, "City_00_01", "Outbreak", MapType::CITY },
@@ -58,7 +57,7 @@ static std::vector<MapData> g_defined_map_datas =
     {55014, "Warehouse", "Warehouse", MapType::MISSION }
 };
 
-QString getMissionPath(QString map_name, MissionCategory size)
+String getMissionPath(StringView map_name, MissionCategory size)
 {
     const MapData &map_data = getMapData(map_name);
     if (!map_data.m_mission_data.empty())
@@ -78,18 +77,17 @@ QString getMissionPath(QString map_name, MissionCategory size)
             {
                 if (mission_data.m_mission_category == MissionCategory::OUTDOOR)
                 {
-                    return QString("maps/Missions/%1/%2.txt").arg(map_name).arg(mission_data.m_layouts.front());
+                    return StringUtils::fmt("maps/Missions/%.*s/%s.txt",(int)map_name.size(),map_name.data(),mission_data.m_layouts.front().c_str());
                 }
                 else
                 {
-                    return QString("maps/Missions/%1/%2/%3.txt").arg(map_name).arg(mission_data.m_mission_name).arg(mission_data.m_layouts.front());
+                    return StringUtils::fmt("maps/Missions/%.*s/%s/%s.txt",(int)map_name.size(),map_name.data(),mission_data.m_mission_name.c_str(),mission_data.m_layouts.front().c_str());
                 }
                 break;
             }
             case MapType::UNIQUE:
             {
-                return QString("maps/Missions/unique/%1/%2.txt").arg(mission_data.m_mission_name).arg(mission_data.m_layouts.front());
-                break;
+                return StringUtils::fmt("maps/Missions/unique/%s/%s.txt",mission_data.m_mission_name.c_str(),mission_data.m_layouts.front().c_str());
             }
             default:
             {
@@ -98,20 +96,21 @@ QString getMissionPath(QString map_name, MissionCategory size)
         }
     }
 
-    qWarning() << "Attempted to get mission filename for the map -- " << map_name << " -- That map doesn't have mission data loaded.";
-    return QString();
+    sWarning() << "Attempted to get mission filename for the map -- " << map_name << " -- That map doesn't have mission data loaded.";
+    return String();
 }
 
-void getMissionMapLevelData(QFileInfo map_level_folder, MapData &map_data)
+void getMissionMapLevelData(StringView map_level_folder, MapData &map_data)
 {
     // maps/Missions/Sewers/Sewers_15/
-    QString level = map_level_folder.fileName().mid(map_level_folder.fileName().lastIndexOf("_") + 1);
-    QDir map_layout_dir(map_level_folder.filePath());
-    map_layout_dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
+    StringView fname=PathUtils::get_file(map_level_folder);
+    StringView level = fname.substr(fname.find_last_of('_') + 1,-1);
+    //QDir map_layout_dir(map_level_folder.filePath());
+    //map_layout_dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
 
     MissionMapData mission_data;
-    mission_data.m_mission_name = map_level_folder.baseName();
-    qInfo() << "Mission name: " << mission_data.m_mission_name;
+    mission_data.m_mission_name = PathUtils::get_basename(map_level_folder);
+    sInfo() << "Mission name: " << mission_data.m_mission_name;
 
     if (mission_data.m_mission_name.contains("15"))
     {
@@ -134,136 +133,139 @@ void getMissionMapLevelData(QFileInfo map_level_folder, MapData &map_data)
         mission_data.m_mission_category = MissionCategory::OUTDOOR;
     }
 
-    qInfo() << "Map Size: " << mission_data.m_mission_category;
+    sInfo() << "Map Size: " << mission_data.m_mission_category;
 
-    for (auto &map_layout : map_layout_dir.entryInfoList())
+    //std::filesystem::directory_iterator end_iter;
+    auto fs = SEGS::getServiceLocator()->getFS();
+    fs->visitEntries(map_level_folder,[&](StringView entry, bool is_dir)->auto {
+            SEGS::IFilesystem::VisitResult res;
+            auto entry_name = PathUtils::get_file(entry);
+            if (map_data.m_map_type == MapType::MISSION && !is_dir) //std::filesystem::is_regular_file(dir_iter->status())
     {
-        if (map_data.m_map_type == MapType::MISSION && map_layout.isFile())
-        {
-            QString layout = map_layout.fileName().mid(0, map_layout.fileName().length() - 4);
-            qInfo() << "Layout: " << layout;
-            mission_data.m_layouts.push_back(layout);
+                sInfo() << "Layout: " << PathUtils::get_file(entry);
+                mission_data.m_layouts.emplace_back(entry);
         }
         else if (map_data.m_map_type == MapType::UNIQUE)
         {
-            qInfo() << "Unique filename: " << map_layout.fileName();
-            if (map_layout.isDir())
+                sInfo() << "Unique filename: " << PathUtils::get_file(entry);
+                if (is_dir)
             {
                 mission_data.m_mission_category = MissionCategory::TRIAL_ROOM;
-                QDir trials(map_layout.filePath());
-                trials.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
-                for (auto &trial : trials.entryInfoList())
+                    //QDir trials(map_layout.filePath());
+                    //trials.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
+                    fs->visitEntries(entry,[&](StringView ptrial,bool is_dir)->auto {
+                        auto trial_entry_name = PathUtils::get_file(ptrial);
+                        if (!is_dir && !StringUtils::contains(ptrial,"beacon") && StringUtils::contains(ptrial,"spawn"))
                 {
-                    if (trial.isFile() && !trial.fileName().contains("beacon", Qt::CaseInsensitive) && !trial.fileName().contains("spawn", Qt::CaseInsensitive))
-                    {
-                        qInfo() << "Trial path: " << trial.filePath();
-                        QString layout = trial.fileName().mid(0, trial.fileName().length() - 4);
-                        qInfo() << "Layout: " << layout;
-                        mission_data.m_layouts.push_back(layout);
+                            sInfo() << "Trial path: " << ptrial;
+                            sInfo() << "Layout: " << PathUtils::get_basename(trial_entry_name);
+                            mission_data.m_layouts.emplace_back(PathUtils::get_basename(trial_entry_name));
                     }
-                }
+                       return SEGS::IFilesystem::VisitNext;
+                    });
             }
             else
             {
-                if (map_layout.isFile() && !map_layout.fileName().contains("trial"))
+                    if (!entry_name.contains("trial")) //std::filesystem::is_regular_file(dir_iter->status()) &&
                 {
-                    if (map_layout.fileName().contains("Interdimensional"))
+                        if (entry_name.contains("Interdimensional"))
                     {
                         mission_data.m_mission_category = MissionCategory::INTERDIMENSIONAL;
                     }
-                    else if (map_layout.fileName().contains("jumppuzzles"))
+                        else if (entry_name.contains("jumppuzzles"))
                     {
                         mission_data.m_mission_category = MissionCategory::JUMP_PUZZLE;
                     }
 
-                    QString layout = map_layout.fileName().mid(0, map_layout.fileName().length() - 4);
-                    qInfo() << "Layout: " << layout;
-                    mission_data.m_layouts.push_back(layout);
+                        StringView layout = entry_name.substr(0, entry_name.length() - 4);
+                    sInfo() << "Layout: " << layout;
+                        mission_data.m_layouts.emplace_back(layout);
                 }
             }
 
         }
-    }
+            return SEGS::IFilesystem::VisitNext;
+        });
 
     map_data.m_mission_data.push_back(mission_data);
 }
 
 void loadAllMissionMapData()
 {
+    auto fs = SEGS::getServiceLocator()->getFS();
     for(auto& map_data : g_defined_map_datas)
     {
-        qInfo() << "Loading mission data for: " << map_data.m_map_name;
-        if (map_data.m_map_type == MapType::MISSION ||
-            map_data.m_map_type == MapType::OUTDOOR_MISSION ||
-            map_data.m_map_type == MapType::UNIQUE)
-        {
+        sInfo() << "Loading mission data for: " << map_data.m_map_name;
+        if (map_data.m_map_type != MapType::MISSION && map_data.m_map_type != MapType::OUTDOOR_MISSION &&
+            map_data.m_map_type != MapType::UNIQUE)
+            continue;
 
-            QString base_path = QFileInfo(QString("data/geobin/maps/Missions/%1").arg(QString(map_data.m_map_name))).filePath();
-            QDir mapDir(base_path);
-            mapDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
-            if (!mapDir.exists())
+        String base_path = StringUtils::fmt("data/geobin/maps/Missions/%s",map_data.m_map_name.c_str());
+        if(!fs->exists(base_path.c_str(),base_path.size()))
             {
-                qInfo() << "Failed to open map dir: " << mapDir.absolutePath();
+            sInfo() << "Failed to open map dir: " << base_path;
+            continue;
             }
-            if (mapDir.exists())
+        fs->visitEntries(base_path,[&](StringView p, bool is_dir)->auto {
+            StringView fpath(p);
+            if (!is_dir)
             {
-                for (auto &map_level : mapDir.entryInfoList())
+                sInfo() << "Layout: " << p;
+                // We're in an outdoor mission folder here, so we pass the parent folder.
+                getMissionMapLevelData(fpath, map_data);
+            }
+            if (is_dir)
                 {
-                    if (map_level.isDir())
-                    {
+                // skip the . and .. directories
+                if (fpath == "." || fpath == "..")
+                    return SEGS::IFilesystem::VisitNext;
                         if (map_data.m_map_type == MapType::MISSION)
                         {
-                            getMissionMapLevelData(map_level, map_data);
+                    getMissionMapLevelData(fpath, map_data);
                         }
                         else if (map_data.m_map_type == MapType::UNIQUE)
                         {
-                            getMissionMapLevelData(map_level, map_data);
+                    getMissionMapLevelData(fpath, map_data);
                         }
                         else if(map_data.m_map_type == MapType::OUTDOOR_MISSION)
                         {
                             //getOutdoorUniqueMissionMapData(map_level, map_data);
                         }
                     }
-                    else if (map_level.isFile())
-                    {
-                        // We're in an outdoor mission folder here, so we pass the parent folder.
-                        getMissionMapLevelData(QFileInfo(mapDir.absolutePath()), map_data);
-                    }
-                }
-            }
-        }
+            return SEGS::IFilesystem::VisitNext;
+        });
     }
 }
 
-std::vector<MapData> &getAllMapData()
+Vector<MapData> &getAllMapData()
 {
     return g_defined_map_datas;
 }
 
-MapData &getMapData(QString &map_name)
+MapData &getMapData(StringView map_name)
 {
     for (auto &map_data : g_defined_map_datas)
     {
-        if(map_name.contains(map_data.m_map_name, Qt::CaseInsensitive))
+        if(StringUtils::contains(map_name,map_data.m_map_name, StringUtils::CaseInsensitive))
             return map_data;
     }
 
     // If no map is found, log a warning and return Outbreak's data.
-    qWarning() << "No match for \"" << map_name << "\" in g_defined_map_datas."
+    sWarning() << "No match for \"" << map_name << "\" in g_defined_map_datas."
                << "Returning Outbreak's map data as default...";
     return g_defined_map_datas[0];
 }
 
-uint32_t getMapIndex(const QString &map_name)
+uint32_t getMapIndex(const String &map_name)
 {
     for (auto &map_data : g_defined_map_datas)
     {
-        if(map_name.contains(map_data.m_map_name, Qt::CaseInsensitive))
+        if(StringUtils::contains(map_name,map_data.m_map_name, StringUtils::CaseInsensitive))
             return map_data.m_map_idx;
     }
 
     // log a warning because this part of the code is called when things went wrong
-    qWarning() << "No matching \"" << map_name << "\" in g_defined_map_datas to sent map name."
+    sWarning() << "No matching \"" << map_name << "\" in g_defined_map_datas to sent map name."
                << "Returning Outbreak's map index as default...";
 
     // defaulting to Outbreak's map name
@@ -271,23 +273,23 @@ uint32_t getMapIndex(const QString &map_name)
 }
 
 /// \note this functions returns the string by value, since m_display_map_name is QByteArray
-QString getDisplayMapName(QString &map_name)
+String getDisplayMapName(String &map_name)
 {
     for (auto &map_data : g_defined_map_datas)
     {
-        if(map_name.contains(map_data.m_map_name, Qt::CaseInsensitive))
+        if(StringUtils::contains(map_name,map_data.m_map_name, StringUtils::CaseInsensitive))
             return map_data.m_display_map_name;
     }
 
     // log a warning because this part of the code is called when things went wrong
-    qWarning() << "No matching \"" << map_name << "\" in g_defined_map_datas to sent map name."
+    sWarning() << "No matching \"" << map_name << "\" in g_defined_map_datas to sent map name."
                << "Returning Outbreak's display map name as default...";
 
     // defaulting to Outbreak's map name
     return g_defined_map_datas[0].m_display_map_name;
 }
 
-QString getDisplayMapName(uint32_t index)
+String getDisplayMapName(uint32_t index)
 {
     for (auto &map_data : g_defined_map_datas)
     {
@@ -295,24 +297,24 @@ QString getDisplayMapName(uint32_t index)
             return map_data.m_display_map_name;
     }
     // Log a warning and return Outbreak if nothing found
-    qWarning() << "Cannot find map index \"" << index << "\" ."
+    sWarning() << "Cannot find map index \"" << index << "\" ."
                << "Returning Outbreak's display map name as default...";
     return g_defined_map_datas[0].m_display_map_name;
 }
 
-QString getEntityDisplayMapName(const EntityData &ed)
+String getEntityDisplayMapName(const EntityData &ed)
 {
     return getDisplayMapName(ed.m_map_idx);
 }
 
 bool isEntityOnMissionMap(EntityData &ed)
 {
-    QString mapName = getMapName(ed.m_map_idx);
+    String mapName = getMapName(ed.m_map_idx);
     // Hazard and Trial maps are considered as mission maps
     return mapName.contains("Hazard") || mapName.contains("Trial");
 }
 
-QString getMapName(uint32_t index)
+String getMapName(uint32_t index)
 {
     for (auto &map_data : g_defined_map_datas)
     {
@@ -320,12 +322,12 @@ QString getMapName(uint32_t index)
             return map_data.m_map_name;
     }
     // Return Outbreak if nothing found
-    qWarning() << "Cannot find map index \"" << index << "\" ."
+    sWarning() << "Cannot find map index \"" << index << "\" ."
                << "Returning Outbreak's map name as default...";
     return g_defined_map_datas[0].m_map_name;
 }
 
-QString getMapPath(uint32_t index)
+String getMapPath(uint32_t index)
 {
     for (auto &map_data : g_defined_map_datas)
     {
@@ -335,37 +337,37 @@ QString getMapPath(uint32_t index)
             {
                 return getMissionPath(map_data.m_map_name, MissionCategory::MEDIUM);
             }
-            return QString("maps/City_Zones/%1/%1.txt").arg(QString(map_data.m_map_name));
+            return StringUtils::fmt("maps/City_Zones/%s/%s.txt",map_data.m_map_name.c_str(),map_data.m_map_name.c_str());
         }
     }
-    qWarning() << "Cannot find map index \"" << index << "\" ."
+    sWarning() << "Cannot find map index \"" << index << "\" ."
                << "Returning Outbreak's map path as default...";
-    return QString("maps/City_Zones/%1/%1.txt").arg(QString(g_defined_map_datas[0].m_map_name));
+    return StringUtils::fmt("maps/City_Zones/%s/%s.txt",g_defined_map_datas[0].m_map_name.c_str(),g_defined_map_datas[0].m_map_name.c_str());
 }
 
-QString getMapPath(EntityData &ed)
+String getMapPath(EntityData &ed)
 {
     return getMapPath(ed.m_map_idx);
 }
 
-QString getMapPath(QString &map_name)
+String getMapPath(String &map_name)
 {
     for (auto &map_data : g_defined_map_datas)
     {
-        if(map_name.contains(map_data.m_map_name, Qt::CaseInsensitive))
+        if(StringUtils::contains(map_name,map_data.m_map_name, StringUtils::CaseInsensitive))
         {
             if (!map_data.m_mission_data.empty())
             {
                 return getMissionPath(map_data.m_map_name, MissionCategory::MEDIUM);
             }
-            return QString("maps/City_Zones/%1/%1.txt").arg(QString(map_data.m_map_name));
+            return StringUtils::fmt("maps/City_Zones/%s/%s.txt",map_data.m_map_name.c_str(),map_data.m_map_name.c_str());
         }
     }
 
     // log a warning because this part of the code is called when things went wrong
-    qWarning() << "No matching map path in g_defined_map_datas to sent map name."
+    sWarning() << "No matching map path in g_defined_map_datas to sent map name."
                << "Returning Outbreak's display map path as default...";
 
-    // defaulting to Outbreak's map name
-    return QString("maps/City_Zones/%1/%1.txt").arg(QString(g_defined_map_datas[0].m_map_name));
+    // defaulting to 0th map - Outbreak's map name
+    return StringUtils::fmt("maps/City_Zones/%s/%s.txt",g_defined_map_datas[0].m_map_name.c_str(),g_defined_map_datas[0].m_map_name.c_str());
 }

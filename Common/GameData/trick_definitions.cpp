@@ -1,18 +1,18 @@
 #include "trick_definitions.h"
 #include "Common/GameData/anim_definitions.h"
+#include "Components/Logging.h"
 
-#include <QDebug>
-
-GeometryModifiers *findGeomModifier(SceneModifiers &tricks,const QString &modelname, const QString &trick_path)
+GeometryModifiers *findGeomModifier(SceneModifiers &tricks,StringView modelname, StringView trick_path)
 {
-    QStringList parts = modelname.split("__");
+    Vector<StringView> parts;
+    String::split_ref(parts,modelname,"__");
     if( parts.size()<2 )
         return nullptr;
-    parts.removeFirst();
-    QString bone_trick_name = parts.join("__");
-    GeometryModifiers *result = tricks.g_tricks_string_hash_tab.value(bone_trick_name.toLower(),nullptr);
+    parts.pop_front();
+    String bone_trick_name = String::joined(parts,"__");
+    GeometryModifiers *result = tricks.g_tricks_string_hash_tab.at(bone_trick_name.to_lower(),nullptr);
     if( result )
         return result;
-    qDebug() << "Can't find modifier for" << trick_path<<modelname;
+    sDebug() << "Can't find modifier for" << trick_path<<modelname;
     return nullptr;
 }

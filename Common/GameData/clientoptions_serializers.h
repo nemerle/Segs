@@ -7,10 +7,10 @@
 
 #pragma once
 #include <stdint.h>
+#include "Common/Containers/String.h"
 
-class QString;
 class ClientOptions;
 
-void saveTo(const ClientOptions &target,const QString &baseName,bool text_format=false);
-void serializeToDb(const ClientOptions &data, QString &tgt);
-void serializeFromDb(ClientOptions &data, const QString &src);
+void saveTo(const ClientOptions &target,const String &baseName,bool text_format=false);
+void serializeToDb(const ClientOptions &data, String &tgt);
+void serializeFromDb(ClientOptions &data, const String &src);

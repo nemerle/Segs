@@ -21,97 +21,93 @@
 #include "MessageHelpers.h"
 #include "Components/Settings.h"
 
-#include <QtCore/QString>
-#include <QtCore/QDebug>
-
 using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 9 Commands (GMs)
-void cmdHandler_Falling(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Falling(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     toggleFalling(*sess.m_ent);
 
-    QString msg = "Toggling falling";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggling falling";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_Sliding(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Sliding(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     toggleSliding(*sess.m_ent);
 
-    QString msg = "Toggling sliding";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggling sliding";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_Jumping(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Jumping(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     toggleJumping(*sess.m_ent);
 
-    QString msg = "Toggling jumping";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggling jumping";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_Stunned(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_Stunned(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     toggleStunned(*sess.m_ent);
 
-    QString msg = "Toggling stunned";
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Toggling stunned";
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetSpeed(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetSpeed(const Vector<String> &params, MapClientSession &sess)
 {
-    float v1 = params.value(0).toFloat();
-    float v2 = params.value(1).toFloat();
-    float v3 = params.value(2).toFloat();
+    float v1 = StringUtils::to_float(params.at(0));
+    float v2 = StringUtils::to_float(params.at(1));
+    float v3 = StringUtils::to_float(params.at(2));
     setSpeed(*sess.m_ent, v1, v2, v3);
 
-    QString msg = QString("Set Speed to: <%1,%2,%3>").arg(v1).arg(v2).arg(v3);
+    String msg(String::CtorSprintf(),"Set Speed to: <%d,%d,%d>",v1,v2,v3);
 
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetBackupSpd(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetBackupSpd(const Vector<String> &params, MapClientSession &sess)
 {
-    float val = params.value(0).toFloat();
+    float val = StringUtils::to_float(params.at(0));
     setBackupSpd(*sess.m_ent, val);
 
-    QString msg = "Set BackupSpd to: " + QString::number(val);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Set BackupSpd to: " + eastl::to_string(val);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetJumpHeight(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetJumpHeight(const Vector<String> &params, MapClientSession &sess)
 {
-    float val = params.value(0).toFloat();
+    float val = StringUtils::to_float(params.at(0));
     setJumpHeight(*sess.m_ent, val);
 
-    QString msg = "Set JumpHeight to: " + QString::number(val);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Set JumpHeight to: " + eastl::to_string(val);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetHP(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetHP(const Vector<String> &params, MapClientSession &sess)
 {
-    float attrib = params.value(0).toFloat();
+    float attrib = StringUtils::to_float(params.at(0));
 
     changeHP(*sess.m_ent, attrib);
 
-    QString msg = QString("Setting HP to: %1 / %2")
-            .arg(attrib).arg(getMaxHP(*sess.m_ent->m_char));
-    qCDebug(logSlashCommand) << msg;
+    String msg = String(String::CtorSprintf(),"Setting HP to: %f / %f",attrib,getMaxHP(*sess.m_ent->m_char));
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetEnd(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetEnd(const Vector<String> &params, MapClientSession &sess)
 {
-    float attrib = params.value(0).toFloat();
+    float attrib = StringUtils::to_float(params.at(0));
     float maxattrib = sess.m_ent->m_char->m_max_attribs.m_Endurance;
 
     if(attrib > maxattrib)
@@ -119,94 +115,94 @@ void cmdHandler_SetEnd(const QStringList &params, MapClientSession &sess)
 
     setEnd(*sess.m_ent->m_char,attrib);
 
-    QString msg = QString("Setting Endurance to: %1 / %2").arg(attrib).arg(maxattrib);
-    qCDebug(logSlashCommand) << msg;
+    String msg(String::CtorSprintf(),"Setting Endurance to: %f / %f",attrib,maxattrib);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetXP(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetXP(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt();
+    uint32_t attrib = StringUtils::to_int(params.at(0));
     uint32_t lvl = getLevel(*sess.m_ent->m_char);
 
     setXP(*sess.m_ent->m_char, attrib);
-    QString msg = "Setting XP to " + QString::number(attrib);
+    String msg = "Setting XP to " + eastl::to_string(attrib);
 
     uint32_t newlvl = getLevel(*sess.m_ent->m_char);
     if(lvl != newlvl)
-        msg += " and LVL to " + QString::number(newlvl);
+        msg += " and LVL to " + eastl::to_string(newlvl);
 
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_GiveXP(const QStringList &params, MapClientSession &sess)
+void cmdHandler_GiveXP(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt();
+    uint32_t attrib = StringUtils::to_int(params.at(0));
     uint32_t lvl = getLevel(*sess.m_ent->m_char);
 
     giveXp(sess, attrib);
-    QString msg = "Giving " + QString::number(attrib) + " XP";
+    String msg = "Giving " + eastl::to_string(attrib) + " XP";
 
     uint32_t newlvl = getLevel(*sess.m_ent->m_char);
     if(lvl != newlvl)
-        msg += " and setting LVL to " + QString::number(newlvl);
+        msg += " and setting LVL to " + eastl::to_string(newlvl);
 
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetDebt(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetDebt(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt();
+    uint32_t attrib = StringUtils::to_int(params.at(0));
 
     setDebt(*sess.m_ent->m_char, attrib);
-    QString msg = QString("Setting XP Debt to %1").arg(attrib);
+    String msg(String::CtorSprintf(),"Setting XP Debt to %d",attrib);
 
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetInf(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetInf(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt();
+    uint32_t attrib = StringUtils::to_int(params.at(0));
 
     setInf(*sess.m_ent->m_char, attrib);
 
-    QString msg = "Setting influence to: " + QString::number(attrib);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Setting influence to: " + eastl::to_string(attrib);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetLevel(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetLevel(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt() - 1; // convert from 1-50 to 0-49
+    uint32_t attrib = StringUtils::to_int(params.at(0)) - 1; // convert from 1-50 to 0-49
 
     setLevel(*sess.m_ent->m_char, attrib);
 
-    QString contents = FloatingInfoMsg.find(FloatingMsg_Leveled).value();
+    String contents = FloatingInfoMsg.find(FloatingMsg_Leveled)->second;
     sendFloatingInfo(sess, contents, FloatingInfoStyle::FloatingInfo_Attention, 4.0);
 
-    QString msg = "Setting Level to: " + QString::number(attrib + 1);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Setting Level to: " + eastl::to_string(attrib + 1);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
-void cmdHandler_SetCombatLevel(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetCombatLevel(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t attrib = params.value(0).toUInt() - 1; // convert from 1-50 to 0-49
+    uint32_t attrib = StringUtils::to_int(params.at(0)) - 1; // convert from 1-50 to 0-49
 
     setCombatLevel(*sess.m_ent->m_char, attrib);
 
-    QString msg = "Setting Combat Level to: " + QString::number(attrib+1);
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Setting Combat Level to: " + eastl::to_string(attrib + 1);
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 2 Commands
-void cmdHandler_Alignment(const QStringList &params, MapClientSession &sess)
+void cmdHandler_Alignment(const Vector<String> &params, MapClientSession &sess)
 {
     if(params.size() == 1)
     {
@@ -214,21 +210,21 @@ void cmdHandler_Alignment(const QStringList &params, MapClientSession &sess)
         sendInfoMessage(MessageChannel::DEBUG_INFO, "New alignment: " + params.at(0), sess);
         return;
     }
-    QString msg = "Choose from hero, villain, both or none/neither: ";
-    qCDebug(logSlashCommand) << msg << params.join(" ");
-    sendInfoMessage(MessageChannel::USER_ERROR, msg + params.join(" "), sess);
+    String msg = "Choose from hero, villain, both or none/neither: ";
+    sCDebug(logSlashCommand) << msg << String::joined(params," ");
+    sendInfoMessage(MessageChannel::USER_ERROR, msg + String::joined(params," "), sess);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 1 Commands
-void cmdHandler_AFK(const QStringList &params, MapClientSession &sess)
+void cmdHandler_AFK(const Vector<String> &params, MapClientSession &sess)
 {
     Entity* e = sess.m_ent;
-    QString afk_msg = params.join(" ");
+    String afk_msg = String::joined(params," ");
     toggleAFK(*e->m_char, afk_msg);
 
-    QString msg = "Setting afk message to: " + afk_msg;
-    qCDebug(logSlashCommand) << msg;
+    String msg = "Setting afk message to: " + afk_msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::EMOTE, msg, sess);
 
     // the server regards writing on chat (including cmd commands) as an input
@@ -236,16 +232,15 @@ void cmdHandler_AFK(const QStringList &params, MapClientSession &sess)
     e->m_has_input_on_timeframe = false;
 }
 
-void cmdHandler_SetTitles(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetTitles(const Vector<String> &params, MapClientSession &sess)
 {
-    QString title = params.join(" ");
+    String title = String::joined(params," ");
     setTitle(sess, title);
 }
 
-void cmdHandler_SetCustomTitles(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetCustomTitles(const Vector<String> &params, MapClientSession &sess)
 {
-    bool        prefix;
-    QString     msg, generic, origin, special;
+    String     msg;
 
     if(params.size() == 0)
     {
@@ -254,34 +249,32 @@ void cmdHandler_SetCustomTitles(const QStringList &params, MapClientSession &ses
     }
     else
     {
-        prefix  = !params.value(0).isEmpty();
-        generic = params.value(1);
-        origin  = params.value(2);
-        special = params.value(3);
+        bool   prefix  = !params.at(0).empty();
+        String generic = params.at(1);
+        String origin  = params.at(2);
+        String special = params.at(3);
         setTitles(*sess.m_ent->m_char, prefix, generic, origin, special);
-        msg = "Titles changed to: " + QString::number(prefix) + " " + generic + " " + origin + " " + special;
+        msg = "Titles changed to: " + eastl::to_string(prefix) + " " + generic + " " + origin + " " + special;
     }
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::USER_ERROR, msg, sess);
 }
 
-void cmdHandler_SetSpecialTitle(const QStringList &params, MapClientSession &sess)
+void cmdHandler_SetSpecialTitle(const Vector<String> &params, MapClientSession &sess)
 {
-    bool        prefix;
-    QString     msg, generic, origin, special;
-    prefix = sess.m_ent->m_char->m_char_data.m_has_the_prefix;
-    generic = getGenericTitle(*sess.m_ent->m_char);
-    origin = getOriginTitle(*sess.m_ent->m_char);
-    special = params.join(" ");
+    bool   prefix  = sess.m_ent->m_char->m_char_data.m_has_the_prefix;
+    String generic = getGenericTitle(*sess.m_ent->m_char);
+    String origin  = getOriginTitle(*sess.m_ent->m_char);
+    String special = String::joined(params," ");
 
     setTitles(*sess.m_ent->m_char, prefix, generic, origin, special);
-    msg = "Titles changed to: " + QString::number(prefix) + " " + generic + " " + origin + " " + special;
+    String msg = "Titles changed to: " + eastl::to_string(prefix) + " " + generic + " " + origin + " " + special;
 
-    qCDebug(logSlashCommand) << msg;
+    sCDebug(logSlashCommand) << msg;
     sendInfoMessage(MessageChannel::USER_ERROR, msg, sess);
 }
 
-void cmdHandler_SetAssistTarget(const QStringList &/*params*/, MapClientSession &sess)
+void cmdHandler_SetAssistTarget(const Vector<String> &/*params*/, MapClientSession &sess)
 {
     // it appears that `/assist` should target the target of your current target
     // but it also seems that what we call m_assist_target_idx is actually
@@ -301,9 +294,9 @@ void cmdHandler_SetAssistTarget(const QStringList &/*params*/, MapClientSession 
     else
         setAssistTarget(*sess.m_ent, new_target);
 
-    QString msg = "Now targeting " + target_ent->name() + "'s target";
+    String msg = "Now targeting " + target_ent->name() + "'s target";
     sendInfoMessage(MessageChannel::TEAM, msg, sess);
-    qCDebug(logSlashCommand).noquote() << msg;
+    sCDebug(logSlashCommand) << msg;
 }
 
 //! @}

@@ -16,7 +16,7 @@ TradeSuccess::TradeSuccess()
 {
 }
 
-TradeSuccess::TradeSuccess(const QString& msg)
+TradeSuccess::TradeSuccess(const String& msg)
     : GameCommandEvent(MapEventTypes::evTradeSuccess)
     , m_msg(msg)
 {

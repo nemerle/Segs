@@ -17,28 +17,24 @@
 #include "Components/Logging.h"
 #include "MapInstance.h"
 #include "MessageHelpers.h"
-#include "Components/Settings.h"
-
-#include <QtCore/QString>
-#include <QtCore/QDebug>
 
 using namespace SEGSEvents;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Access Level 0 Commands
-void cmdHandler_EmailHeaders(const QStringList & /*params*/, MapClientSession &sess)
+void cmdHandler_EmailHeaders(const Vector<String> & /*params*/, MapClientSession &sess)
 {
     getEmailHeaders(sess);
 }
 
-void cmdHandler_EmailRead(const QStringList &params, MapClientSession &sess)
+void cmdHandler_EmailRead(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t id = params.value(0).toInt();
+    uint32_t id = StringUtils::to_int(params.at(0));
 
     readEmailMessage(sess, id);
 }
 
-void cmdHandler_EmailSend(const QStringList &params, MapClientSession &sess)
+void cmdHandler_EmailSend(const Vector<String> &params, MapClientSession &sess)
 {
     if (params.size() < 3)
     {
@@ -47,13 +43,13 @@ void cmdHandler_EmailSend(const QStringList &params, MapClientSession &sess)
     }
 
     // params are: recipient name, email subject, email message words
-    QString recipients = params.at(0);
+    String recipients = params.at(0);
     // recipients from email window are enclosed in \q
     recipients.replace("\\q ", ";");
     recipients.replace("\\q", "");
-    QStringList recipient_list = recipients.split(";");
+    Vector<String> recipient_list = recipients.split(';');
     // the last element will be empty if sent through email window, so remove it
-    if (recipient_list.back().isEmpty())
+    if (recipient_list.back().empty())
     {
         recipient_list.pop_back();
     }
@@ -69,17 +65,17 @@ void cmdHandler_EmailSend(const QStringList &params, MapClientSession &sess)
 
     for (const auto &recipient : recipient_list)
         // Everything after recipient and subject is the email body
-        sendEmail(sess, recipient, params.at(1), params.mid(2).join(" "));
+        sendEmail(sess, recipient, params.at(1), String::joined(Span<const String>(params).subspan(2)," "));
 }
 
-void cmdHandler_EmailDelete(const QStringList &params, MapClientSession &sess)
+void cmdHandler_EmailDelete(const Vector<String> &params, MapClientSession &sess)
 {
-    uint32_t id = params.value(0).toInt();
+    uint32_t id = StringUtils::to_int(params.at(0));
 
     deleteEmailHeaders(sess, id);
 
-    QString msg = "Email Deleted ID: " + QString::number(id);
-    qDebug().noquote() << msg;
+    String msg = "Email Deleted ID: " + eastl::to_string(id);
+    sDebug() << msg;
     sendInfoMessage(MessageChannel::DEBUG_INFO, msg, sess);
 }
 
