@@ -52,7 +52,8 @@ jobs:
     - name: Configure CMake Linux
       env:
         CMAKE_PREFIX_PATH: ${{ env.QT_ROOT_DIR }}
-        CXX: "/usr/bin/g++"
+        CXX: "/usr/bin/g++-13"
+        CC: "/usr/bin/gcc-13"
       run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
     - name: Build
