@@ -54,7 +54,7 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
 
     - name: Get OpenSSL Libraries # Download OpenSSL 1.1.1 and extract required dlls, copy to out directory for SEGSAdmin.
-      continue-on-error: true # Robocopy uses an exit code 1 on successful copy which causes the step to fail. Allowing this step to continue even if reported as failure. 
+      continue-on-error: true # Robocopy uses an exit code 1 on successful copy which causes the step to fail. Allowing this step to continue even if reported as failure.
       run: |
         mkdir ${{ github.workspace }}\build\openssl
         curl -o ${{ github.workspace }}\build\openssl\openssl.zip https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1n.zip
@@ -63,13 +63,13 @@ jobs:
 
     - name: Create Windows Archive
       uses: thedoctor0/zip-release@main
-      with: 
+      with:
         type: 'zip'
         directory: ${{ github.workspace }}/build/out
         filename: 'windows-release-x64.zip'
         exclusions: '*.git*'
 
-    - name: Deploy Windows Release 
+    - name: Deploy Windows Release
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -85,14 +85,14 @@ jobs:
 
   build-linux:
     needs: tidy-up-releases
-    runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-24.04'
     permissions:
       contents: write
     steps:
     - uses: actions/checkout@v3
 
     - name: Install Qt Linux
-      uses: jurplel/install-qt-action@v2.14.0
+      uses: jurplel/install-qt-action@v4
       with:
         host: linux
         target: desktop
@@ -103,7 +103,8 @@ jobs:
     - name: Configure CMake Linux
       env:
         CMAKE_PREFIX_PATH: ${{ env.Qt6_Dir }}
-        CXX: "/usr/bin/clang++"
+        CXX: "/usr/bin/g++-13"
+        CC: "/usr/bin/gcc-13"
       run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
     - name: Build Linux
@@ -111,7 +112,7 @@ jobs:
 
     - name: Create Linux Archive
       uses: thedoctor0/zip-release@main
-      with: 
+      with:
         type: 'zip'
         directory: ${{ github.workspace }}/build/out
         filename: 'linux-release-x64.zip'
@@ -158,13 +159,13 @@ jobs:
 
     - name: Create MacOS Archive
       uses: thedoctor0/zip-release@main
-      with: 
+      with:
         type: 'zip'
         directory: ${{ github.workspace }}/build/out
         filename: 'macos-release-x64.zip'
         exclusions: '*.git*'
 
-    - name: Deploy MacOS Release 
+    - name: Deploy MacOS Release
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
