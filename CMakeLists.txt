@@ -10,6 +10,8 @@ cmake_policy(SET CMP0065 NEW)
 cmake_policy(SET CMP0072 NEW)
 cmake_policy(SET CMP0079 NEW)
 
+set(STANDALONE_ENV ON)
+
 # for version and revision info. Derived from https://github.com/dolphin-emu/dolphin/blob/master/CMakeLists.txt#L132
 find_package(Git)
 if(GIT_FOUND)
@@ -206,6 +208,9 @@ add_subdirectory(Components)
 add_subdirectory(Common)
 if(BUILD_EDITOR)
     add_subdirectory(Editor)
+endif()
+if(STANDALONE_ENV)
+    add_subdirectory(StandaloneEnv)
 endif()
 add_subdirectory(Servers)
 add_subdirectory(Clients)

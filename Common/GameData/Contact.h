@@ -54,28 +54,28 @@ public:
     const String &getLocationDescription() const { return m_location_description; }
     void setLocationDescription(const char *n) { m_location_description = n; }
 
-       String         m_name;
-       String         m_location_description;
-       uint32_t        m_npc_id;
-       uint32_t        m_contact_idx;
-       uint32_t        m_current_standing;
-       uint32_t        m_confidant_threshold;
-       uint32_t        m_friend_threshold;
-       uint32_t        m_complete_threshold;
-       uint32_t        m_task_index            = 0;
-       bool            m_notify_player         = false;
-       bool            m_can_use_cell          = false;
-       bool            m_has_location          = false;
-       Destination     m_location;
+    String         m_name;
+    String         m_location_description;
+    uint32_t        m_npc_id;
+    uint32_t        m_contact_idx;
+    uint32_t        m_current_standing;
+    uint32_t        m_confidant_threshold;
+    uint32_t        m_friend_threshold;
+    uint32_t        m_complete_threshold;
+    uint32_t        m_task_index            = 0;
+    bool            m_notify_player         = false;
+    bool            m_can_use_cell          = false;
+    bool            m_has_location          = false;
+    Destination     m_location;
 
-       // Not saved to DB
-       uint32_t        m_dlg_screen            = 0;
-       bool            m_setting_title         = false;
+    // Not saved to DB
+    uint32_t        m_dlg_screen            = 0;
+    bool            m_setting_title         = false;
 
+    bool operator==(const Contact &) const = default;
 
-
-       template<class Archive>
-       void serialize(Archive &archive, uint32_t const version);
+    template<class Archive>
+    void serialize(Archive &archive, uint32_t const version);
 
 };
 using vContactList = Vector<Contact>;
