@@ -18,6 +18,7 @@
 #include "Components/Logging.h"
 #include "GameData/playerdata_definitions.h"
 
+#include <chrono>
 
 /*
  * Entity Methods

@@ -175,7 +175,7 @@ void updateLastOnline(Character &c)
     localtime_r(&time_t_now, &local_tm);
 #endif
 
-    char buffer[32];
+    char buffer[32]={0};
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_tm);
     c.m_char_data.m_last_online = String(buffer);
 }
