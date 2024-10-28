@@ -27,7 +27,7 @@ set(tool_SRC
 add_executable(dbtool ${tool_SRC})
 target_include_directories(dbtool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(dbtool Qt6::Core Qt6::Sql)
-target_link_libraries(dbtool SEGS_Components)
+target_link_libraries(dbtool SEGS_Components SEGS_Env)
 
 # dbtool relies on QT more now, so we need these for windows builds
 IF(WIN32)
@@ -39,8 +39,8 @@ ELSEIF(APPLE)
 ENDIF()
 
 # Retain directory structure in visual studio
-get_target_property(TARGET_SOURCES dbtool SOURCES) 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${TARGET_SOURCES}) 
+get_target_property(TARGET_SOURCES dbtool SOURCES)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${TARGET_SOURCES})
 set_target_properties (dbtool PROPERTIES
     FOLDER Utilities
     RUNTIME_OUTPUT_DIRECTORY   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/utilities

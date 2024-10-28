@@ -181,6 +181,8 @@ T Settings::value(StringView key, const T &default_value, bool *ok)
     ACE_Guard<ACE_Recursive_Thread_Mutex> guard(m_impl->mutex);
     ACE_TString ace_key(key.data(), key.length());
     ACE_TString value;
+    ACE_Configuration::VALUETYPE vt;
+    int found=m_impl->config.find_value(m_impl->current_section, ace_key.c_str(),vt);
     if (m_impl->config.get_string_value(m_impl->current_section, ace_key.c_str(), value) == 0)
     {
         if (ok) *ok = true;
@@ -201,8 +203,14 @@ void Settings::setSettingsPath(const String &path)
 {
     if(path.empty())
         sCritical() << "Settings path not defined? This is unpossible!";
-
-    s_settings_path = getSEGSDir() + '/' + path;
+    if(!PathUtils::is_rel_path(path))
+    {
+        s_settings_path = path;
+    }
+    else
+    {
+        s_settings_path = getSEGSDir() + '/' + path;
+    }
 
     if(!fileExists(s_settings_path))
         createSettingsFile(s_settings_path);
