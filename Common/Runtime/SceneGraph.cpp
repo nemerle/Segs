@@ -17,7 +17,6 @@
 
 #include "glm/mat3x3.hpp"
 #include "glm/gtx/quaternion.hpp"
-#include <QRegularExpression>
 #include <cmath>
 
 using namespace SEGS;

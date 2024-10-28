@@ -44,7 +44,7 @@ int64_t msecsSinceStartOfDay() {
     return duration_cast<milliseconds>(duration).count();
 }
 
-PasswordHasher::PasswordHasher() 
+PasswordHasher::PasswordHasher()
 {
 
 }
@@ -54,7 +54,6 @@ String PasswordHasher::getRandomString(int length) const
     const String possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     const int randomStringLength = length;
     srand(static_cast<uint64_t>(msecsSinceStartOfDay()));
-    generator.seed(static_cast<quint64>(QTime::currentTime().msecsSinceStartOfDay()));
 
     String randomString;
     randomString.reserve(randomStringLength);

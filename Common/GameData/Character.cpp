@@ -29,8 +29,6 @@
 #include "Components/Logging.h"
 #include "Containers/String.h"
 #include "Common/Utils/string_utils.h"
-//#include <QtCore/QDebug>
-#include <QtCore/QString>
 
 using namespace SEGSEvents;
 
