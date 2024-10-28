@@ -13,8 +13,8 @@
 #include "CharacterHelpers.h"
 #include "Character.h"
 #include "Costume.h"
+
 #include <chrono>
-#include <format>
 
 /*
  * Character Methods
@@ -165,10 +165,19 @@ void initializeCharacter(Character &c)
 
 void updateLastOnline(Character &c)
 {
-    //"Wed May 20 03:40:13 1998"
     auto now = std::chrono::system_clock::now();
-    auto formatted= std::format("{:%Y-%m-%d %X}", now);
-    c.m_char_data.m_last_online = String(formatted.c_str());
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+
+    std::tm local_tm;
+#ifdef _WIN32
+    localtime_s(&local_tm, &time_t_now);
+#else
+    localtime_r(&time_t_now, &local_tm);
+#endif
+
+    char buffer[32];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_tm);
+    c.m_char_data.m_last_online = String(buffer);
 }
 
 // Toggles
