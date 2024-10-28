@@ -15,6 +15,9 @@
 
 #include <QDir>
 
+
+static_assert(!sol::meta::is_ordered<HashMap<String,uint32_t>>());
+
 int ScriptingEngine::loadAndRunFile(const String &filename)
 {
     sol::load_result load_res = m_private->m_lua.load_file(filename.c_str());
@@ -36,65 +39,69 @@ int ScriptingEngine::loadAndRunFile(const String &filename)
     return 0;
 }
 
+std::unordered_map<std::string,uint32_t> toStd(const HashMap<String,uint32_t> &from) {
+    std::unordered_map<std::string,uint32_t> res(from.size());
+    for(const auto &a : from) {
+        res.emplace(a.first.c_str(),a.second);
+    }
+    return res;
+}
+
 void ScriptingEngine::callFuncWithMapInstance(MapInstance *mi, const char *name, int arg1)
 {
-    assert(false);
     this->mi = mi;
-    //m_private->m_lua["contactDialogButtons"] = contactLinkHash;
+    m_private->m_lua["contactDialogButtons"] = toStd(contactLinkHash);
 
     callFunc(name,arg1);
 }
 
 String ScriptingEngine::callFuncWithClientContext(MapClientSession *client, const char *name, int arg1)
 {
-    assert(false);
     this->cl = client;
     this->mi = client->m_current_map;
-    //m_private->m_lua["contactDialogButtons"] = contactLinkHash;
+    m_private->m_lua["contactDialogButtons"] = toStd(contactLinkHash);
 
-    // if (client->m_ent->m_type == EntType::PLAYER)
-    // {
-    //     m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
-    //     m_private->m_lua["heroName"] = client->m_name;
-    //     m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
+    if (client->m_ent->m_type == EntType::PLAYER)
+    {
+        m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
+        m_private->m_lua["heroName"] = client->m_name;
+        m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
 
 
-    //     if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
-    //     {
-    //         m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
-    //     }
-    // }
+        if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
+        {
+            m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
+        }
+    }
 
     return callFunc(name,arg1);
 }
 
 String ScriptingEngine::callFuncWithClientContext(MapClientSession *client, const char *name, int arg1, glm::vec3 loc)
 {
-    assert(false);
-    // this->cl = client;
-    // this->mi = client->m_current_map;
-    // m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
-    // m_private->m_lua["heroName"] = client->m_name;
-    // m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
-    // if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
-    // {
-    //     m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
-    // }
+    this->cl = client;
+    this->mi = client->m_current_map;
+    m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
+    m_private->m_lua["heroName"] = client->m_name;
+    m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
+    if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
+    {
+        m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
+    }
     return callFunc(name,arg1,loc);
 }
 
 String ScriptingEngine::callFuncWithClientContext(MapClientSession *client, const char *name, const char *arg1, glm::vec3 loc)
 {
-    assert(false);
-    // this->cl = client;
-    // this->mi = client->m_current_map;
-    // m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
-    // m_private->m_lua["heroName"] = client->m_name;
-    // m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
-    // if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
-    // {
-    //     m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
-    // }
+    this->cl = client;
+    this->mi = client->m_current_map;
+    m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
+    m_private->m_lua["heroName"] = client->m_name;
+    m_private->m_lua["Player"]["entityId"] = client->m_ent->m_db_id;
+    if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
+    {
+        m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
+    }
     return callFunc(name,arg1,loc);
 }
 
@@ -168,39 +175,36 @@ String ScriptingEngine::callFunc(const char *name,const Vector<Contact> &contact
         sCDebug(logScripts) << "Failed to retrieve script func:"<<name;
         return "";
     }
-    return "";
-    // auto result = funcwrap(contact_list);
-    // if(!result.valid())
-    // {
-    //     sol::error err = result;
-    //     sCDebug(logScripts) << "Failed to run script func:"<<name<<err.what();
-    //     return "";
-    // }
-    // return result.get<String>();
+    auto result = funcwrap(contact_list);
+    if(!result.valid())
+    {
+        sol::error err = result;
+        sCDebug(logScripts) << "Failed to run script func:"<<name<<err.what();
+        return "";
+    }
+    return result.get<String>();
 }
 
 int ScriptingEngine::runScript(MapClientSession * client, const String &script_contents, const char *script_name)
 {
-    assert(false);
-    // this->cl = client;
-    // this->mi = client->m_current_map;
-    // m_private->m_lua["heroName"] = client->m_name;
-    // sol::load_result load_res=m_private->m_lua.load(script_contents.c_str(),script_name);
-    // if(!load_res.valid())
-    // {
-    //     sol::error err = load_res;
-    //     sendInfoMessage(MessageChannel::ADMIN,err.what(),*client);
-    //     return -1;
-    // }
-    // sol::protected_function_result script_result = load_res();
-    // if(!script_result.valid())
-    // {
-    //     sol::error err = script_result;
-    //     sendInfoMessage(MessageChannel::ADMIN,err.what(),*client);
-    //     return -1;
-    // }
-    // return 0;
-    return -1;
+    this->cl = client;
+    this->mi = client->m_current_map;
+    m_private->m_lua["heroName"] = client->m_name;
+    sol::load_result load_res=m_private->m_lua.load(script_contents.c_str(),script_name);
+    if(!load_res.valid())
+    {
+        sol::error err = load_res;
+        sendInfoMessage(MessageChannel::ADMIN,err.what(),*client);
+        return -1;
+    }
+    sol::protected_function_result script_result = load_res();
+    if(!script_result.valid())
+    {
+        sol::error err = script_result;
+        sendInfoMessage(MessageChannel::ADMIN,err.what(),*client);
+        return -1;
+    }
+    return 0;
 }
 
 int ScriptingEngine::runScript(const String &script_contents, const char *script_name)
@@ -240,14 +244,13 @@ void ScriptingEngine::updateMapInstance(MapInstance * instance)
 
 void ScriptingEngine::updateClientContext(MapClientSession * client)
 {
-    assert(false);
-    // this->cl = client;
-    // this->mi = client->m_current_map;
-    // m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
-    // m_private->m_lua["heroName"] = client->m_name;
-    // m_private->m_lua["m_db_id"] = client->m_ent->m_db_id;
-    // if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
-    // {
-    //     m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
-    // }
+    this->cl = client;
+    this->mi = client->m_current_map;
+    m_private->m_lua["vContacts"] = client->m_ent->m_player->m_contacts;
+    m_private->m_lua["heroName"] = client->m_name;
+    m_private->m_lua["m_db_id"] = client->m_ent->m_db_id;
+    if(client->m_ent->m_player->m_tasks_entry_list.size() > 0)
+    {
+        m_private->m_lua["vTaskList"] = client->m_ent->m_player->m_tasks_entry_list[0].m_task_list;
+    }
 }

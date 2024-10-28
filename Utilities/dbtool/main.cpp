@@ -18,8 +18,9 @@
 #include "DBConnection.h"
 #include "DatabaseConfig.h"
 
-#include "Components/Settings.h"
 #include "Components/Logging.h"
+#include "Components/Settings.h"
+#include "Services/StandaloneServices.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QCoreApplication>
@@ -134,6 +135,8 @@ void errorHandler(QtMsgType type, const QMessageLogContext &context, const QStri
 
 int main(int argc, char **argv)
 {
+    registerEnvSingleton();
+
     const QStringList known_commands {"create","adduser","upgrade","info"};
     DBToolResult ret = DBToolResult::SUCCESS;
 

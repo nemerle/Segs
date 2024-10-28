@@ -17,7 +17,10 @@
 Vector<LoggingCategory *>  LoggingCategory::m_registered_categories;
 
 DebugOutput::~DebugOutput() {
-    printf("%s:%s\n",m_category,m_buffer.c_str());
+    if(m_category)
+        printf("%s:%s\n",m_category,m_buffer.c_str());
+    else
+        printf("%s\n",m_buffer.c_str());
 }
 
 #define SEGS_LOGGING_CATEGORY(name, string) \
