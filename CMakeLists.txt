@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.21)
 project(SEGS)
 
+# this requires c++ 20
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(CMAKE_CXX_EXTENSIONS OFF)
 # Tell cmake to honor CXX_VISIBILITY_PRESET and ignore it
 cmake_policy(SET CMP0063 NEW)
 cmake_policy(SET CMP0065 NEW)
@@ -52,6 +53,7 @@ add_definitions(
     "-DSEGS_DESCRIPTION=\"${SEGS_DESCRIPTION}\""
     )
 
+if(STANDALONE_ENV)
 if(MSVC)
     add_definitions( -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DNOMINMAX -D_USE_MATH_DEFINES)
     add_compile_options (/wd4251) # disable warning related to dll interface needed ... clients of class
@@ -73,6 +75,19 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wno-nested-anon-types -Wno-gnu-anonymous-struct -Wno-gnu-zero-variadic-macro-arguments")
+endif()
+else()
+if(MSVC)
+# pass iterator and runtime flags from the UE to our build
+if (DEFINED _ITERATOR_DEBUG_LEVEL)
+    add_definitions(-D_ITERATOR_DEBUG_LEVEL=${_ITERATOR_DEBUG_LEVEL})
+endif()
+
+if (DEFINED RUNTIME_LIBRARY)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /${RUNTIME_LIBRARY}")
+endif()
+
+endif() # MSVC
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -100,12 +115,17 @@ option(BUILD_EDITOR "Build experimental Segs Editor ?" OFF)
 option(BUILD_RPC_TEST_CLIENT "Build RPC Test Client ?" OFF)
 option(BUILD_CLIENT_PATCH "Build client patch for AMD graphics cards ?" OFF)
 
+if(STANDALONE_ENV)
+    add_compile_definitions(SEGS_STANDALONE)
+endif()
 ########################################################################################
 # Prerequisites
 ########################################################################################
 find_package(Threads REQUIRED)
+if(STANDALONE_ENV)
 include(LocateQt5)
 find_package(Qt6 COMPONENTS Core Sql REQUIRED)
+endif()
 
 include(SDKHelper)
 include(3rdparty_support)
@@ -212,12 +232,11 @@ if(BUILD_EDITOR)
 endif()
 if(STANDALONE_ENV)
     add_subdirectory(StandaloneEnv)
-endif()
-add_subdirectory(Servers)
-add_subdirectory(Clients)
-
+    add_subdirectory(Servers)
+#   add_subdirectory(Clients)
 # Add README, scripts, settings.cfg, and Starter Databases
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/README.md ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/README.md COPYONLY)
+endif()
 
 add_subdirectory(Data)
 

@@ -12,15 +12,46 @@
 
 #include "Components/Logging.h"
 #include "Components/Settings.h"
+#include "Utils/IServiceLocator.h"
 #include "Utils/string_utils.h"
 
 Vector<LoggingCategory *>  LoggingCategory::m_registered_categories;
 
+static constexpr int categoryToLogLevel(SegsLogLevel level) {
+    switch(level) {
+
+    case SegsLogLevel::Debug:
+        return 0;
+    case SegsLogLevel::Info:
+        return 1;
+    case SegsLogLevel::Warning:
+        return 2;
+    case SegsLogLevel::Critical:
+        return 3;
+    }
+    return 4;
+}
 DebugOutput::~DebugOutput() {
-    if(m_category)
-        printf("%s:%s\n",m_category,m_buffer.c_str());
-    else
-        printf("%s\n",m_buffer.c_str());
+    thread_local String buffer;
+    // write out the message
+    if(m_buffer.empty())
+        return;
+    auto sl=SEGS::getServiceLocator();
+    auto logger = sl ? sl->getLogger() : nullptr;
+
+    buffer.clear();
+    if(m_category!=nullptr)
+    {
+        buffer=m_category;
+        buffer.push_back(':');
+    }
+    buffer.append(m_buffer);
+
+    if(!logger) {
+        fprintf(stderr,"NO_LOGGER:%s",buffer.c_str());
+    } else {
+        logger->logString(categoryToLogLevel(m_level),buffer.c_str());
+    }
 }
 
 #define SEGS_LOGGING_CATEGORY(name, string) \
@@ -294,19 +325,19 @@ void dumpLogging()
 //! @}
 
 DebugOutput LogChannels::debug(const char *file, int line, const char *func, const char *category) {
-    return DebugOutput(file,line,func,LogLevel::Debug, category);
+    return DebugOutput(file,line,func,SegsLogLevel::Debug, category);
 }
 
 DebugOutput LogChannels::info(const char *file, int line, const char *func, const char *category) {
-    return DebugOutput(file,line,func,LogLevel::Info, category);
+    return DebugOutput(file,line,func,SegsLogLevel::Info, category);
 
 }
 
 DebugOutput LogChannels::warning(const char *file, int line, const char *func, const char *category) {
-    return DebugOutput(file,line,func,LogLevel::Warning, category);
+    return DebugOutput(file,line,func,SegsLogLevel::Warning, category);
 
 }
 
 DebugOutput LogChannels::critical(const char *file, int line, const char *func, const char *category) {
-    return DebugOutput(file,line,func,LogLevel::Critical, category);
+    return DebugOutput(file,line,func,SegsLogLevel::Critical, category);
 }

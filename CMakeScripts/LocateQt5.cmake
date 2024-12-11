@@ -27,15 +27,10 @@ IF(MSVC)
     # fix any double slashes which seem to be common
     STRING(REPLACE "//" "/"  QT_VERSION "${QT_VERSION}")
 
-    # we only support 2017, and qt5 uses vs2015 files for 32 bit build
-    SET(QT_MSVC "2015")
-    # check for 64-bit os
-    # may need to be removed for older compilers as it wasn't always offered
-    if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-        SET(QT_MSVC "2017_64")
-    endif()
+    # we only support 2022, and qt6 uses vs2015 files for 32 bit build
+    SET(QT_MSVC "msvc2022_64")
 
-    SET(QT_PATH "${QT_VERSION}/msvc${QT_MSVC}")
+    SET(QT_PATH "${QT_VERSION}/${QT_MSVC}")
     if(NOT EXISTS ${QT_PATH})
         SET(QT_PATH "${QT_VERSION}/msvc2019_64")
     endif()

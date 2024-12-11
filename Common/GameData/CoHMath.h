@@ -10,6 +10,7 @@
 #include <glm/mat3x3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/constants.hpp>
+#include <algorithm>
 
 // AngleRadians for use in PosUpdate etc
 // TODO: we can replace this with glm::vec and other methods

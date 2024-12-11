@@ -12,7 +12,7 @@ class DateTime {
 public:
     // Default constructor, initializes to the current system time
     DateTime() : timePoint() {}
-    DateTime(ChronoWrapper tp) : timePoint(tp) {}
+    explicit DateTime(ChronoWrapper tp) : timePoint(tp) {}
     DateTime(int year, uint8_t month, uint8_t day);
 
     static DateTime fromMSecsSinceEpoch(int64_t ms_since_epoch);
@@ -30,8 +30,8 @@ public:
 
     bool isValid() const;
     // Comparison operators using C++20 features
-    auto operator<=>(const DateTime &other) const = default;
-    auto operator<=>(const ChronoWrapper &other) const { return timePoint <=> other; }
+    auto operator<=>(DateTime other) const { return timePoint <=> other.timePoint; }
+    auto operator<=>(ChronoWrapper other) const { return timePoint <=> other; }
 
 private:
     ChronoWrapper timePoint;

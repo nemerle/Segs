@@ -82,7 +82,7 @@ void loadTexHeader(IFilesystem *fs,StringView fname)
         }
         return;
     }
-    IFile *src_tex = fs->open(actualPath);
+    IFile *src_tex = fs->open(actualPath,IFile::ReadOnly);
     if(src_tex)
     {
         TexFileHdr hdr;
@@ -92,6 +92,10 @@ void loadTexHeader(IFilesystem *fs,StringView fname)
             if(hdr.alpha) {
                 res.flags |= TextureWrapper::ALPHA;
             }
+            if ( hdr.alpha && !(hdr.flags & TexHeaderOpt::FADE) )
+                res.flags |= TextureWrapper::ALPHA;
+            if(hdr.flags & TexHeaderOpt::BUMPMAP)
+                res.flags |= TextureWrapper::BUMPMAP;
         }
         delete src_tex;
     }
@@ -141,6 +145,7 @@ void loadTexHeader(IFilesystem *fs,StringView fname)
 
     res.scaleUV0 = {1,1};
     res.scaleUV1 = {1,1};
+    res.Gloss= res.info ? res.info->Gloss : 1.0f;
 
     if(res.info && !res.info->BumpMap.empty())
         res.bumpmap = res.info->BumpMap;

@@ -15,12 +15,11 @@
 
 bool BinStore::check_bin_version_and_crc(uint32_t req_crc)
 {
-    String tgt;
-    uint32_t crc_from_file;
+    uint32_t crc_from_file=0;
     char magic_contents[8];
     m_str->read(magic_contents,8);
     read(crc_from_file);
-    tgt=read_pstr(4096);
+    const String &tgt=read_pstr(4096);
     if( 0!=strncmp(magic_contents,"CrypticS",8) || StringView(tgt).substr(0,6)!="Parse4" || (req_crc!=0 && crc_from_file != req_crc) ) //
     {
         m_str->close();
@@ -33,21 +32,19 @@ const String &BinStore::read_pstr( size_t maxlen )
 {
     static String buf;
     uint16_t len=0;
-    buf.resize(0);
+    buf.clear();
     if(read(len)!=true)
         return buf;
-    if(len<=maxlen)
-    {
-        buf.resize(len);
-        m_str->read(buf.data(),len);
-        if(m_file_sizes.size()>0)
-        {
-            (*m_file_sizes.rbegin())-=len;
-            bytes_read+=len;
-        }
-        fixup();
+    if (len > maxlen)
         return buf;
+    buf.resize(len);
+    m_str->read(buf.data(),len);
+    if(m_file_sizes.size()>0)
+    {
+        m_file_sizes.back()-=len;
+        bytes_read+=len;
     }
+    fixup();
     return buf;
 }
 
@@ -70,13 +67,13 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
         return true;
     }
     const String &hdr(read_pstr(20));
-    uint32_t sz;
+    uint32_t sz=0;
     read_internal(sz);
 
     uint64_t read_start = m_str->pos();
     if(!hdr.starts_with("Files1")||sz<=0)
         return false;
-    int num_data_blocks;
+    int num_data_blocks=0;
     read_internal(num_data_blocks);
     for (int blk_idx=0; blk_idx<num_data_blocks; ++blk_idx)
     {
@@ -207,7 +204,7 @@ bool BinStore::read(Vector<String> &res)
         return parse_ok;
     for(size_t idx = 0; idx < to_read; ++idx)
     {
-        res.push_back(read_str(12000));
+        res.emplace_back(read_str(12000));
         //parse_ok &= res[idx].size()>0; TODO handle string read errors
     }
     return parse_ok;
@@ -294,7 +291,7 @@ bool BinStore::prepare_nested()
 {
     bool result= bytes_to_read==bytes_read;
     assert(bytes_to_read==bytes_read);
-    bytes_to_read = *m_file_sizes.rbegin();
+    bytes_to_read = m_file_sizes.back();
     return result;
 }
 
@@ -304,28 +301,26 @@ bool BinStore::nesting_name(String &name)
     if(expected_size == uint32_t(~0))
         return false;
     bytes_to_read = expected_size;
-    if(m_file_sizes.size()>0)
-        (*m_file_sizes.rbegin())-=bytes_to_read;
-    m_file_sizes.push_back(bytes_to_read); // the size of structure being read. + sizeof(uint32_t)
+    if(!m_file_sizes.empty())
+        m_file_sizes.back()-=bytes_to_read;
+    m_file_sizes.emplace_back(bytes_to_read); // the size of structure being read. + sizeof(uint32_t)
     return true;
 }
 
 void BinStore::fixup()
 {
-    int nonmult4 = ((m_str->pos() + 3) & ~3) - m_str->pos();
-    if(nonmult4)
-    {
-        m_str->seek(nonmult4+m_str->pos());
-        bytes_read+=nonmult4;
-        if(m_file_sizes.size()>0)
-            (*m_file_sizes.rbegin())-=nonmult4;
-
-    }
+    int64_t nonmult4 = ((m_str->pos() + 3) & ~3) - m_str->pos();
+    if (!nonmult4)
+        return;
+    m_str->seek(nonmult4+m_str->pos());
+    bytes_read+=nonmult4;
+    if(!m_file_sizes.empty())
+        m_file_sizes.back()-=nonmult4;
 }
 
 bool BinStore::end_encountered() const
 {
-    return (*m_file_sizes.rbegin())==0;
+    return m_file_sizes.back()==0;
 }
 
 //! @}

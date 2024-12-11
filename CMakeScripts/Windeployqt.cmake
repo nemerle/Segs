@@ -26,6 +26,7 @@ find_package(Qt6 COMPONENTS Core REQUIRED)
 # the windeployqt binary
 get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+unset(WINDEPLOYQT_EXECUTABLE CACHE)
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
 
 # Running this with MSVC 2015 requires CMake 3.6+

@@ -25,14 +25,6 @@
 #include <cstdio>
 namespace SEGS {
 
-inline Vector<char> IFile_readAll(IFile *self)
-{
-    Vector<char> res;
-    res.resize(self->size());
-    self->read(res.data(),res.size());
-    return res;
-}
-
 inline Vector<char> IFile_read(IFile *self,int64_t len) {
     if(self->pos()+len>=self->size())
         return {};
@@ -103,7 +95,7 @@ bool commonReadFrom(const String &crl_path,const char *classname, T &target)
             sWarning() << "Failed to open" << crl_path;
             return false;
         }
-        auto contents=IFile_readAll(ifl.get());
+        auto contents=ifl->readAll();
         std::istringstream istr(std::string(contents.begin(),contents.end()));
         try
         {

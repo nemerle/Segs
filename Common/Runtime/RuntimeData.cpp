@@ -22,9 +22,9 @@ static void setupTexOpt(SceneModifiers *mods,TextureModifiers *tmod)
     if(tmod->ScaleST1.y == 0.0f)
         tmod->ScaleST1.y = 1.0f;
     if(tmod->Fade.x != 0.0f || tmod->Fade.y != 0.0f)
-        tmod->Flags |= uint32_t(TexOpt::FADE);
+        tmod->Flags |= uint32_t(TexHeaderOpt::FADE);
     if(!tmod->Blend.empty())
-        tmod->Flags |= uint32_t(TexOpt::DUAL);
+        tmod->Flags |= uint32_t(TexHeaderOpt::DUAL);
     if(!tmod->Surface.empty())
     {
         //sCDebug(logSceneGraph) << "Has surface" << tex->Surface;

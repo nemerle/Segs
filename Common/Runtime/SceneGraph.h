@@ -16,7 +16,6 @@
 #include "glm/mat3x3.hpp"
 #include "glm/common.hpp"
 #include "glm/gtc/constants.hpp"
-#include "Components/serialization_common.h"
 #include "Common/Containers/HashMap.h"
 #include "Common/Containers/Set.h"
 #include "EASTL/functional.h"
@@ -24,6 +23,7 @@
 
 namespace SEGS
 {
+struct IFilesystem;
 struct LoadingContext;
 struct Model;
 struct SceneNodeChildTransform

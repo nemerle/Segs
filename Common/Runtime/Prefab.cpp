@@ -1,12 +1,13 @@
 #include "Prefab.h"
 
-#include "Common/Utils/IServiceLocator.h"
-#include "SceneGraph.h"
-#include "Model.h"
-#include "Common/GameData/trick_serializers.h"
 #include "Common/GameData/GameDataStore.h"
 #include "Common/GameData/scenegraph_serializers.h" //for getFilepathCaseInsensitive
-
+#include "Common/GameData/trick_serializers.h"
+#include "Common/Utils/IServiceLocator.h"
+#include "Components/Logging.h"
+#include "Model.h"
+#include "SceneGraph.h"
+#include "Utils/string_utils.h"
 
 namespace SEGS
 {
@@ -27,7 +28,7 @@ GeoSet *findAndPrepareGeoSet(IFilesystem *fs,const String &fname,const String &b
     name_fixed.replace(".anm", ".geo");
     String true_path = getFilepathCaseInsensitive(fs,base_path + name_fixed);
 
-    IFile *fp = fs->open(true_path);
+    IFile *fp = fs->open(true_path,IFile::ReadOnly);
     if(fp)
     {
         geoset = new GeoSet;
@@ -98,7 +99,7 @@ bool PrefabStore::prepareGeoLookupArray(const String &base_path)
     auto services=getServiceLocator();
     auto fs=services->getFS();
     String bin_path =base_path + "bin/defnames.bin";
-    auto file=fs->open(bin_path);
+    auto file=fs->open(bin_path,IFile::ReadOnly);
     if(!file)
     {
         sCritical() << "Failed to open bin/defnames.bin:" << bin_path;
@@ -106,7 +107,7 @@ bool PrefabStore::prepareGeoLookupArray(const String &base_path)
     }
 
     GeoStoreDef *current_geosetinf = nullptr;
-    auto data=IFile_readAll(file);
+    auto data=file->readAll();
     Vector<StringView> defnames_arr;
     String::split_ref(defnames_arr, StringView(data.data(),data.size()), '\0');
     for(StringView &str : defnames_arr)

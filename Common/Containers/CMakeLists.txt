@@ -4,5 +4,5 @@ add_library(SegsContainers STATIC
     ChronoWrapper.cpp ChronoWrapper.h
     DateTime.cpp  DateTime.h
 )
-target_include_directories(SegsContainers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+target_include_directories(SegsContainers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 target_link_libraries(SegsContainers PUBLIC EASTL)

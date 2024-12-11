@@ -19,16 +19,20 @@
 #include "Friend.h"
 #include "Components/Settings.h"
 #include "Components/serialization_common.h"
-#include "Messages/GameDatabase/GameDBSyncEvents.h"
 #include "GameData/chardata_serializers.h"
 #include "GameData/entitydata_serializers.h"
 #include "GameData/playerdata_definitions.h"
 #include "GameData/playerdata_serializers.h"
 #include "GameData/GameDataStore.h"
-#include "Servers/MapServer/DataHelpers.h"
 #include "Components/Logging.h"
 #include "Containers/String.h"
 #include "Common/Utils/string_utils.h"
+#ifdef SEGS_STANDALONE
+#include "Servers/MapServer/DataHelpers.h"
+#include "Messages/GameDatabase/GameDBSyncEvents.h"
+#else
+const StringView EMPTY_STRING = "EMPTY"; // Client expects value "EMPTY" in several places
+#endif
 
 using namespace SEGSEvents;
 
@@ -627,6 +631,7 @@ void Character::sendFriendList(BitStream &bs) const
     }
 }
 
+#ifdef SEGS_STANDALONE
 bool toActualCharacter(const GameAccountResponseCharacterData &src,
                        Character &tgt, PlayerData &player, EntityData &entity)
 {
@@ -685,5 +690,5 @@ bool fromActualCharacter(const Character &src, const PlayerData &player,
 
     return true;
 }
-
+#endif
 //! @}

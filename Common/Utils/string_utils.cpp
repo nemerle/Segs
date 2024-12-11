@@ -1,11 +1,13 @@
 //#include <charconv>
 #include "string_utils.h"
 
+#include "Components/Logging.h"
 #include <cassert>
 #include <charconv>
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <iomanip>
+#include <sstream>
 
 using ChronoData = std::chrono::system_clock::time_point;
 
@@ -1426,26 +1428,6 @@ bool PathUtils::is_network_share_path(StringView path) {
 
 String PathUtils::simplify_path(StringView str) {
 
-    String drive;
-     if (is_network_share_path(str)) {
-        drive = str.substr(0, 2);
-        str = str.substr(2);
-    } else if (str.starts_with("/") || str.starts_with("\\")) {
-
-        drive = str.substr(0, 1);
-        str = str.substr(1);
-    } else {
-
-        size_t p = str.find(":/");
-        if (p == String::npos) {
-            p = str.find(":\\");
-        }
-        if (p != String::npos && p < str.find("/")) {
-
-            drive = str.substr(0, p + 2);
-            str = str.substr(p + 2);
-        }
-    }
     String s(str);
 
     s.replace('\\', '/');
@@ -1474,7 +1456,7 @@ String PathUtils::simplify_path(StringView str) {
         }
     }
 
-    return drive + String::joined(filtered, "/");
+    return String::joined(filtered, "/");
 }
 
 static int _humanize_digits(int p_num) {
@@ -2044,11 +2026,12 @@ String PathUtils::path_to(StringView str, StringView p_path) {
 
     String src = from_native_path(str);
     String dst = from_native_path(p_path);
-    if (!src.ends_with("/")) {
-        src += "/";
+    // Remove trailing separators except for root
+    if (src.length() > 1 && src.ends_with("/")) {
+        src = src.substr(0, src.length() - 1);
     }
-    if (!dst.ends_with("/")) {
-        dst += "/";
+    if (dst.length() > 1 && dst.ends_with("/")) {
+        dst = dst.substr(0, dst.length() - 1);
     }
 
     String base;
@@ -2066,13 +2049,13 @@ String PathUtils::path_to(StringView str, StringView p_path) {
         }
 
         base = src_begin;
-        src = src.substr(src_begin.length(), src.length());
-        dst = dst.substr(dst_begin.length(), dst.length());
+        src = src.substr(src_begin.length());
+        dst = dst.substr(dst_begin.length());
     }
 
     //remove leading and trailing slash and split
-    auto src_dirs = StringUtils::split(StringView(src).substr(1, src.length() - 2), "/");
-    auto dst_dirs = StringUtils::split(StringView(dst).substr(1, dst.length() - 2), "/");
+    auto src_dirs = StringUtils::split(src.starts_with('/') ? StringView(src).substr(1):StringView(src), "/");
+    auto dst_dirs = StringUtils::split(dst.starts_with('/') ? StringView(dst).substr(1):StringView(dst), "/");
 
     //find common parent
     size_t common_parent = 0;
@@ -2099,10 +2082,9 @@ String PathUtils::path_to(StringView str, StringView p_path) {
         dir += "../";
     }
 
-    for (size_t i = common_parent + 1; i < dst_dirs.size(); i++) {
-
-        dir += String(dst_dirs[i]) + "/";
-    }
+    Span<StringView> from_common(dst_dirs.begin()+common_parent+1,dst_dirs.end());
+    if(!from_common.empty())
+        dir += String::joined(from_common,"/");
 
     if (dir.length() == 0) {
         dir = "./";
@@ -2529,13 +2511,13 @@ DateTime StringUtils::parseDate(const char *value, StringView fmt) {
     std::istringstream ss(value);
     ss >> std::get_time(&tm, fmt.data());
     if (ss.fail()) {
-        return {fromChronoType(std::chrono::system_clock::time_point::max())};
+        return DateTime(fromChronoType(std::chrono::system_clock::time_point::max()));
     }
 
     // Convert std::tm to time_t (assumes tm is in local time)
     std::time_t time_t_val = std::mktime(&tm);
     if (time_t_val == -1) {
-        return {fromChronoType(std::chrono::system_clock::time_point::max())};
+        return DateTime(fromChronoType(std::chrono::system_clock::time_point::max()));
     }
 
     // Convert time_t to time_point

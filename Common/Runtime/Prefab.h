@@ -6,7 +6,6 @@
  */
 
 #pragma once
-#include "Components/serialization_common.h"
 
 #include "Common/Containers/HashMap.h"
 #include "Common/Containers/Vector.h"
@@ -20,6 +19,7 @@ struct NodeLoadRequest;
 struct Model;
 struct SceneGraph;
 struct SceneNode;
+struct IFilesystem;
 
 struct GeoSet
 {

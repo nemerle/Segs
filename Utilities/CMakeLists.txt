@@ -1,6 +1,7 @@
 #add_subdirectory(slav)
-add_subdirectory(event_gen)
+if(STANDALONE_ENV)
 
+add_subdirectory(event_gen)
 IF(BUILD_COX_MAP_VIEWER)
   add_subdirectory(MapViewer)
   add_subdirectory(CharacterViewer)
@@ -15,3 +16,4 @@ add_subdirectory(EditorComponents)
 IF(BUILD_RPC_TEST_CLIENT)
   add_subdirectory(RPCTestClient)
 ENDIF(BUILD_RPC_TEST_CLIENT)
+endif()
