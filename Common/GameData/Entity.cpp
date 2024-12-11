@@ -16,16 +16,15 @@
 #include "Team.h"
 #include "Character.h"
 #include "CharacterHelpers.h"
-#include "Servers/MapServer/DataHelpers.h"
 #include "GameData/GameDataStore.h"
 #include "GameData/playerdata_definitions.h"
 #include "GameData/npc_definitions.h"
+#ifdef SEGS_STANDALONE
+#include "Servers/MapServer/DataHelpers.h"
+#endif
 //#include <QtCore/QDebug>
-#include <algorithm>
+#include "EASTL/algorithm.h"
 #include <cmath>
-#include <limits>
-
-#include <memory>
 
 void Entity::sendAllyID(BitStream &bs)
 {

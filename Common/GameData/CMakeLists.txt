@@ -146,7 +146,7 @@ SET(target_INCLUDE
 add_library(gameData STATIC ${target_CPP} ${target_INCLUDE})
 target_include_directories(gameData PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gameData PUBLIC EASTL SegsUtils ace_IMP cereal_IMP) # used for Singleton stuff.
-target_link_libraries(gameData INTERFACE SEGS_Components)
+target_link_libraries(gameData PUBLIC SEGS_Components)
 target_include_directories(gameData INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>
   #$<INSTALL_INTERFACE:gameData>

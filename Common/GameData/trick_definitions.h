@@ -140,7 +140,7 @@ struct GeometryModifiers
     float                         LodScale;
 };
 
-enum TexOpt : uint32_t
+enum TexHeaderOpt : uint32_t
 {
     FADE        = 0x0001,
     DUAL        = 0x0010,

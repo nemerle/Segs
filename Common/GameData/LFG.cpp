@@ -12,7 +12,6 @@
 
 #include "LFG.h"
 
-#include "Servers/MapServer/DataHelpers.h"
 #include "Entity.h"
 #include "Components/Logging.h"
 #include "Character.h"

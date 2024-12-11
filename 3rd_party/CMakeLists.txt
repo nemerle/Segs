@@ -24,7 +24,8 @@ target_include_directories(glm INTERFACE
 # Optional components
 ########################################################################################
 include(ExternalProject_EASTL.cmake)
+if(STANDALONE_ENV)
 include(ExternalProject_LUA.cmake)
 include(ExternalProject_SOL2.cmake)
 include(ExternalProject_JCON.cmake)
-
+endif()

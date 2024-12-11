@@ -1,10 +1,13 @@
 #include "Animation.h"
+
+#include "Components/Logging.h"
 #include "Model.h"
 #include "Prefab.h"
 #include "RuntimeData.h"
 
 #include "AnimationEngine.h"
 #include "Common/GameData/anim_definitions.h"
+#include "Utils/IServiceLocator.h"
 
 #include <cassert>
 

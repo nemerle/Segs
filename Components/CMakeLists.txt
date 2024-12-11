@@ -53,15 +53,12 @@ add_library(SEGS_Components STATIC ${target_SOURCES}
 add_dependencies(SEGS_Components ACE_BUILD)
 
 target_link_libraries(SEGS_Components PUBLIC ace_IMP)
-IF(MINGW)
-    target_link_libraries(SEGS_Components INTERFACE ws2_32)
-ENDIF()
 
 if(ENABLE_TESTS)
     add_subdirectory(UnitTests)
 endif()
 target_include_directories(SEGS_Components PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
-target_link_libraries(SEGS_Components PUBLIC #[[cereal_IMP]] EASTL SegsUtils SegsContainers glm)
+target_link_libraries(SEGS_Components PUBLIC cereal_IMP EASTL SegsUtils SegsContainers glm)
 
 # Retain directory structure in visual studio
 get_target_property(TARGET_SOURCES SEGS_Components SOURCES)

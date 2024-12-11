@@ -84,17 +84,15 @@ struct IFilesystem
 
     virtual ~IFilesystem() = default;
 
-    virtual IFile* open(const char *path,int path_len, IFile::OpenMode mode)=0;
+    virtual IFile* open(StringView path, IFile::OpenMode mode)=0;
     virtual FileStats stat(StringView path)=0;
-    virtual bool exists(const char *path,int path_len)=0;
+    virtual bool exists(StringView path)=0;
     virtual void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool /*is_dir*/)> visitor) = 0;
     virtual bool mkpath(StringView path) = 0;
-    IFile *open(StringView path, IFile::OpenMode mode=IFile::ReadOnly) { return open(path.data(), (int)path.size(), mode); }
-    bool exists(StringView path) { return exists(path.data(), (int)path.size()); }
 };
 
 struct ILogger {
-    enum LogLevel {
+    enum SegsLogLevel {
         Debug=0,
         Info=1,
         Warning=2,

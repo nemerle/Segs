@@ -2,6 +2,7 @@
 
 #include "Animation.h"
 #include "AnimationEngine.h"
+#include "Components/Logging.h"
 #include "Model.h"
 #include "Prefab.h"
 #include "SceneGraph.h"
@@ -11,6 +12,7 @@
 #include "Common/GameData/seq_serializers.h"
 #include "Common/Containers/Set.h"
 
+#include "Utils/string_utils.h"
 #include "magic_enum/magic_enum.hpp"
 #include <glm/common.hpp>
 #include <glm/ext.hpp>

@@ -1,6 +1,7 @@
 #include "ChronoWrapper.h"
 
 #include <chrono>
+#include <new>
 
 using ChronoData = std::chrono::system_clock::time_point;
 using SteadyChronoData = std::chrono::steady_clock::time_point;

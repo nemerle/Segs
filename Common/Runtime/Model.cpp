@@ -1,4 +1,5 @@
 #include "Model.h"
+#include "Components/serialization_common.h"
 #include "Prefab.h"
 #include "RuntimeData.h"
 #include "Texture.h"

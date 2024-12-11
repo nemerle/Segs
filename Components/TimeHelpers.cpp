@@ -29,3 +29,4 @@ int64_t getSecsSince2000Epoch()
     // Convert the duration to seconds
     return duration_cast<seconds>(duration).count();
 }
+//! @}

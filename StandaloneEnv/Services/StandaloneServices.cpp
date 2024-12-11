@@ -53,12 +53,12 @@ struct QFSWrapper : public SEGS::IFilesystem
 public:
     ~QFSWrapper() override = default;
 
-    SEGS::IFile *open(const char *path,int path_len, SEGS::IFile::OpenMode mode) override {
-        if(path_len==0)
+    SEGS::IFile *open(StringView path, SEGS::IFile::OpenMode mode) override {
+        if(path.empty()==0)
         {
             return nullptr;
         }
-        QString q_path = QString::fromUtf8(path,path_len);
+        QString q_path = QString::fromUtf8(path.data(),path.size());
         if(!QFile::exists(q_path) && mode==SEGS::IFile::OpenMode::ReadOnly) {
             return nullptr;
         }
@@ -70,8 +70,8 @@ public:
         return res;
     }
 
-    bool exists(const char *path,int path_len) override {
-        return QFile::exists(QString::fromUtf8(path,path_len));
+    bool exists(StringView path) override {
+        return QFile::exists(QString::fromUtf8(path.data(),path.size()));
     }
 
     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool /*is_dir*/)> visitor) override {
@@ -118,21 +118,21 @@ struct LoggerWrapper : public SEGS::ILogger
 {
 public:
     void logString(int log_level, const char *debug_msg) override {
-        switch(static_cast<LogLevel>(log_level))
+        switch(static_cast<SegsLogLevel>(log_level))
         {
-        case LogLevel::Debug:
+        case SegsLogLevel::Debug:
             qDebug() << debug_msg;
             break;
-        case LogLevel::Info:
+        case SegsLogLevel::Info:
             qInfo() << debug_msg;
             break;
-        case LogLevel::Warning:
+        case SegsLogLevel::Warning:
             qWarning() << debug_msg;
             break;
-        case LogLevel::Error:
+        case SegsLogLevel::Error:
             qCritical() << debug_msg;
             break;
-        case LogLevel::Unknown:
+        case SegsLogLevel::Unknown:
             qDebug()<<debug_msg;
             break;
         }

@@ -7,7 +7,7 @@
 #pragma once
 #include "Common/Runtime/HandleBasedStorage.h"
 #include "Common/Containers/String.h"
-#include "Containers/StringView.h"
+#include "Common/Containers/StringView.h"
 
 #include <glm/vec2.hpp>
 #include <stdint.h>
@@ -35,7 +35,7 @@ struct TextureStorage;
 struct TextureWrapper
 {
     using StorageClass = SEGS::TextureStorage; //tells the handle template to look up
-    enum
+    enum TexFlags
     {
         ALPHA = 0x1,
         RGB8 = 0x2,
@@ -60,6 +60,7 @@ struct TextureWrapper
     };
     String detailname;
     String bumpmap;
+    float Gloss;
     int flags {0};
     glm::vec2 scaleUV0 {0,0};
     glm::vec2 scaleUV1 {0,0};

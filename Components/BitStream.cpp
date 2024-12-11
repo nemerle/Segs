@@ -16,6 +16,7 @@
 #include "Common/Utils/IServiceLocator.h"
 #include <cstring>
 #include <cassert>
+#include "EASTL/algorithm.h"
 
 //  Constants
 
@@ -166,7 +167,7 @@ void BitStream::StorePackedBits(uint32_t nBits, uint32_t dataBits)
     {
         dataBits -= BIT_MASK(nBits);
         StoreBits(nBits, BIT_MASK(nBits));
-        nBits = std::min(nBits * 2,BITS_PER_UINT32);
+        nBits = eastl::min(nBits * 2,BITS_PER_UINT32);
     }
 
     StoreBits(nBits, dataBits);
@@ -382,7 +383,7 @@ int64_t BitStream::Get64Bits()
 uint32_t BitStream::GetAvailSize() const
 {
     int64_t res = int64_t(m_size)- int64_t(m_write_off)-(m_write_bit_off!=0);
-    return uint32_t(std::max<int64_t>(0,res));
+    return uint32_t(eastl::max<int64_t>(0,res));
 }
 /************************************************************************
 Function:    GetFloat/GetFloatWithDebugInfo()

@@ -434,7 +434,7 @@ bool loadFrom(const String &path, SequencerTypeMap &target)
 //    {
 //        if(!ifl.open(QFile::ReadOnly))
 //        {
-//            qWarning() << "Failed to open" << path;
+//            sWarning() << "Failed to open" << path;
 //            return false;
 //        }
 //        std::istringstream istr(ifl.readAll().toStdString());

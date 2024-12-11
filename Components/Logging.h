@@ -12,8 +12,8 @@
 #include <cassert>
 
 
-enum class LogLevel : uint8_t {
-    Debug,
+enum class SegsLogLevel : uint8_t {
+    Debug=0,
     Info,
     Warning,
     Critical
@@ -24,7 +24,7 @@ class DebugOutput
 public:
     DebugOutput() = default;
     DebugOutput(const char *category) : m_category(category) {}
-    DebugOutput(const char *file, int line, const char *func, LogLevel level=LogLevel::Debug,const char *category=nullptr)
+    DebugOutput(const char *file, int line, const char *func, SegsLogLevel level=SegsLogLevel::Debug,const char *category=nullptr)
         : m_file(file), m_line(line), m_func(func), m_category(category),m_level(level)
     {
     }
@@ -116,7 +116,7 @@ private:
     int m_line=0;
     const char *m_func=nullptr;
     const char *m_category=nullptr;
-    LogLevel m_level;
+    SegsLogLevel m_level;
     String m_buffer;
 };
 
@@ -143,12 +143,12 @@ struct LogChannelSwitches {
     uint8_t m_info:1=0;
     uint8_t m_warning:1=0;
     uint8_t m_critical:1=0;
-    void setEnabled(LogLevel level, bool v) {
+    void setEnabled(SegsLogLevel level, bool v) {
         switch(level) {
-        case LogLevel::Debug: m_debug=v; break;
-        case LogLevel::Info: m_info=v; break;
-        case LogLevel::Warning: m_warning=v; break;
-        case LogLevel::Critical: m_critical=v; break;
+        case SegsLogLevel::Debug: m_debug=v; break;
+        case SegsLogLevel::Info: m_info=v; break;
+        case SegsLogLevel::Warning: m_warning=v; break;
+        case SegsLogLevel::Critical: m_critical=v; break;
         }
     }
     [[nodiscard]] bool isDebugEnabled() const {
@@ -177,7 +177,7 @@ struct LoggingCategory
     }
     [[nodiscard]] bool enabled() const { return m_enabled; }
     void setEnabled(bool v) { m_enabled=v; }
-    void setEnabled(LogLevel level, bool v) {
+    void setEnabled(SegsLogLevel level, bool v) {
         switches.setEnabled(level,v);
     }
     [[nodiscard]] const char *name() const { return m_name; }
