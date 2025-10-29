@@ -52,7 +52,7 @@ void BinStore::skip_pstr()
 {
     uint16_t len=0;
     read(len);
-    m_str->seek(len+m_str->pos());
+    m_str->seek(len+m_str->tell());
 }
 
 bool BinStore::read_data_blocks( bool file_data_blocks )
@@ -63,14 +63,14 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
         uint32_t v;
         read(v);
         if(v)
-            m_str->seek(v+m_str->pos());
+            m_str->seek(v+m_str->tell());
         return true;
     }
     const String &hdr(read_pstr(20));
     uint32_t sz=0;
     read_internal(sz);
 
-    uint64_t read_start = m_str->pos();
+    uint64_t read_start = m_str->tell();
     if(!hdr.starts_with("Files1")||sz<=0)
         return false;
     int num_data_blocks=0;
@@ -82,7 +82,7 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
         read_internal(fe.date);
         m_entries.push_back(fe);
     }
-    uint64_t read_end = m_str->pos();
+    uint64_t read_end = m_str->tell();
     m_file_sizes.emplace_back((uint32_t)(m_str->size()-read_end));
     return (sz==(read_end-read_start));
 }
@@ -90,13 +90,7 @@ bool BinStore::read_data_blocks( bool file_data_blocks )
 bool BinStore::open(const String &name, uint32_t required_crc )
 {
     auto fs = SEGS::getServiceLocator()->getFS();
-    if(m_str && m_str->isOpen())
-    {
-        m_str->close();
-        delete m_str;
-        m_str = nullptr;
-    }
-    m_str=fs->open(name,SEGS::IFile::ReadOnly);
+    m_str=fs->openFile(name,SEGS::IFile::ReadOnly);
     if(!m_str) {
         return false;
     }
@@ -106,12 +100,6 @@ bool BinStore::open(const String &name, uint32_t required_crc )
 
 BinStore::~BinStore()
 {
-    if(m_str && m_str->isOpen())
-    {
-        m_str->close();
-    }
-    delete m_str;
-    m_str = nullptr;
 }
 
 bool BinStore::read( uint32_t &v )
@@ -309,10 +297,10 @@ bool BinStore::nesting_name(String &name)
 
 void BinStore::fixup()
 {
-    int64_t nonmult4 = ((m_str->pos() + 3) & ~3) - m_str->pos();
+    int64_t nonmult4 = ((m_str->tell() + 3) & ~3) - m_str->tell();
     if (!nonmult4)
         return;
-    m_str->seek(nonmult4+m_str->pos());
+    m_str->seek(nonmult4+m_str->tell());
     bytes_read+=nonmult4;
     if(!m_file_sizes.empty())
         m_file_sizes.back()-=nonmult4;

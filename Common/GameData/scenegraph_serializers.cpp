@@ -394,12 +394,12 @@ String getFilepathCaseInsensitive(SEGS::IFilesystem * fs, const String &fpath)
 
     String true_path;
 
-    fs->visitEntries(base_path,[&](StringView path,bool is_dir)->SEGS::IFilesystem::VisitResult {
+    fs->visitEntries(base_path,[&](StringView path,bool is_dir)->SEGS::VisitResult {
         if(fpath.ends_with(path,false)) {
             true_path = path;
-            return SEGS::IFilesystem::VisitStop;
+            return SEGS::VisitResult::VisitStop;
         }
-        return SEGS::IFilesystem::VisitNext;
+        return SEGS::VisitResult::VisitNext;
     });
 
     if(!true_path.empty())

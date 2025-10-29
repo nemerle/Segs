@@ -135,7 +135,7 @@ public:
     uint16_t    m_first_control_state_change_id = 0xffff;
 
     // whether this state change contains the keys currently held in m_keys,
-    // doesn't necessarily mean any of them have changed, but useful for 
+    // doesn't necessarily mean any of them have changed, but useful for
     // validating against current key state on server
     bool        m_has_keys = false;
     bool        m_keys[6] = {};
@@ -176,27 +176,65 @@ class InputState
 {
 public:
     // input changes which have been received from the client but not processed yet
-    Vector<InputStateChange>        m_queued_changes;
+    Vector<InputStateChange> m_queued_changes;
 
     // next control state change id that the server wants, used to avoid processing
     // the same control state changes multiple times
-    uint16_t                        m_next_expected_control_state_change_id = 0;
+    uint16_t m_next_expected_control_state_change_id = 0;
 
     // keys currently held
-    bool                            m_keys[6] = {};
+    bool m_keys[6] = {};
 
     // how long each key has been held
-    uint32_t                        m_key_press_duration_ms[6] = {};
+    uint32_t m_key_press_duration_ms[6] = {};
 
     // sent by client, alters speed of all movement
-    float                           m_velocity_scale = 1.0f;
+    float m_velocity_scale = 1.0f;
 
     // sent by client, not sure what it's for
-    uint8_t                         m_every_4_ticks = 0;
+    uint8_t m_every_4_ticks = 0;
 
-    // seems to only ever be 1 on the client when predicting movement, so should only need to be 1 on server (I think) todo(jbr)
-    float                           m_timestep = 1.0f; // todo(jbr) is this in the packet? the array of timestate things, equal to number of full ticks?
+    // seems to only ever be 1 on the client when predicting movement, so should only need to be 1 on server (I think)
+    // todo(jbr)
+    float m_timestep =
+        1.0f; // todo(jbr) is this in the packet? the array of timestate things, equal to number of full ticks?
+    /// Accumulates delta time until enough has passed to run a physics step.
+    /// Physics runs when this reaches PHYSICS_TIMESTEP_THRESHOLD (1.0).
+    /// Units: Arbitrary physics time (1.0 = one physics tick)
+    /// Range: [0.0, ~15.0] (clamped to prevent lag spirals)
+    float m_timestep_acc = 0.0f;
+
+           // ========================================================================
+    // Position Interpolation Support (Step 3)
+    // ========================================================================
+
+    /// Position at the START of the current physics tick (world coordinates)
+    /// NOTE: This is a COPY of m_motion_state.m_last_pos for convenience
+    /// Captured: Inside control_id == 8 handler, BEFORE playerMotion()
+    /// Used for:
+    ///   - Client-side interpolation (future)
+    ///   - Delta calculation (end_pos - start_pos)
+    ///   - Teleport detection
+    /// Timing: Set per-tick, not per-frame
+    /// Updated: processNewInputs() in control_id == 8 case
+    glm::vec3 m_start_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    /// Position at the END of the current physics tick (world coordinates)
+    /// Captured: Inside control_id == 8 handler, AFTER playerMotion()
+    /// Used for:
+    ///   - Client-side interpolation (future)
+    ///   - Next tick's start_pos (in Step 4 multi-tick loop)
+    ///   - Delta calculation
+    /// Timing: Set per-tick, not per-frame
+    /// Updated: processNewInputs() in control_id == 8 case
+    glm::vec3 m_end_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    /// Number of physics steps run this frame
+    /// Used for: Debugging, performance monitoring
+    /// Range: [0, MAX_PHYSICS_STEPS_PER_FRAME]
+    /// Reset: Every frame in processNewInputs()
+    uint32_t m_physics_steps_this_frame = 0;
 
     // whether to generate input logging for this entity
-    bool                            m_debug = false;
+    bool m_debug = false;
 };

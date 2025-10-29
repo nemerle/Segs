@@ -34,12 +34,12 @@ bool MapManager::load_templates(const String &template_directory, uint8_t game_i
     auto fs = SEGS::getServiceLocator()->getFS();
     sInfo() << "Searching for maps in:" << template_directory;
 
-    fs->visitEntries(template_directory, [&](StringView path, bool is_dir) -> SEGS::IFilesystem::VisitResult {
+    fs->visitEntries(template_directory, [&](StringView path, bool is_dir) -> SEGS::VisitResult {
         if (is_dir)
         {
             if (path != "." && path != "..")
-                return SEGS::IFilesystem::VisitSubdirectory;
-            return SEGS::IFilesystem::VisitNext;
+                return SEGS::VisitResult::VisitSubdirectory;
+            return SEGS::VisitResult::VisitNext;
         }
         // QString dirname = map_dir_visitor.next();
         StringView dirname = PathUtils::get_file(path);
@@ -66,7 +66,7 @@ bool MapManager::load_templates(const String &template_directory, uint8_t game_i
             // actually load
             m_name_to_template[tpl->client_filename()] = tpl; // maps/missions/sewers, maps/missions/caves, etc.
         }
-        return SEGS::IFilesystem::VisitNext;
+        return SEGS::VisitResult::VisitNext;
     });
 
     // (template_directory / "bin/tutorial.bin")

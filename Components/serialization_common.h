@@ -8,9 +8,10 @@
 #pragma once
 #include <Common/Utils/IServiceLocator.h>
 #include "Common/Containers/String.h"
-#include "Logging.h"
 #include "Common/Containers/StringView.h"
 #include "Common/Containers/Vector.h"
+#include "Common/Utils/IFilesystem.h"
+#include "Logging.h"
 
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/memory_binary.hpp>
@@ -26,7 +27,7 @@
 namespace SEGS {
 
 inline Vector<char> IFile_read(IFile *self,int64_t len) {
-    if(self->pos()+len>=self->size())
+    if(self->tell()+len>=self->size())
         return {};
     Vector<char> res;
     res.resize(len);
@@ -54,8 +55,8 @@ void commonSaveTo(const T & target, const char *classname, const String & baseNa
                 cereal::JSONOutputArchive ar( tgt );
                 ar(cereal::make_nvp(classname,target));
             }
-            eastl::unique_ptr<IFile> tgt_fle(
-                fs->open(target_fname, IFile::OpenMode(SEGS::IFile::WriteOnly | SEGS::IFile::Text)));
+            FileHandle tgt_fle(
+                fs->openFile(target_fname, IFile::OpenMode(SEGS::IFile::WriteOnly | SEGS::IFile::Text)));
             if(!tgt_fle) {
                 sCritical() << "Failed to open"<<target_fname<<"in write mode";
                 return;
@@ -63,7 +64,7 @@ void commonSaveTo(const T & target, const char *classname, const String & baseNa
             tgt_fle->write(tgt.str().c_str(),tgt.str().size());
         }
         else {
-            eastl::unique_ptr<IFile> tgt_fle(fs->open(target_fname,SEGS::IFile::WriteOnly));
+            FileHandle tgt_fle(fs->openFile(target_fname,SEGS::IFile::WriteOnly));
             eastl::vector<uint8_t> tgt;
             cereal::VectorOutputArchive ar( tgt );
             ar(cereal::make_nvp(classname,target));
@@ -89,7 +90,7 @@ bool commonReadFrom(const String &crl_path,const char *classname, T &target)
     auto fs=getServiceLocator()->getFS();
     if(crl_path.ends_with("json") || crl_path.ends_with("crl_json"))
     {
-        eastl::unique_ptr<IFile> ifl(fs->open(crl_path,(IFile::OpenMode)(IFile::ReadOnly|IFile::Text)));
+        FileHandle ifl(fs->openFile(crl_path,(IFile::OpenMode)(IFile::ReadOnly|IFile::Text)));
         if(!ifl)
         {
             sWarning() << "Failed to open" << crl_path;
@@ -113,7 +114,7 @@ bool commonReadFrom(const String &crl_path,const char *classname, T &target)
     }
     else if(crl_path.ends_with(".crl.bin"))
     {
-        eastl::unique_ptr<IFile> ifl(fs->open(crl_path,IFile::ReadOnly));
+        FileHandle ifl(fs->openFile(crl_path,IFile::ReadOnly));
         if(!ifl)
         {
             sWarning() << "Failed to open" << crl_path;

@@ -421,7 +421,7 @@ Vector<StringView> StringUtils::split(StringView str, StringView p_splitter, boo
                 ret.push_back(substr(str, from, end - from));
             } else {
                 // Put rest of the string and leave cycle.
-                if (p_maxsplit == ret.size()) {
+                if (p_maxsplit == (int)ret.size()) {
                     ret.push_back(substr(str, from));
                     break;
                 }

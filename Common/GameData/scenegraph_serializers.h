@@ -11,7 +11,7 @@
 
 namespace SEGS
 {
-struct IFilesystem;
+class IFilesystem;
 }
 
 class BinStore;

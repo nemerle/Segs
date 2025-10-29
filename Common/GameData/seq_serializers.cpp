@@ -419,7 +419,7 @@ bool loadFrom(const String &path, SequencerTypeMap &target)
 
     if(path.ends_with("json") || path.ends_with("crl_json"))
     {
-        auto ifl = fs->open(path,SEGS::IFile::ReadOnly);
+        auto ifl = fs->openFile(path,SEGS::IFile::ReadOnly);
         if(!ifl)
         {
             sWarning() << "Failed to open" << path;

@@ -134,18 +134,18 @@ void preloadTextureNames(IFilesystem *fs,const String &basepath)
     int tex_count=0;
     //TODO: store texture headers into an array, and only rescan directories when forced ?
     fs->visitEntries(textures_path,
-        [&](StringView fpath,bool is_dir)->SEGS::IFilesystem::VisitResult {
+        [&](StringView fpath,bool is_dir)->SEGS::VisitResult {
             if(is_dir) {
-                return SEGS::IFilesystem::VisitSubdirectory;
+                return SEGS::VisitResult::VisitSubdirectory;
     }
             StringView path_str = fpath;
             if(!path_str.ends_with(".texture")) {
-                return SEGS::IFilesystem::VisitNext;
+                return SEGS::VisitResult::VisitNext;
             }
             String texture_key = String(PathUtils::get_basename(PathUtils::get_file(path_str))).to_lower();
             rd.m_texture_paths[texture_key] = path_str;
             loadTexHeader(fs,fpath);
-            return SEGS::IFilesystem::VisitNext;
+            return SEGS::VisitResult::VisitNext;
         });
     sInfo()<<"Loaded " << StringUtils::num_int64(tex_count);
 }

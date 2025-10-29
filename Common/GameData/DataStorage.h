@@ -82,7 +82,7 @@ private:
         String name;
         uint32_t date=0;
     };
-    SEGS::IFile *m_str = nullptr;
+    SEGS::FileHandle m_str;
     size_t bytes_read=0;
     uint32_t bytes_to_read=0;
     Vector<uint32_t> m_file_sizes; // implicit stack

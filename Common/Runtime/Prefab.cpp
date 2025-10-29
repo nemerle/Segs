@@ -4,10 +4,11 @@
 #include "Common/GameData/scenegraph_serializers.h" //for getFilepathCaseInsensitive
 #include "Common/GameData/trick_serializers.h"
 #include "Common/Utils/IServiceLocator.h"
+#include "Common/Utils/IFilesystem.h"
+#include "Common/Utils/string_utils.h"
 #include "Components/Logging.h"
 #include "Model.h"
 #include "SceneGraph.h"
-#include "Utils/string_utils.h"
 
 namespace SEGS
 {
@@ -28,16 +29,15 @@ GeoSet *findAndPrepareGeoSet(IFilesystem *fs,const String &fname,const String &b
     name_fixed.replace(".anm", ".geo");
     String true_path = getFilepathCaseInsensitive(fs,base_path + name_fixed);
 
-    IFile *fp = fs->open(true_path,IFile::ReadOnly);
+    auto fp = fs->openFile(true_path,IFile::ReadOnly);
     if(fp)
     {
         geoset = new GeoSet;
         //TODO: QDir(base_path).relativeFilePath(true_path) should be provided by fs service.
         geoset->geopath = PathUtils::path_to(base_path,true_path);
-        geosetLoadHeader(fp, geoset);
+        geosetLoadHeader(fp.get(), geoset);
         fp->seek(0);
         s_name_to_geoset[fname] = geoset;
-        delete fp;
     }
     else
         sCritical() << "Can't find .geo file" << fname;
@@ -99,7 +99,7 @@ bool PrefabStore::prepareGeoLookupArray(const String &base_path)
     auto services=getServiceLocator();
     auto fs=services->getFS();
     String bin_path =base_path + "bin/defnames.bin";
-    auto file=fs->open(bin_path,IFile::ReadOnly);
+    auto file=fs->openFile(bin_path,IFile::ReadOnly);
     if(!file)
     {
         sCritical() << "Failed to open bin/defnames.bin:" << bin_path;
@@ -125,11 +125,13 @@ bool PrefabStore::prepareGeoLookupArray(const String &base_path)
             current_geosetinf          = &m_dir_to_geoset[lookup_str];
             current_geosetinf->geopath = eastl::move(geo_path);
         }
+        if(current_geosetinf) {
+            services->getLogger()->logString(ILogger::Error,"Geo lookup got null geosetinfo");
+            return false;
+        }
         current_geosetinf->entries.emplace_back(str.substr(last_slash + 1));
         m_modelname_to_geostore[String(str.substr(last_slash + 1))] = current_geosetinf;
     }
-
-    delete file;
     return true;
 }
 

@@ -57,7 +57,14 @@ void World::update(const ACE_Time_Value &tick_timer)
 
 void World::physicsStep(Entity *e,uint32_t msec)
 {
-    processNewInputs(*e);
+    // Convert milliseconds to seconds for physics
+    // Note: msec parameter currently unused in original implementation,
+    // but we use sim_frame_time calculated in update() for consistency
+    float delta_time_sec = sim_frame_time;
+    // Alternative: Use the msec parameter if it's more accurate
+    // float delta_time_sec = msec / 1000.0f;
+
+    processNewInputs(*e, delta_time_sec);
 }
 
 float animateValue(float v,float start,float target,float length,float dT)
@@ -357,7 +364,7 @@ void World::collisionStep(Entity *e, uint32_t /*msec*/)
         auto i = m_owner_instance->get_map_zone_transfers().cbegin();
         while (i != m_owner_instance->get_map_zone_transfers().cend())
         {
-            // TODO: This needs to check against the trigger plane for transfers. This should be part of the wall objects geobin. Also need to make sure that this doesn't cause players to immediately zone after being spawned in a spawnLocation near a zoneline.            
+            // TODO: This needs to check against the trigger plane for transfers. This should be part of the wall objects geobin. Also need to make sure that this doesn't cause players to immediately zone after being spawned in a spawnLocation near a zoneline.
             if ((e->m_entity_data.m_pos.x >= i->second.m_position.x - 20 && e->m_entity_data.m_pos.x <= i->second.m_position.x + 20) &&
                 (e->m_entity_data.m_pos.y >= i->second.m_position.y - 20 && e->m_entity_data.m_pos.y <= i->second.m_position.y + 20) &&
                 (e->m_entity_data.m_pos.z >= i->second.m_position.z - 20 && e->m_entity_data.m_pos.z <= i->second.m_position.z + 20))

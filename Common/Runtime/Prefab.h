@@ -19,7 +19,7 @@ struct NodeLoadRequest;
 struct Model;
 struct SceneGraph;
 struct SceneNode;
-struct IFilesystem;
+class IFilesystem;
 
 struct GeoSet
 {

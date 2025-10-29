@@ -1,6 +1,8 @@
 #include "StandaloneServices.h"
 
+#include "Common/Utils/IFilesystem.h"
 #include "Common/Utils/IServiceLocator.h"
+#include "Common/Utils/FilesystemHandler.h"
 
 #include <QDirIterator>
 #include <QFile>
@@ -8,28 +10,37 @@
 
 struct QFSHandle : public SEGS::IFile {
 public:
-    QFSHandle(const QString &path) {
+    QFSHandle(const QString &path,OpenMode m=OpenMode::ReadOnly) {
         f = new QFile(path);
+        reopen(m);
     }
     ~QFSHandle() {
         delete f;
     }
-    virtual bool    seek(int64_t pos) { return f->seek(pos);}
-    virtual int64_t pos() const { return f->pos();}
-    virtual int64_t size() const { return f->size();}
-    virtual bool    atEnd() const { return f->atEnd();}
-    virtual bool    reset() { return f->reset();}
-    virtual bool    flush() { return f->flush();}
-    virtual int64_t read(char *data, int64_t maxlen) {
-        return f->read(data,maxlen);
+    bool    seek(int64_t offset, SeekOrigin origin=SeekOrigin::Begin) override {
+        switch(origin) {
+
+        case SEGS::IFile::Begin:
+            return f->seek(offset);
+        case SEGS::IFile::Current:
+            return f->seek(offset+f->pos());
+        case SEGS::IFile::End: break;
+            return f->seek(f->size()-offset);
+        }
+        return false;
+
     }
-    virtual int64_t write(const char *data, int64_t len) {
-        return f->write(data,len);
+    int64_t tell() override { return f->pos();}
+    int64_t size() override { return f->size();}
+    bool    atEnd() const override { return f->atEnd();}
+    bool    flush() override { return f->flush();}
+    int64_t read(void *data, int64_t maxlen) override {
+        return f->read((char *)data,maxlen);
     }
-    virtual bool    isSequential() const {
-        return f->isSequential();
+    int64_t write(const void *data, int64_t len) override {
+        return f->write((char *)data,len);
     }
-    virtual bool    open(OpenMode mode) {
+    bool  reopen(OpenMode mode) override {
         QFile::OpenMode om;
         if(mode&OpenMode::ReadOnly)
             om|=QFile::ReadOnly;
@@ -42,77 +53,101 @@ public:
 
         return f->open(om);
     }
-    virtual void    close() { f->close();}
-    virtual bool    isOpen() const { return f->isOpen(); }
+    void    close() override { f->close();}
+    bool    isOpen() const override { return f->isOpen(); }
 
     QFile *f;
 };
 
-struct QFSWrapper : public SEGS::IFilesystem
+struct QFSWrapper : public SEGS::BaseFilesystem
 {
 public:
+    QFSWrapper(StringView sourcePath) : SEGS::BaseFilesystem(sourcePath) {}
     ~QFSWrapper() override = default;
 
-    SEGS::IFile *open(StringView path, SEGS::IFile::OpenMode mode) override {
-        if(path.empty()==0)
+    SEGS::FileHandle openFile(StringView path, SEGS::IFile::OpenMode mode) override;
+    SEGS::FileStats stat(StringView path) override;
+    bool exists(StringView path) override;
+    void visitEntries(StringView                                                      path,
+                      eastl::function<SEGS::VisitResult(StringView, bool /*is_dir*/)> visitor) override;
+
+    bool            mkpath(StringView path) override;
+    String getFilesystemType() const override { return "NativeFilesystem"; }
+};
+bool QFSWrapper::mkpath(StringView path)
+{
+    auto full_path = getSourcePath()+path;
+    QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
+    return QDir(q_path).mkpath(".");
+}
+
+SEGS::FileStats QFSWrapper::stat(StringView path)
+{
+    SEGS::FileStats res;
+    auto full_path = getSourcePath()+path;
+    QString         q_path = QString::fromUtf8(full_path.data(), full_path.size());
+    QFileInfo       fi(q_path);
+    res.size          = fi.size();
+    res.exists        = fi.exists();
+    res.is_dir        = fi.isDir();
+    res.last_modified = fi.lastModified().toMSecsSinceEpoch();
+    return res;
+}
+
+void QFSWrapper::visitEntries(StringView path, eastl::function<SEGS::VisitResult(StringView, bool /*is_dir*/)> visitor)
+{
+    QString     q_path = QString::fromUtf8(path.data(), path.size());
+    QStringList to_visit;
+    QString basepath=getSourcePath().c_str();
+    to_visit.push_back(q_path);
+    while (!to_visit.empty())
+    {
+        QDirIterator iter(basepath+to_visit.takeFirst());
+        while (iter.hasNext())
         {
-            return nullptr;
-        }
-        QString q_path = QString::fromUtf8(path.data(),path.size());
-        if(!QFile::exists(q_path) && mode==SEGS::IFile::OpenMode::ReadOnly) {
-            return nullptr;
-        }
-        auto res=new QFSHandle(q_path);
-        if(!res->open(mode)) {
-            delete res;
-            return nullptr;
-        }
-        return res;
-    }
 
-    bool exists(StringView path) override {
-        return QFile::exists(QString::fromUtf8(path.data(),path.size()));
-    }
-
-    void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool /*is_dir*/)> visitor) override {
-        QString q_path = QString::fromUtf8(path.data(),path.size());
-        QStringList to_visit;
-        to_visit.push_back(q_path);
-        while(!to_visit.empty()) {
-            QDirIterator iter(to_visit.takeFirst());
-            while(iter.hasNext()) {
-
-                QString fpath = iter.next();
-                QByteArray path_utf8=fpath.toUtf8();
-                QFileInfo fi(fpath);
-                auto vr=visitor(StringView(path_utf8.data(),path_utf8.size()),fi.isDir());
-                switch(vr) {
-                case SEGS::IFilesystem::VisitNext:
-                    continue;
-                case SEGS::IFilesystem::VisitSubdirectory:
-                    to_visit.push_back(fpath); break;
-                case SEGS::IFilesystem::VisitStop:
-                    return;
-                }
+            QString    fpath     = iter.next();
+            QByteArray path_utf8 = fpath.toUtf8();
+            QFileInfo  fi(basepath+fpath);
+            auto       vr = visitor(StringView(path_utf8.data(), path_utf8.size()), fi.isDir());
+            switch (vr)
+            {
+            case SEGS::VisitResult::VisitNext: continue;
+            case SEGS::VisitResult::VisitSubdirectory: to_visit.push_back(fpath); break;
+            case SEGS::VisitResult::VisitStop: return;
             }
         }
     }
+}
 
-    SEGS::FileStats stat(StringView path) override {
-        SEGS::FileStats res;
-        QString q_path = QString::fromUtf8(path.data(),path.size());
-        QFileInfo fi(q_path);
-        res.size = fi.size();
-        res.exists = fi.exists();
-        res.is_dir = fi.isDir();
-        res.last_modified = fi.lastModified().toMSecsSinceEpoch();
-        return res;
+bool QFSWrapper::exists(StringView path)
+{
+    auto full_path = getSourcePath()+path;
+    QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
+
+    return QFile::exists(q_path);
+}
+
+SEGS::FileHandle QFSWrapper::openFile(StringView path, SEGS::IFile::OpenMode mode)
+{
+    if (path.empty() == 0)
+    {
+        return nullptr;
     }
-    bool mkpath(StringView path) override {
-        QString q_path = QString::fromUtf8(path.data(),path.size());
-        return QDir(q_path).mkpath(".");
+    auto full_path = getSourcePath()+path;
+    QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
+    if (!QFile::exists(q_path) && mode == SEGS::IFile::OpenMode::ReadOnly)
+    {
+        return nullptr;
     }
-};
+    auto ptr=new QFSHandle(q_path);
+    if (!ptr->isOpen())
+    {
+        delete ptr;
+        return nullptr;
+    }
+    return wrapFile(ptr);
+}
 
 struct LoggerWrapper : public SEGS::ILogger
 {
@@ -173,19 +208,26 @@ public:
     }
 };
 
-class StandaloneServiceLocator : public SEGS::IServiceLocator {
+class StandaloneServiceLocator : public SEGS::BaseServiceLocator {
 public:
+    StandaloneServiceLocator(const String &basepath);
     SEGS::ICompressionService *getCompression() override { return &compr; }
-    SEGS::IFilesystem         *getFS() override { return &fs;}
     SEGS::ILogger             *getLogger() override { return &logger; }
 private:
-    QFSWrapper fs;
     QCompressor compr;
     LoggerWrapper logger;
 };
 
 void registerEnvSingleton() {
-    static StandaloneServiceLocator locator;
-    // setup services
+    static StandaloneServiceLocator locator(".");
     SEGS::setServiceLocator(&locator);
 }
+static SEGS::FilesystemFactory getNativeFSFactory() {
+    return [](StringView path)->auto { return eastl::make_shared<::QFSWrapper>(path); };
+}
+
+StandaloneServiceLocator::StandaloneServiceLocator(const String &basepath) : SEGS::BaseServiceLocator(eastl::move(getNativeFSFactory()))  {
+
+}
+
+

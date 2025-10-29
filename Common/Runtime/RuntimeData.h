@@ -8,7 +8,7 @@
 struct SceneModifiers;
 namespace SEGS
 {
-    struct IFilesystem;
+    class IFilesystem;
     struct RuntimeData;
 }
 extern SEGS::RuntimeData& getRuntimeData();

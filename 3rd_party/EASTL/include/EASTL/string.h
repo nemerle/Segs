@@ -729,7 +729,7 @@ namespace eastl
         // Comparison operations
         int        compare(size_type pos1, size_type n1, const this_type& x) const;
         int        compare(size_type pos1, size_type n1, const this_type& x, size_type pos2, size_type n2) const;
-		int        compare(view_type p) const EA_NOEXCEPT;
+        int        compare(view_type p) const EA_NOEXCEPT;
         int        compare(size_type pos1, size_type n1, const value_type* p) const;
         int        compare(size_type pos1, size_type n1, const value_type* p, size_type n2) const;
         static int compare(const value_type* pBegin1, const value_type* pEnd1, const value_type* pBegin2, const value_type* pEnd2);
@@ -3276,7 +3276,7 @@ namespace eastl
 
 
     template <typename T, typename Allocator>
-	inline int basic_string<T, Allocator>::compare(view_type p) const EA_NOEXCEPT
+    inline int basic_string<T, Allocator>::compare(view_type p) const EA_NOEXCEPT
     {
         return compare(internalLayout().BeginPtr(), internalLayout().EndPtr(), p.begin(), p.end());
     }
@@ -3457,11 +3457,11 @@ namespace eastl
     }
 
 
-	template <typename T, typename Allocator>
-	inline int basic_string<T, Allocator>::comparei(const view_type p) const
-	{
-		return comparei(internalLayout().BeginPtr(), internalLayout().EndPtr(), p.begin(), p.end());
-	}
+    template <typename T, typename Allocator>
+    inline int basic_string<T, Allocator>::comparei(const view_type p) const
+    {
+        return comparei(internalLayout().BeginPtr(), internalLayout().EndPtr(), p.begin(), p.end());
+    }
 
     template <typename T, typename Allocator>
     typename basic_string<T, Allocator>::iterator
@@ -3582,11 +3582,11 @@ namespace eastl
     }
 
 
-	template <typename T, typename Allocator>
-	inline void basic_string<T, Allocator>::AllocateSelf()
-	{
-		internalLayout().ResetToSSO();
-	}
+    template <typename T, typename Allocator>
+    inline void basic_string<T, Allocator>::AllocateSelf()
+    {
+        internalLayout().ResetToSSO();
+    }
 
 
     template <typename T, typename Allocator>
@@ -3856,50 +3856,50 @@ namespace eastl
     }
 
 #if defined(EA_COMPILER_HAS_THREE_WAY_COMPARISON)
-	template <typename T, typename Allocator>
-	inline auto operator<=>(const basic_string<T, Allocator>& a, const basic_string<T, Allocator>& b)
-	{
-		return basic_string<T, Allocator>::compare(a.begin(), a.end(), b.begin(), b.end()) <=> 0;
-	}
+    template <typename T, typename Allocator>
+    inline auto operator<=>(const basic_string<T, Allocator>& a, const basic_string<T, Allocator>& b)
+    {
+        return basic_string<T, Allocator>::compare(a.begin(), a.end(), b.begin(), b.end()) <=> 0;
+    }
 
-	template <typename T, typename Allocator>
-	inline auto operator<=>(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::value_type* p)
-	{
-		typedef typename basic_string<T, Allocator>::size_type string_size_type;
-		const string_size_type n = (string_size_type)CharStrlen(p);
-		return basic_string<T, Allocator>::compare(a.begin(), a.end(), p, p + n) <=> 0;
-	}
+    template <typename T, typename Allocator>
+    inline auto operator<=>(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::value_type* p)
+    {
+        typedef typename basic_string<T, Allocator>::size_type string_size_type;
+        const string_size_type n = (string_size_type)CharStrlen(p);
+        return basic_string<T, Allocator>::compare(a.begin(), a.end(), p, p + n) <=> 0;
+    }
 
-	template <typename T, typename Allocator>
-	inline auto operator<=>(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
-	{
-		typedef typename basic_string<T, Allocator>::view_type view_type;
-		return static_cast<view_type>(a) <=> v;
-	}
+    template <typename T, typename Allocator>
+    inline auto operator<=>(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
+    {
+        typedef typename basic_string<T, Allocator>::view_type view_type;
+        return static_cast<view_type>(a) <=> v;
+    }
 
 #else
 
-	template <typename T, typename Allocator>
-	inline bool operator==(const typename basic_string<T, Allocator>::view_type v, const basic_string<T, Allocator>& b)
-	{
-		// Workaround for basic_string_view comparisons that require conversions,
-		// since they are causing an internal compiler error when compiled using
-		// MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
+    template <typename T, typename Allocator>
+    inline bool operator==(const typename basic_string<T, Allocator>::view_type v, const basic_string<T, Allocator>& b)
+    {
+        // Workaround for basic_string_view comparisons that require conversions,
+        // since they are causing an internal compiler error when compiled using
+        // MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
 
-		typedef typename basic_string<T, Allocator>::view_type view_type;
-		return v == static_cast<view_type>(b);
-	}
+        typedef typename basic_string<T, Allocator>::view_type view_type;
+        return v == static_cast<view_type>(b);
+    }
 
-	template <typename T, typename Allocator>
-	inline bool operator==(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
-	{
-		// Workaround for basic_string_view comparisons that require conversions,
-		// since they are causing an internal compiler error when compiled using
-		// MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
+    template <typename T, typename Allocator>
+    inline bool operator==(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
+    {
+        // Workaround for basic_string_view comparisons that require conversions,
+        // since they are causing an internal compiler error when compiled using
+        // MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
 
-		typedef typename basic_string<T, Allocator>::view_type view_type;
-		return static_cast<view_type>(a) == v;
-	}
+        typedef typename basic_string<T, Allocator>::view_type view_type;
+        return static_cast<view_type>(a) == v;
+    }
 
 
     template <typename T, typename Allocator>
@@ -3934,20 +3934,20 @@ namespace eastl
     }
 
 
-	template <typename T, typename Allocator>
-	inline bool operator!=(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
-	{
-		// Workaround for basic_string_view comparisons that require conversions,
-		// since they are causing an internal compiler error when compiled using
-		// MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
+    template <typename T, typename Allocator>
+    inline bool operator!=(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
+    {
+        // Workaround for basic_string_view comparisons that require conversions,
+        // since they are causing an internal compiler error when compiled using
+        // MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
 
-		return !(a == v);
-	}
-	// Operator< (and also >, <=, and >=).
-	template <typename T, typename Allocator>
-	inline bool operator<(const basic_string<T, Allocator>& a, const basic_string<T, Allocator>& b)
-	{
-		return basic_string<T, Allocator>::compare(a.begin(), a.end(), b.begin(), b.end()) < 0; }
+        return !(a == v);
+    }
+    // Operator< (and also >, <=, and >=).
+    template <typename T, typename Allocator>
+    inline bool operator<(const basic_string<T, Allocator>& a, const basic_string<T, Allocator>& b)
+    {
+        return basic_string<T, Allocator>::compare(a.begin(), a.end(), b.begin(), b.end()) < 0; }
 
     template <typename T, typename Allocator>
     inline bool operator<(const typename basic_string<T, Allocator>::value_type* p, const basic_string<T, Allocator>& b)
@@ -3972,21 +3972,21 @@ namespace eastl
         // since they are causing an internal compiler error when compiled using
         // MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
 
-		typedef typename basic_string<T, Allocator>::view_type view_type;
-		return v < static_cast<view_type>(b);
-	}
+        typedef typename basic_string<T, Allocator>::view_type view_type;
+        return v < static_cast<view_type>(b);
+    }
 
 
-	template <typename T, typename Allocator>
-	inline bool operator<(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
-	{
-		// Workaround for basic_string_view comparisons that require conversions,
-		// since they are causing an internal compiler error when compiled using
-		// MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
+    template <typename T, typename Allocator>
+    inline bool operator<(const basic_string<T, Allocator>& a, const typename basic_string<T, Allocator>::view_type v)
+    {
+        // Workaround for basic_string_view comparisons that require conversions,
+        // since they are causing an internal compiler error when compiled using
+        // MSVC when certain flags are enabled (/Zi /O2 /Zc:inline).
 
-		typedef typename basic_string<T, Allocator>::view_type view_type;
-		return static_cast<view_type>(a) < v;
-	}
+        typedef typename basic_string<T, Allocator>::view_type view_type;
+        return static_cast<view_type>(a) < v;
+    }
 
     template <typename T, typename Allocator>
     inline bool operator>(const basic_string<T, Allocator>& a, const basic_string<T, Allocator>& b)
@@ -4125,14 +4125,14 @@ namespace eastl
     }
 
 
-	/// string / wstring
-	typedef basic_string<char>    string;
-	typedef basic_string<wchar_t> wstring;
+    /// string / wstring
+    typedef basic_string<char>    string;
+    typedef basic_string<wchar_t> wstring;
 
-	/// custom string8 / string16 / string32
-	// typedef basic_string<char>     string8;
-	// typedef basic_string<char16_t> string16;
-	// typedef basic_string<char32_t> string32;
+    /// custom string8 / string16 / string32
+    // typedef basic_string<char>     string8;
+    // typedef basic_string<char16_t> string16;
+    // typedef basic_string<char32_t> string32;
 
     /// ISO mandated string types
     // typedef basic_string<char8_t>  u8string;    // Actually not a C++11 type, but added for consistency.
@@ -4163,61 +4163,61 @@ namespace eastl
         }
     };
 
-	// #if defined(EA_CHAR8_UNIQUE) && EA_CHAR8_UNIQUE
-	// 	template <>
-	// 	struct hash<u8string>
-	// 	{
-	// 		size_t operator()(const u8string& x) const
-	// 		{
-	// 			const char8_t* p = (const char8_t*)x.c_str();
-	// 			unsigned int c, result = 2166136261U;
-	// 			while((c = *p++) != 0)
-	// 				result = (result * 16777619) ^ c;
-	// 			return (size_t)result;
-	// 		}
-	// 	};
-	// #endif
+    // #if defined(EA_CHAR8_UNIQUE) && EA_CHAR8_UNIQUE
+    // 	template <>
+    // 	struct hash<u8string>
+    // 	{
+    // 		size_t operator()(const u8string& x) const
+    // 		{
+    // 			const char8_t* p = (const char8_t*)x.c_str();
+    // 			unsigned int c, result = 2166136261U;
+    // 			while((c = *p++) != 0)
+    // 				result = (result * 16777619) ^ c;
+    // 			return (size_t)result;
+    // 		}
+    // 	};
+    // #endif
 
-	// template <>
-	// struct hash<string16>
-	// {
-	// 	size_t operator()(const string16& x) const
-	// 	{
-	// 		const char16_t* p = x.c_str();
-	// 		unsigned int c, result = 2166136261U;
-	// 		while((c = *p++) != 0)
-	// 			result = (result * 16777619) ^ c;
-	// 		return (size_t)result;
-	// 	}
-	// };
+    // template <>
+    // struct hash<string16>
+    // {
+    // 	size_t operator()(const string16& x) const
+    // 	{
+    // 		const char16_t* p = x.c_str();
+    // 		unsigned int c, result = 2166136261U;
+    // 		while((c = *p++) != 0)
+    // 			result = (result * 16777619) ^ c;
+    // 		return (size_t)result;
+    // 	}
+    // };
 
-	// template <>
-	// struct hash<string32>
-	// {
-	// 	size_t operator()(const string32& x) const
-	// 	{
-	// 		const char32_t* p = x.c_str();
-	// 		unsigned int c, result = 2166136261U;
-	// 		while((c = (unsigned int)*p++) != 0)
-	// 			result = (result * 16777619) ^ c;
-	// 		return (size_t)result;
-	// 	}
-	// };
+    // template <>
+    // struct hash<string32>
+    // {
+    // 	size_t operator()(const string32& x) const
+    // 	{
+    // 		const char32_t* p = x.c_str();
+    // 		unsigned int c, result = 2166136261U;
+    // 		while((c = (unsigned int)*p++) != 0)
+    // 			result = (result * 16777619) ^ c;
+    // 		return (size_t)result;
+    // 	}
+    // };
 
-	#if defined(EA_WCHAR_UNIQUE) && EA_WCHAR_UNIQUE
-		template <>
-		struct hash<wstring>
-		{
-			size_t operator()(const wstring& x) const
-			{
-				const wchar_t* p = x.c_str();
-				unsigned int c, result = 2166136261U;
-				while((c = (unsigned int)*p++) != 0)
-					result = (result * 16777619) ^ c;
-				return (size_t)result;
-			}
-		};
-	#endif
+    #if defined(EA_WCHAR_UNIQUE) && EA_WCHAR_UNIQUE
+        template <>
+        struct hash<wstring>
+        {
+            size_t operator()(const wstring& x) const
+            {
+                const wchar_t* p = x.c_str();
+                unsigned int c, result = 2166136261U;
+                while((c = (unsigned int)*p++) != 0)
+                    result = (result * 16777619) ^ c;
+                return (size_t)result;
+            }
+        };
+    #endif
 
 
     /// to_string
@@ -4306,7 +4306,7 @@ namespace eastl
         {
             inline namespace string_literals
             {
-                inline string operator"" s(const char* str, size_t len) EA_NOEXCEPT { return {str, string::size_type(len)}; }
+                inline string operator""s(const char* str, size_t len) EA_NOEXCEPT { return {str, string::size_type(len)}; }
                 //inline u16string operator"" s(const char16_t* str, size_t len) EA_NOEXCEPT { return {str, u16string::size_type(len)}; }
                 //inline u32string operator"" s(const char32_t* str, size_t len) EA_NOEXCEPT { return {str, u32string::size_type(len)}; }
                 //inline wstring operator"" s(const wchar_t* str, size_t len) EA_NOEXCEPT { return {str, wstring::size_type(len)}; }

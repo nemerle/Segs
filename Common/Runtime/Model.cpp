@@ -318,7 +318,7 @@ void geosetLoadHeader(IFile *fp, GeoSet *geoset)
         sDebug() << "Alternate model pivots were not converted";
 }
 
-void modelFixup(const Model &model,VBOPointers &vbo)
+void modelFixup(const Model &model,VBOPointers &vbo,const eastl::map<int,SEGS::HTexture> &textures)
 {
     if(!vbo.norm.empty() && (model.flags & OBJ_NOLIGHTANGLE))
     {
@@ -345,13 +345,13 @@ void modelFixup(const Model &model,VBOPointers &vbo)
     }
     }
 
-    for(HTexture tex : vbo.assigned_textures)
+    for(const auto &a : textures)
     {
-        if(!tex->info)
+        if(!a.second)
             continue;
 
-        if( 1.0f != tex->scaleUV0.x || 1.0f != tex->scaleUV0.y ||
-             1.0f != tex->scaleUV1.x || 1.0f != tex->scaleUV1.y )
+        if( 1.0f != a.second->scaleUV0.x || 1.0f != a.second->scaleUV0.y ||
+            1.0f != a.second->scaleUV1.x || 1.0f != a.second->scaleUV1.y )
             texture_scaling_used = true;
     }
 
@@ -360,10 +360,12 @@ void modelFixup(const Model &model,VBOPointers &vbo)
 
     Vector<bool> vertex_uv_was_scaled(model.vertex_count);
     uint32_t triangle_offset = 0;
-    for(uint32_t j = 0; j < model.num_textures; ++j )
+    //uint32_t j = 0; j < model.num_textures; ++j
+
+    for(const auto &bind : model.texture_bind_info)
     {
-        TextureWrapper &tex(vbo.assigned_textures[j].get());
-        const uint32_t bind_tri_count = model.texture_bind_info[j].tri_count;
+        TextureWrapper &tex(textures.at(bind.tex_idx).get());
+        const uint32_t bind_tri_count = bind.tri_count;
         if(!tex.info)
             continue;
 
@@ -387,10 +389,6 @@ void modelFixup(const Model &model,VBOPointers &vbo)
         }
         triangle_offset += bind_tri_count;
     }
-
-
-
-
 }
 
 static bool bumpMapped(const Model &model)
@@ -452,10 +450,10 @@ eastl::unique_ptr<VBOPointers> fillVbo(const Model &model)
     return vbo;
 }
 
-void fillVBO(Model & model)
+void fillVBO(Model & model,const eastl::map<int,SEGS::HTexture> &tex)
 {
     eastl::unique_ptr<VBOPointers> databuf(fillVbo(model));
-    modelFixup(model,*databuf);
+    modelFixup(model,*databuf,tex);
     model.vbo = eastl::move(databuf);
 }
 static void convertModelBones(Model *m, ModelBones_32 *src)

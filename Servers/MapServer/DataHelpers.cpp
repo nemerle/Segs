@@ -241,11 +241,10 @@ void sendServerMOTD(MapClientSession *tgt)
 
     String fileName("scripts/motd.smlx");
     auto   fs = SEGS::getServiceLocator()->getFS();
-    SEGS::IFile *fl = fs->open(fileName, SEGS::IFile::ReadOnly);
+    auto fl = fs->openFile(fileName, SEGS::IFile::ReadOnly);
     if(fl)
     {
         String contents(fl->readAll().data());
-        delete fl;
         tgt->addCommand<StandardDialogCmd>(contents);
     }
     else

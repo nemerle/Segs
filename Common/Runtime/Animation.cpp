@@ -7,7 +7,8 @@
 
 #include "AnimationEngine.h"
 #include "Common/GameData/anim_definitions.h"
-#include "Utils/IServiceLocator.h"
+#include "Common/Utils/IServiceLocator.h"
+#include "Common/Utils/IFilesystem.h"
 
 #include <cassert>
 
@@ -307,14 +308,13 @@ HAnimationTrack getOrLoadAnimationTrack(const String &name)
     if (animTrack)
         return animTrack;
     auto fs = SEGS::getServiceLocator()->getFS();
-    auto  anim_file = fs->open(base_path + "/" + full_anim_path, IFile::ReadOnly);
+    auto  anim_file = fs->openFile(base_path + "/" + full_anim_path, IFile::ReadOnly);
     if (!anim_file)
     {
         sCritical() << "failed to open animation file" << full_anim_path;
         return {};
     }
-    animTrack = animReadTrackFile(anim_file);
-    delete anim_file;
+    animTrack = animReadTrackFile(anim_file.get());
 
     AnimationEngine::get().m_loaded_tracks[latin_name.to_upper()] = animTrack;
     SEGS::AnimTrack &atrack(animTrack.get());
@@ -327,13 +327,13 @@ HAnimationTrack getOrLoadAnimationTrack(const String &name)
     atrack.m_max_hip_displacement = 4.0f;
     return animTrack;
 }
-static GeoSet *getAnimatedGeoSet(const String &name, SEGS::IFile *&fp)
+static GeoSet *getAnimatedGeoSet(const String &name, SEGS::FileHandle &fp)
 {
     auto fs = SEGS::getServiceLocator()->getFS();
     RuntimeData &rd(getRuntimeData());
     String      base_path = rd.m_prefab_mapping->m_base_path;
     String fpath = base_path + "/" + name;
-    fp = fs->open(fpath, IFile::ReadOnly);
+    fp = fs->openFile(fpath, IFile::ReadOnly);
     if (!fp)
     {
         sWarning() << "Failed to open" << name;
@@ -342,7 +342,7 @@ static GeoSet *getAnimatedGeoSet(const String &name, SEGS::IFile *&fp)
     }
     GeoSet *geoset = new GeoSet;
     geoset->name = name;
-    geosetLoadHeader(fp, geoset);
+    geosetLoadHeader(fp.get(), geoset);
     fp->seek(0);
     g_geoset_dictionary[geoset->name] = geoset;
     return geoset;
@@ -367,7 +367,7 @@ GeoSet *animLoad(const String &filename, bool background_load, bool header_only)
 
         // TODO: if given geo set is being loaded asynchronously, wait for it.
     }
-    IFile *file=nullptr;
+    SEGS::FileHandle file;
     if (!geoset)
         geoset = getAnimatedGeoSet(animname, file);
 
@@ -381,7 +381,7 @@ GeoSet *animLoad(const String &filename, bool background_load, bool header_only)
     }
     else // load now
     {
-        geosetLoadData(file, geoset);
+        geosetLoadData(file.get(), geoset);
     }
     if (file)
     {

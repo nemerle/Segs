@@ -35,12 +35,11 @@ void cmdHandler_SmileX(const Vector<String> &params, MapClientSession &sess)
     String fileName("scripts/" + String::joined(params," "));
     if(!fileName.ends_with(".smlx"))
         fileName.append(".smlx");
-    auto fp = fs->open(fileName, SEGS::IFile::ReadOnly);
+    auto fp = fs->openFile(fileName, SEGS::IFile::ReadOnly);
     if (fp)
     {
         auto contents(fp->readAll());
         sess.addCommandToSendNextUpdate(eastl::make_unique<StandardDialogCmd>(String(contents.data(),contents.size())));
-        delete fp;
     }
     else {
         String errormsg = "Failed to load smilex file. \'" + fileName + "\' not found.";

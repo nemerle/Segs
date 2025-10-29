@@ -27,7 +27,7 @@ IF(MSVC)
     # fix any double slashes which seem to be common
     STRING(REPLACE "//" "/"  QT_VERSION "${QT_VERSION}")
 
-    # we only support 2022, and qt6 uses vs2015 files for 32 bit build
+    # we only support 2022, 
     SET(QT_MSVC "msvc2022_64")
 
     SET(QT_PATH "${QT_VERSION}/${QT_MSVC}")

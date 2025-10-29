@@ -124,7 +124,8 @@ void geosetLoadHeader(IFile *fp, GeoSet *geoset);
 void geosetLoadData(IFile *fp, GeoSet *geoset);
 
 void initLoadedModel(std::function<HTexture (const String &)> funcloader,Model *model,const Vector<HTexture> &textures);
-void fillVBO(Model & model);
+//void fillVBO(Model & model);
+void fillVBO(Model &model,const eastl::map<int,SEGS::HTexture> &tex);
 void toSafeModelName(char *inp,int cnt);
 
 } // namespace SEGS

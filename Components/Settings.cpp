@@ -12,6 +12,7 @@
 
 #include "Components/Settings.h"
 #include "Common/Utils/IServiceLocator.h"
+#include "Common/Utils/IFilesystem.h"
 #include "Components/Logging.h"
 
 #include <ace/Configuration.h>
@@ -252,13 +253,13 @@ void Settings::discoverSEGSDir()
 
     auto search_path = String(curdir.string().c_str());
 
-    fs->visitEntries(search_path,[&](StringView path, bool is_dir) -> SEGS::IFilesystem::VisitResult {
+    fs->visitEntries(search_path,[&](StringView path, bool is_dir) -> SEGS::VisitResult {
         if(!is_dir && path.contains("segs_server"))
         {
             has_segs_server=true;
-            return SEGS::IFilesystem::VisitResult::VisitStop;
+            return SEGS::VisitResult::VisitStop;
         }
-        return SEGS::IFilesystem::VisitResult::VisitNext;
+        return SEGS::VisitResult::VisitNext;
     });
 
     if(!has_segs_server)
@@ -301,7 +302,7 @@ void Settings::createSettingsFile(const String &new_file_path)
     String new_file(new_file_path);
 
     SEGS::IFilesystem *fs = SEGS::getServiceLocator()->getFS();
-    SEGS::IFile *tpl_file_ptr = fs->open(tpl_file, SEGS::IFile::OpenMode::ReadOnly);
+    SEGS::FileHandle tpl_file_ptr = fs->openFile(tpl_file, SEGS::IFile::OpenMode::ReadOnly);
 
     if(!tpl_file_ptr)
     {
@@ -309,8 +310,8 @@ void Settings::createSettingsFile(const String &new_file_path)
         return;
     }
     auto content=tpl_file_ptr->readAll();
-    delete tpl_file_ptr;
-    SEGS::IFile *new_file_ptr = fs->open(new_file, SEGS::IFile::OpenMode::WriteOnly);
+
+    SEGS::FileHandle new_file_ptr = fs->openFile(new_file, SEGS::IFile::OpenMode::WriteOnly);
     // QSettings setValue() methods delete all file comments, it's better to
     // simply copy the template over to our destination directory.
     // Unfortunately QFile::copy() has some sort of bug and doesn't work
@@ -320,7 +321,6 @@ void Settings::createSettingsFile(const String &new_file_path)
         sWarning() << "Unable to create" << new_file << "Check folder permissions.";
         return;
     }
-    delete new_file_ptr;
 }
 
 

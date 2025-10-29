@@ -23,7 +23,7 @@
 
 namespace SEGS
 {
-struct IFilesystem;
+class IFilesystem;
 struct LoadingContext;
 struct Model;
 struct SceneNodeChildTransform

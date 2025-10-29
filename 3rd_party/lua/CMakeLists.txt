@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 project(lua)
 
@@ -6,10 +6,10 @@ set(lua_library
   lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c llex.c
   lmem.c lobject.c lopcodes.c lparser.c lstate.c lstring.c
   ltable.c ltm.c lundump.c lvm.c lzio.c
-  lauxlib.c lbaselib.c ldblib.c lmathlib.c 
-  # liolib.c - do not expose fillesystem access to the interpreter 
-  # loslib.c - do not expose OS functions to the interpreter 
-  # loadlib.c - do not expose shared library loading functions to the interpreter 
+  lauxlib.c lbaselib.c ldblib.c lmathlib.c
+  # liolib.c - do not expose fillesystem access to the interpreter
+  # loslib.c - do not expose OS functions to the interpreter
+  # loadlib.c - do not expose shared library loading functions to the interpreter
   ltablib.c lstrlib.c  linit.c
   lbitlib.c lcorolib.c lutf8lib.c
 )

@@ -82,7 +82,7 @@ void loadTexHeader(IFilesystem *fs,StringView fname)
         }
         return;
     }
-    IFile *src_tex = fs->open(actualPath,IFile::ReadOnly);
+    auto src_tex = fs->openFile(actualPath,IFile::ReadOnly);
     if(src_tex)
     {
         TexFileHdr hdr;
@@ -97,7 +97,6 @@ void loadTexHeader(IFilesystem *fs,StringView fname)
             if(hdr.flags & TexHeaderOpt::BUMPMAP)
                 res.flags |= TextureWrapper::BUMPMAP;
         }
-        delete src_tex;
     }
     StringView actualPathView(PathUtils::path(actualPath));
     auto loc = actualPath.rfind('.');

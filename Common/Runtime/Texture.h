@@ -17,7 +17,7 @@ struct TextureModifiers;
 class QFile;
 namespace SEGS
 {
-struct IFilesystem;
+class IFilesystem;
 struct GeoSet;
 
 enum class CoHBlendMode : uint8_t

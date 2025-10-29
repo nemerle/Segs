@@ -1,4 +1,5 @@
 #include "map_definitions.h"
+#include "Utils/IFilesystem.h"
 #include "entitydata_definitions.h"
 
 #include "Utils/string_utils.h"
@@ -158,7 +159,7 @@ void getMissionMapLevelData(StringView map_level_folder, MapData &map_data)
                         sInfo() << "Layout: " << PathUtils::get_basename(trial_entry_name);
                         mission_data.m_layouts.emplace_back(PathUtils::get_basename(trial_entry_name));
                     }
-                    return SEGS::IFilesystem::VisitNext;
+                    return SEGS::VisitResult::VisitNext;
                 });
             }
             else
@@ -180,7 +181,7 @@ void getMissionMapLevelData(StringView map_level_folder, MapData &map_data)
                 }
             }
         }
-        return SEGS::IFilesystem::VisitNext;
+        return SEGS::VisitResult::VisitNext;
     });
 
     map_data.m_mission_data.push_back(mission_data);
@@ -214,7 +215,7 @@ void loadAllMissionMapData()
                 {
                 // skip the . and .. directories
                 if (fpath == "." || fpath == "..")
-                    return SEGS::IFilesystem::VisitNext;
+                    return SEGS::VisitResult::VisitNext;
                         if (map_data.m_map_type == MapType::MISSION)
                         {
                     getMissionMapLevelData(fpath, map_data);
@@ -228,7 +229,7 @@ void loadAllMissionMapData()
                             //getOutdoorUniqueMissionMapData(map_level, map_data);
                         }
                     }
-            return SEGS::IFilesystem::VisitNext;
+            return SEGS::VisitResult::VisitNext;
         });
     }
 }
