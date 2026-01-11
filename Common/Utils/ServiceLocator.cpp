@@ -14,12 +14,15 @@ namespace SEGS
         return g_service_locator;
     }
 
-    BaseServiceLocator::BaseServiceLocator(FilesystemFactory &&native_fs)
+    BaseServiceLocator::BaseServiceLocator(FilesystemFactory &&native_fs, const String& app_dir)
     {
         m_fs = eastl::make_unique<RootFilesystem>();
         m_fs->registerFactory("",native_fs);
         m_fs->registerFactory("pigg", createPiggFilesystemFactory());;
         m_fs->mount("/","/",-99);
+        if (!app_dir.empty()) {
+            m_fs->mount(app_dir, "app:", -50);
+        }
     }
 
     BaseServiceLocator::~BaseServiceLocator() {

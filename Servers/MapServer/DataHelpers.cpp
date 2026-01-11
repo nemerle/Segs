@@ -12,10 +12,11 @@
 
 #include "DataHelpers.h"
 
-#include "MapServer.h"
-#include "MapInstance.h"
-#include "MessageHelpers.h"
 #include "Components/TimeHelpers.h"
+#include "MapInstance.h"
+#include "MapLink.h"
+#include "MapServer.h"
+#include "MessageHelpers.h"
 
 #include "GameData/GameDataStore.h"
 #include "GameData/ClientStates.h"

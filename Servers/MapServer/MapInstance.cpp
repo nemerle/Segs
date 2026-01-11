@@ -12,52 +12,37 @@
 
 #include "MapInstance.h"
 
-#include "DataHelpers.h"
-#include "EntityStorage.h"
-#include "Components/Logging.h"
-#include "MapManager.h"
-#include "MapSceneGraph.h"
-#include "MapServer.h"
-#include "MapTemplate.h"
-#include "MessageHelpers.h"
-#include "Components/SEGSTimer.h"
-#include "SlashCommands/SlashCommand.h"
-#include "Components/TimeEvent.h"
-#include "Components/TimeHelpers.h"
-#include "WorldSimulation.h"
-#include "Components/serialization_common.h"
-#include "Components/serialization_types.h"
-#include "Version.h"
-#include "ScriptingEngine/ScriptingEngine.h"
+#include "CRUD_Link.h"
 #include "Common/GameData/CoHMath.h"
 #include "Common/GameData/LFG.h"
-#include "Common/Servers/Database.h"
 #include "Common/Servers/HandlerLocator.h"
 #include "Common/Servers/InternalEvents.h"
-#include "Common/Servers/MessageBus.h"
+#include "Components/Logging.h"
+#include "Components/SEGSTimer.h"
+#include "Components/TimeHelpers.h"
+#include "Components/serialization_common.h"
+#include "DataHelpers.h"
+#include "EntityStorage.h"
 #include "GameData/Character.h"
 #include "GameData/CharacterHelpers.h"
 #include "GameData/Entity.h"
 #include "GameData/GameDataStore.h"
+#include "GameData/Store.h"
 #include "GameData/Trade.h"
 #include "GameData/chardata_serializers.h"
-#include "GameData/clientoptions_serializers.h"
 #include "GameData/entitydata_serializers.h"
-#include "GameData/keybind_serializers.h"
 #include "GameData/map_definitions.h"
 #include "GameData/playerdata_definitions.h"
 #include "GameData/playerdata_serializers.h"
-#include "GameData/Store.h"
-#include "Messages/Map/TeamLooking.h"
-#include "Messages/Map/TeamOffer.h"
+#include "MapLink.h"
+#include "MapSceneGraph.h"
+#include "MapServer.h"
+#include "MapTemplate.h"
+#include "MessageHelpers.h"
 #include "Messages/EmailService/EmailEvents.h"
-#include "Messages/Game/GameEvents.h"
 #include "Messages/GameDatabase/GameDBSyncEvents.h"
 #include "Messages/Map/ClueList.h"
 #include "Messages/Map/ContactList.h"
-#include "Messages/Map/EmailHeaders.h"
-#include "Messages/Map/EmailMessageStatus.h"
-#include "Messages/Map/EmailRead.h"
 #include "Messages/Map/FloatingInfoStyles.h"
 #include "Messages/Map/LevelUp.h"
 #include "Messages/Map/MapEvents.h"
@@ -66,12 +51,17 @@
 #include "Messages/Map/PlayerInfo.h"
 #include "Messages/Map/StoresEvents.h"
 #include "Messages/Map/Tasks.h"
+#include "Messages/Map/TeamLooking.h"
+#include "Messages/Map/TeamOffer.h"
+#include "ScriptingEngine/ScriptingEngine.h"
+#include "SlashCommands/SlashCommand.h"
+#include "Version.h"
+#include "WorldSimulation.h"
 
 #include <ace/Reactor.h>
 
 #include <QRegularExpression>
 #include <QtCore/QDir>
-#include <random>
 #include <stdlib.h>
 #include <Utils/ElapsedTimer.h>
 
@@ -116,7 +106,7 @@ protected:
 MapInstance::MapInstance(const String &mapdir_path, const ListenAndLocationAddresses &listen_addr, bool is_mission_map)
   : m_data_path(mapdir_path),
     m_index(getMapIndex(mapdir_path.substr(mapdir_path.find('/')))),
-    m_addresses(listen_addr), m_is_mission_map(is_mission_map)
+    m_is_mission_map(is_mission_map), m_addresses(listen_addr)
 {
     m_world = new World(m_entities, getGameData().m_player_fade_in, this);
     m_scripting_interface.reset(new ScriptingEngine);
@@ -1033,8 +1023,8 @@ void MapInstance::on_scene_request(SceneRequest *ev)
     res->m_map_desc        = map_path;
     res->current_map_flags = true; // off 1
     res->unkn1             = 1;
-    qDebug("Scene Request: unkn1: %d, undos_PP: %d, current_map_flags: %d", res->unkn1, res->undos_PP, res->current_map_flags);
     res->unkn2 = true;
+    qDebug("Scene Request: unkn1: %d, undos_PP: %d, current_map_flags: %d", res->unkn1, res->undos_PP, res->current_map_flags);
     lnk->putq(res);
 }
 void MapInstance::on_entities_request(EntitiesRequest *ev)
@@ -2286,9 +2276,13 @@ void MapInstance::on_change_stance(ChangeStance * ev)
 
     session.m_ent->m_stance = ev->m_stance;
     if(ev->m_stance.has_stance)
+    {
         sCDebug(logMapEvents) << "Change stance request" << session.m_ent->m_idx << ev->m_stance.pset_idx << ev->m_stance.pow_idx;
+    }
     else
+    {
         sCDebug(logMapEvents) << "Exit stance request" << session.m_ent->m_idx;
+    }
 }
 
 void MapInstance::on_set_destination(SetDestination * ev)

@@ -18,6 +18,8 @@
 #include "Components/SEGSTimer.h"
 #include "Components/Settings.h"
 #include "Components/Logging.h"
+#include "Components/GameDataMounter.h"
+#include "Common/Utils/IServiceLocator.h"
 #include "Version.h"
 //////////////////////////////////////////////////////////////////////////
 
@@ -308,6 +310,9 @@ ACE_INT32 ACE_TMAIN (int argc, ACE_TCHAR *argv[])
         return 0;
 
     Settings::setSettingsPath(parser.value("config").toStdString().c_str()); // set settings.cfg from args
+
+    // Initialize game data mounts (PIGGs and local overrides)
+    SEGS::initializeGameDataMounts(SEGS::getServiceLocator()->getFS());
 
     ACE_Sig_Set interesting_signals;
     interesting_signals.sig_add(SIGINT);

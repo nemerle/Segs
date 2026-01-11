@@ -204,7 +204,15 @@ void Settings::setSettingsPath(const String &path)
 {
     if(path.empty())
         sCritical() << "Settings path not defined? This is unpossible!";
-    if(!PathUtils::is_rel_path(path))
+
+    // Try to resolve virtual path (e.g., "app:settings.cfg") to native path
+    auto* fs = SEGS::getServiceLocator()->getFS();
+    String resolved = fs->resolveToNativePath(path);
+
+    if (!resolved.empty()) {
+        s_settings_path = resolved;
+    }
+    else if(!PathUtils::is_rel_path(path))
     {
         s_settings_path = path;
     }

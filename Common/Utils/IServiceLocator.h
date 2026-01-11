@@ -45,7 +45,7 @@ public:
 
 class BaseServiceLocator : public IServiceLocator {
 public:
-    BaseServiceLocator(FilesystemFactory &&native_fs);
+    BaseServiceLocator(FilesystemFactory &&native_fs, const String& app_dir = "");
     ~BaseServiceLocator() override;
     RootFilesystem *getFS() final { return m_fs.get(); }
 protected:

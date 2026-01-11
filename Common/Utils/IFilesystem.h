@@ -2,7 +2,6 @@
 
 #include "Common/Containers/StringView.h"
 #include "Common/Utils/IFile.h"
-#include "Common/Containers/Vector.h"
 #include <EASTL/functional.h>
 #include <EASTL/shared_ptr.h>
 #include <magic_enum/magic_enum.hpp>
@@ -46,6 +45,9 @@ public:
 
     // Simple manual counting
     virtual bool hasOpenFiles() const = 0;
+    // Returns true if paths can be resolved to native filesystem paths
+    // Archive filesystems (pigg, zip) return false since files are inside archives
+    virtual bool convertableToNative() const { return false; }
 protected:
     // Helper method for subclasses to create FileHandle with proper cleanup
     FileHandle wrapFile(IFile* file) {

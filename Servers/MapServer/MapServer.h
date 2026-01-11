@@ -9,8 +9,6 @@
 
 #include "Common/Servers/ServerEndpoint.h"
 #include "Common/GameData/map_definitions.h"
-#include "GameServer/GameServer.h"
-#include "MapLink.h"
 #include <Containers/Map.h>
 
 class Net;
@@ -32,7 +30,7 @@ struct TeamUpdatedMessage;
 }
 
 static constexpr uint8_t INVALID_GAME_SERVER_ID = 255;
-static constexpr char RUNTIME_DATA_PATH[] = "./data/";
+static constexpr char RUNTIME_DATA_PATH[] = "coh_data:";
 
 class MapServer final : public EventProcessor
 {

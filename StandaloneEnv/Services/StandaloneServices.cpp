@@ -59,6 +59,16 @@ public:
     QFile *f;
 };
 
+// Helper to properly join base path and relative path with separator
+static String joinPath(const String& base, StringView relative) {
+    String result = base;
+    if (!result.empty() && result.back() != '/' && !relative.empty() && relative[0] != '/') {
+        result += '/';
+    }
+    result.append(relative.data(), relative.size());
+    return result;
+}
+
 struct QFSWrapper : public SEGS::BaseFilesystem
 {
 public:
@@ -73,10 +83,11 @@ public:
 
     bool            mkpath(StringView path) override;
     String getFilesystemType() const override { return "NativeFilesystem"; }
+    bool convertableToNative() const override { return true; }
 };
 bool QFSWrapper::mkpath(StringView path)
 {
-    auto full_path = getSourcePath()+path;
+    auto full_path = joinPath(getSourcePath(), path);
     QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
     return QDir(q_path).mkpath(".");
 }
@@ -84,7 +95,7 @@ bool QFSWrapper::mkpath(StringView path)
 SEGS::FileStats QFSWrapper::stat(StringView path)
 {
     SEGS::FileStats res;
-    auto full_path = getSourcePath()+path;
+    auto full_path = joinPath(getSourcePath(), path);
     QString         q_path = QString::fromUtf8(full_path.data(), full_path.size());
     QFileInfo       fi(q_path);
     res.size          = fi.size();
@@ -98,18 +109,21 @@ void QFSWrapper::visitEntries(StringView path, eastl::function<SEGS::VisitResult
 {
     QString     q_path = QString::fromUtf8(path.data(), path.size());
     QStringList to_visit;
-    QString basepath=getSourcePath().c_str();
+    QString basepath = QString::fromUtf8(getSourcePath().c_str());
+    if (!basepath.isEmpty() && !basepath.endsWith('/')) {
+        basepath += '/';
+    }
     to_visit.push_back(q_path);
     while (!to_visit.empty())
     {
-        QDirIterator iter(basepath+to_visit.takeFirst());
+        QDirIterator iter(basepath + to_visit.takeFirst());
         while (iter.hasNext())
         {
-
-            QString    fpath     = iter.next();
-            QByteArray path_utf8 = fpath.toUtf8();
-            QFileInfo  fi(basepath+fpath);
-            auto       vr = visitor(StringView(path_utf8.data(), path_utf8.size()), fi.isDir());
+            QString    fpath    = iter.next();
+            QFileInfo  fi(fpath);
+            QString    name     = fi.fileName();
+            QByteArray name_utf8 = name.toUtf8();
+            auto       vr = visitor(StringView(name_utf8.data(), name_utf8.size()), fi.isDir());
             switch (vr)
             {
             case SEGS::VisitResult::VisitNext: continue;
@@ -122,7 +136,7 @@ void QFSWrapper::visitEntries(StringView path, eastl::function<SEGS::VisitResult
 
 bool QFSWrapper::exists(StringView path)
 {
-    auto full_path = getSourcePath()+path;
+    auto full_path = joinPath(getSourcePath(), path);
     QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
 
     return QFile::exists(q_path);
@@ -134,7 +148,7 @@ SEGS::FileHandle QFSWrapper::openFile(StringView path, SEGS::IFile::OpenMode mod
     {
         return nullptr;
     }
-    auto full_path = getSourcePath()+path;
+    auto full_path = joinPath(getSourcePath(), path);
     QString q_path = QString::fromUtf8(full_path.data(), full_path.size());
     if (!QFile::exists(q_path) && mode == SEGS::IFile::OpenMode::ReadOnly)
     {
@@ -219,14 +233,15 @@ private:
 };
 
 void registerEnvSingleton() {
-    static StandaloneServiceLocator locator(".");
+    String app_dir = QDir::currentPath().toUtf8().constData();
+    static StandaloneServiceLocator locator(app_dir);
     SEGS::setServiceLocator(&locator);
 }
 static SEGS::FilesystemFactory getNativeFSFactory() {
     return [](StringView path)->auto { return eastl::make_shared<::QFSWrapper>(path); };
 }
 
-StandaloneServiceLocator::StandaloneServiceLocator(const String &basepath) : SEGS::BaseServiceLocator(eastl::move(getNativeFSFactory()))  {
+StandaloneServiceLocator::StandaloneServiceLocator(const String &app_dir) : SEGS::BaseServiceLocator(eastl::move(getNativeFSFactory()), app_dir)  {
 
 }
 
