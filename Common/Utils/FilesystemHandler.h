@@ -99,6 +99,10 @@ public:
     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
     bool mkpath(StringView path) override;
     bool hasOpenFiles() const override;
+
+    // Resolve a virtual path to a native filesystem path
+    // Returns empty string if the path resolves to an archive filesystem
+    String resolveToNativePath(StringView path);
     String getFilesystemType() const override { return "RootFilesystem"; }
     String getSourcePath() const override { return "root"; }
 
@@ -147,20 +151,20 @@ protected:
 };
 
 // Native filesystem implementation for directories
-class NativeFilesystem : public BaseFilesystem {
-public:
-    explicit NativeFilesystem(const String& basePath);
-    ~NativeFilesystem() override = default;
+// class NativeFilesystem : public BaseFilesystem {
+// public:
+//     explicit NativeFilesystem(const String& basePath);
+//     ~NativeFilesystem() override = default;
 
-           // IFilesystem interface implementation
-    FileHandle openFile(StringView path, IFile::OpenMode mode) override;
-    FileStats stat(StringView path) override;
-    bool exists(StringView path) override;
-    void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
-    bool mkpath(StringView path) override;
-    String getFilesystemType() const override { return "NativeFilesystem"; }
+//            // IFilesystem interface implementation
+//     FileHandle openFile(StringView path, IFile::OpenMode mode) override;
+//     FileStats stat(StringView path) override;
+//     bool exists(StringView path) override;
+//     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
+//     bool mkpath(StringView path) override;
+//     String getFilesystemType() const override { return "NativeFilesystem"; }
 
-private:
-    String combinePath(const String& relPath);
-};
+// private:
+//     String combinePath(const String& relPath);
+// };
 }

@@ -1,4 +1,5 @@
 #include "FilesystemHandler.h"
+#include "string_utils.h"
 
 #include "EASTL/algorithm.h"
 #include "EASTL/sort.h"
@@ -87,14 +88,25 @@ bool RootFilesystem::mount(const String &sourcePath, const String &mountPoint, i
 {
     std::lock_guard lock(mountMutex_);
 
+    // Reject single-letter mount points (A: through Z:) - reserved for Windows drive letters
+    if (mountPoint.length() == 2 &&
+        CharUtils::is_ascii_char(mountPoint[0]) &&
+        mountPoint[1] == ':')
+    {
+        return false;
+    }
+
     auto normalizedMount = normalizePath(mountPoint);
+
+    // Normalize source path (handles Windows drive letters: C:/path -> /C/path)
+    String normalizedSource = PathUtils::internalizePath(sourcePath);
 
     // Get or create the mount vector for this path
     auto &mounts = mountPoints_[normalizedMount];
 
     // Check if this source is already mounted here
     auto existingMount =
-        eastl::find_if(mounts.begin(), mounts.end(), [&](const MountPoint &mp) { return mp.sourcePath == sourcePath; });
+        eastl::find_if(mounts.begin(), mounts.end(), [&](const MountPoint &mp) { return mp.sourcePath == normalizedSource; });
 
     if (existingMount != mounts.end())
     {
@@ -108,16 +120,16 @@ bool RootFilesystem::mount(const String &sourcePath, const String &mountPoint, i
     }
 
     // Extract extension
-    size_t dotPos    = sourcePath.find_last_of('.');
-    String extension = (dotPos != String::npos) ? sourcePath.substr(dotPos + 1) : "";
+    size_t dotPos    = normalizedSource.find_last_of('.');
+    String extension = (dotPos != String::npos) ? normalizedSource.substr(dotPos + 1) : "";
 
     // Get or create filesystem instance
-    auto filesystem = repository_->getOrCreate(sourcePath, extension);
+    auto filesystem = repository_->getOrCreate(normalizedSource, extension);
     if (!filesystem)
         return false;
 
     // Add the mount point
-    mounts.emplace_back(filesystem, sourcePath, priority);
+    mounts.emplace_back(filesystem, normalizedSource, priority);
     eastl::sort(mounts.begin(), mounts.end());
     return true;
 }
@@ -294,12 +306,18 @@ String RootFilesystem::resolveToNativePath(StringView path)
         if (fs->convertableToNative() && fs->exists(relativePath))
         {
             String sourcePath = fs->getSourcePath();
+            String result;
             // Join source path with relative path
             if (!sourcePath.empty() && sourcePath.back() != '/' && !relativePath.empty() && relativePath[0] != '/')
             {
-                return sourcePath + "/" + relativePath;
+                result = sourcePath + "/" + relativePath;
             }
-            return sourcePath + relativePath;
+            else
+            {
+                result = sourcePath + relativePath;
+            }
+            // Convert internal format to native: /C/path -> C:/path
+            return PathUtils::externalizePath(result);
         }
     }
     return ""; // Not resolvable to native path

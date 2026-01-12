@@ -213,6 +213,12 @@ namespace PathUtils
     //[[nodiscard]] String trim_trailing_slash(const String &path);
     [[nodiscard]] bool is_network_share_path(StringView path);
 
+    // Cross-platform path normalization for virtual filesystem
+    // Converts Windows drive paths to internal format: C:/path -> /C/path
+    [[nodiscard]] String internalizePath(StringView path);
+    // Converts internal format back to native: /C/path -> C:/path (on Windows patterns)
+    [[nodiscard]] String externalizePath(StringView path);
+
 } // end o PathUtils namespace
 
 namespace CharUtils {

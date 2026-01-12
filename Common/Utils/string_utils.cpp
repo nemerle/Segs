@@ -2537,6 +2537,37 @@ namespace PathUtils {
     String join_path(StringView p1, StringView p2) {
         return join_path({p1, p2});
     }
+
+    String internalizePath(StringView path) {
+        // First normalize backslashes to forward slashes
+        String normalized = from_native_path(path);
+
+        // Convert Windows drive letter to internal format: C:/path -> /C/path
+        if (normalized.length() >= 2 &&
+            CharUtils::is_ascii_char(normalized[0]) &&
+            normalized[1] == ':')
+        {
+            char drive = normalized[0];
+            // Remove the colon, prepend with /
+            normalized = String("/") + drive + normalized.substr(2);
+        }
+        return normalized;
+    }
+
+    String externalizePath(StringView path) {
+        String result(path.data(), path.size());
+
+        // Convert internal drive letter format back to Windows: /C/path -> C:/path
+        if (result.length() >= 3 &&
+            result[0] == '/' &&
+            CharUtils::is_ascii_char(result[1]) &&
+            result[2] == '/')
+        {
+            char drive = result[1];
+            result = String(1, drive) + ":" + result.substr(2);
+        }
+        return result;
+    }
 }
 
 Vector<StringView> StringUtils::split_any(StringView str, StringView split_chars, bool p_allow_empty)

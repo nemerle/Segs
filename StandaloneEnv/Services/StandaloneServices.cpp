@@ -3,6 +3,7 @@
 #include "Common/Utils/IFilesystem.h"
 #include "Common/Utils/IServiceLocator.h"
 #include "Common/Utils/FilesystemHandler.h"
+#include "Common/Utils/string_utils.h"
 
 #include <QDirIterator>
 #include <QFile>
@@ -60,13 +61,15 @@ public:
 };
 
 // Helper to properly join base path and relative path with separator
+// Returns path in native format for Qt operations
 static String joinPath(const String& base, StringView relative) {
     String result = base;
     if (!result.empty() && result.back() != '/' && !relative.empty() && relative[0] != '/') {
         result += '/';
     }
     result.append(relative.data(), relative.size());
-    return result;
+    // Convert internal format to native for Qt: /C/path -> C:/path
+    return PathUtils::externalizePath(result);
 }
 
 struct QFSWrapper : public SEGS::BaseFilesystem
@@ -109,7 +112,9 @@ void QFSWrapper::visitEntries(StringView path, eastl::function<SEGS::VisitResult
 {
     QString     q_path = QString::fromUtf8(path.data(), path.size());
     QStringList to_visit;
-    QString basepath = QString::fromUtf8(getSourcePath().c_str());
+    // Convert internal format to native for Qt
+    String nativeSourcePath = PathUtils::externalizePath(getSourcePath());
+    QString basepath = QString::fromUtf8(nativeSourcePath.c_str());
     if (!basepath.isEmpty() && !basepath.endsWith('/')) {
         basepath += '/';
     }
