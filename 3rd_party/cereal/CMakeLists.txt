@@ -14,18 +14,16 @@ if(NOT MSVC)
     set(CMAKE_CXX_FLAGS "-Wall -Werror -g -Wextra -Wshadow -pedantic ${CMAKE_CXX_FLAGS}")
 endif()
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.0)
-    add_library(cereal INTERFACE)
-    target_include_directories(cereal INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    )
-    install(TARGETS cereal EXPORT cereal
-        DESTINATION lib) # ignored
-    install(EXPORT cereal FILE cereal-config.cmake
-        DESTINATION share/cmake/cereal)
-    install(DIRECTORY include/cereal DESTINATION include)
-endif()
+add_library(cereal INTERFACE)
+target_include_directories(cereal INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+install(TARGETS cereal EXPORT cereal
+    DESTINATION lib) # ignored
+install(EXPORT cereal FILE cereal-config.cmake
+    DESTINATION share/cmake/cereal)
+install(DIRECTORY include/cereal DESTINATION include)
 
 if(JUST_INSTALL_CEREAL)
     return()
