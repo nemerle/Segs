@@ -125,7 +125,7 @@ bool PrefabStore::prepareGeoLookupArray(const String &base_path)
             current_geosetinf          = &m_dir_to_geoset[lookup_str];
             current_geosetinf->geopath = eastl::move(geo_path);
         }
-        if(current_geosetinf) {
+        if(!current_geosetinf) {
             services->getLogger()->logString(ILogger::Error,"Geo lookup got null geosetinfo");
             return false;
         }
