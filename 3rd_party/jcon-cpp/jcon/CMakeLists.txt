@@ -1,7 +1,6 @@
 project(jcon)
 
 set(QTDIR $ENV{QTDIR})
-set(QT5_DIR $ENV{QTDIR})
 set(QT6_DIR $ENV{QTDIR})
 
 set(CMAKE_AUTOMOC ON)

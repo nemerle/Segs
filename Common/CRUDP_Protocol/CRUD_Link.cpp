@@ -179,13 +179,13 @@ void CRUDLink::received_block( BitStream &bytes )
 //! return the amount of time, in milliseconds, this client hasn't received anything
 CRUDLink::duration CRUDLink::client_last_seen_packets() const
 {
-    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch() - duration(m_last_recv_activity));
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch() - steady_clock::duration(m_last_recv_activity));
 }
 
 //! return the amount of time this client wasn't sending anything
 CRUDLink::duration CRUDLink::last_sent_packets() const
 {
-    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch() - duration(m_last_send_activity));
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch() - steady_clock::duration(m_last_send_activity));
 }
 
 int CRUDLink::handle_close(ACE_HANDLE h, ACE_Reactor_Mask c)

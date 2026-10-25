@@ -35,8 +35,7 @@ INCLUDE_DIRECTORIES(${target_INCLUDE_DIR})
 ADD_LIBRARY(CRUDP_Protocol STATIC ${target_SOURCES})
 target_include_directories(CRUDP_Protocol INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(CRUDP_Protocol PUBLIC EASTL ace_IMP)
-target_link_libraries(CRUDP_Protocol PUBLIC SEGS_Components)
+target_link_libraries(CRUDP_Protocol PUBLIC EASTL ace_IMP SEGS_Components)
 
 if(ENABLE_TESTS)
     add_subdirectory(UnitTests)

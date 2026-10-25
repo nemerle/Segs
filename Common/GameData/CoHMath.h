@@ -230,14 +230,41 @@ inline glm::quat fromCoHYpr(glm::vec3 pyr)
     const float m20 = sy * cp;
     const float m01 = - sr * cp;
     const float m10 = sr * cy - sy * sp * cr;
+    // Shepperd's method; the rotation is the transpose of m (R01 = m10, ...).
     glm::quat zc;
-    zc.w = std::sqrt(std::max(0.f, 1 + m00 + m11 + m22)) / 2;
-    zc.x = std::sqrt(std::max(0.f, 1 + m00 - m11 - m22)) / 2;
-    zc.y = std::sqrt(std::max(0.f, 1 - m00 + m11 - m22)) / 2;
-    zc.z = std::sqrt(std::max(0.f, 1 - m00 - m11 + m22)) / 2;
-    zc.x = std::copysign(zc.x, m12 - m21);
-    zc.y = std::copysign(zc.y, m20 - m02);
-    zc.z = std::copysign(zc.z, m01 - m10);
+    const float trace = m00 + m11 + m22;
+    if (trace > 0.0f)
+    {
+        const float s = std::sqrt(1.0f + trace) * 2.0f; // 4w
+        zc.w = 0.25f * s;
+        zc.x = (m12 - m21) / s;
+        zc.y = (m20 - m02) / s;
+        zc.z = (m01 - m10) / s;
+    }
+    else if (m00 > m11 && m00 > m22)
+    {
+        const float s = std::sqrt(1.0f + m00 - m11 - m22) * 2.0f; // 4x
+        zc.w = (m12 - m21) / s;
+        zc.x = 0.25f * s;
+        zc.y = (m10 + m01) / s;
+        zc.z = (m20 + m02) / s;
+    }
+    else if (m11 > m22)
+    {
+        const float s = std::sqrt(1.0f + m11 - m00 - m22) * 2.0f; // 4y
+        zc.w = (m20 - m02) / s;
+        zc.x = (m10 + m01) / s;
+        zc.y = 0.25f * s;
+        zc.z = (m21 + m12) / s;
+    }
+    else
+    {
+        const float s = std::sqrt(1.0f + m22 - m00 - m11) * 2.0f; // 4z
+        zc.w = (m01 - m10) / s;
+        zc.x = (m20 + m02) / s;
+        zc.y = (m21 + m12) / s;
+        zc.z = 0.25f * s;
+    }
     return zc;
 }
 

@@ -207,7 +207,14 @@ EncounterManager.Spawn = function (self)
                                 return ""
                         end
                         --Store in Critters{} so it/they can be properly despawned later as needed.
-                        local newID = spawnCritter(SpawnEntity, EncPos, EncRot)
+                        -- Ambient civilian scenes (a consultation, someone reading a paper) are
+                        -- NPCs; spawning them through AddEnemy made bystanders hostile critters.
+                        local newID
+                        if ES_Library_Objects[Encounter]["Civilian"] == true then
+                                newID = spawnCivilian(SpawnEntity, EncPos, EncRot)
+                        else
+                                newID = spawnCritter(SpawnEntity, EncPos, EncRot)
+                        end
                         self.MyCritters[Counter] = newID
                         --print("My critter count (" .. self.EncounterName .. ") " .. self:AddCritter(newID))
                 end
@@ -257,8 +264,7 @@ end
 
 function spawnCivilian(critter, position, rotation, costume)
         local Costume_variation = costume or 1
-        MapInstance.AddNpc(critter, position, rotation, Costume_variation, tostring(critter))
-        --return MapInstance.AddNpc(critter, position, rotation, Costume_variation, tostring(critter))
+        return MapInstance.AddNpc(critter, position, rotation, Costume_variation, tostring(critter))
 end
 
 --Returns a table of subgroups found in supplied container group.

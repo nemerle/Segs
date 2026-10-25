@@ -77,6 +77,7 @@ Universal_OL = {
         ["CanSpawnDefs"] = {UNI_PoliceDroneGuards_V01,},
     },
     ["ES_Consult_Patient_NPC_City_01_03"] = {
+        ["Civilian"] = true,    -- an ambient scene, not a fight: spawned as an NPC
         "Encounter_E_01", "Encounter_E_02",
         ["EncounterSpawn"] = "Double",
         ["SpawnProbability"] = 100,        
@@ -84,6 +85,7 @@ Universal_OL = {
         ["CanSpawnDefs"] = {UNI_Consult_Pat_V01,},        
     },
     ["ES_Consult_NPC_City_01_03"] = {
+        ["Civilian"] = true,    
         "Encounter_E_01", "Encounter_E_02",
         ["EncounterSpawn"] = "Double",
         ["SpawnProbability"] = 100,        
@@ -91,6 +93,7 @@ Universal_OL = {
         ["CanSpawnDefs"] = {UNI_Consult_V01,},        
     },
     ["ES_Cellphone_NPC_City_01_03"] = {
+        ["Civilian"] = true,    
         "Encounter_E_01",
         ["EncounterSpawn"] = "Single",
         ["SpawnProbability"] = 100,        
@@ -98,6 +101,7 @@ Universal_OL = {
         ["CanSpawnDefs"] = {UNI_Cell_Conv_V01,},        
     },
     ["ES_Newspaper_NPC_City_01_03"] = {
+        ["Civilian"] = true,    
         "Encounter_E_01",
         ["EncounterSpawn"] = "Single",
         ["SpawnProbability"] = 100,        
@@ -105,6 +109,7 @@ Universal_OL = {
         ["CanSpawnDefs"] = {UNI_Reporter_V01,},        
     },
     ["ES_Clipboard_NPC_City_01_03"] = {
+        ["Civilian"] = true,    
         "Encounter_E_01",
         ["EncounterSpawn"] = "Single",
         ["SpawnProbability"] = 100,        

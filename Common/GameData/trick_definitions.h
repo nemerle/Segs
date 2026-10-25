@@ -65,9 +65,9 @@ struct TextureModifiers
     glm::vec2 Fade{0, 0};
     glm::vec2 ScaleST0{0, 0};
     glm::vec2 ScaleST1{0, 0};
-    uint32_t  Flags;
-    uint32_t  BlendType;
-    int       surfaceBitIdx;
+    uint32_t  Flags = 0;
+    uint32_t  BlendType = 0;
+    int       surfaceBitIdx = 0;
     String  Surface; // Name of this surface  WOOD METAL etc.
     float     Gloss;
 };
@@ -81,11 +81,11 @@ struct ColorList
 
 struct ModelModifiers
 {
-    glm::vec2 ScrollST0;
-    glm::vec2 ScrollST1;
-    glm::vec2 tex_scale;
-    RGBA TintColor0;
-    RGBA TintColor1;
+    glm::vec2 ScrollST0 = {0.f, 0.f};
+    glm::vec2 ScrollST1 = {0.f, 0.f};
+    glm::vec2 tex_scale = {0.f, 0.f};
+    RGBA TintColor0 {0xFFFFFFFF};
+    RGBA TintColor1 {0xFFFFFFFF};
     uint32_t _TrickFlags=0;
     float SortBias=0;
     struct GeometryModifiers *info=nullptr;
@@ -155,6 +155,7 @@ enum TexHeaderOpt : uint32_t
     REPEAT_U    = 0x2000,
     REPEAT_V    = 0x4000,
     CUBEMAP     = 0x8000,
+    OLDTINT     = 0x1000000,
 };
 
 struct SceneModifiers

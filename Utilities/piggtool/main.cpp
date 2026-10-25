@@ -15,6 +15,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
+#include <QtCore/QTextStream>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QCommandLineParser>
 
@@ -92,7 +93,12 @@ bool loadDataTable(QFile &src,Pigg_DataTable &target)
         if(!readPOD(src,entrysize))
             return false;
         if(entrysize>0)
-            target.data_parts.push_back(QString::fromLocal8Bit(src.read(entrysize)));
+        {
+            QByteArray raw = src.read(entrysize);
+            while(!raw.isEmpty() && raw.endsWith('\0'))
+                raw.chop(1);
+            target.data_parts.push_back(QString::fromLocal8Bit(raw));
+        }
         num_entries -= entrysize+4;
     }
     return true;
@@ -164,11 +170,13 @@ bool loadPigg(const QString &fname,PiggFile &pigg)
 
 void dumpFileList(PiggFile &pigg)
 {
-    qDebug() << "Filename    -  Compressed Size - Actual size";
+    QTextStream out(stdout);
     for(PiggInternalHeader & ih : pigg.headers)
     {
-        qDebug().noquote() << pigg.strings_table.data_parts[ih.name_id] << "  " <<ih.packed_size<<"  "<<ih.size;
+        out << pigg.strings_table.data_parts[ih.name_id]
+            << '\t' << ih.packed_size << '\t' << ih.size << '\n';
     }
+    out.flush();
 }
 
 void saveFile(const QString &fname,const QByteArray &data)
@@ -289,6 +297,13 @@ int main(int argc, char **argv)
 
         if(loadPigg(pigg_name, header))
           dumpFileList(header);
+        else
+        {
+            QTextStream err(stderr);
+            err << "piggtool: failed to load pigg '" << pigg_name << "'\n";
+            err.flush();
+            return 1;
+        }
     }
     else if(parser.isSet("x"))
     {

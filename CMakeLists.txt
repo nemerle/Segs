@@ -233,12 +233,12 @@ endif()
 if(STANDALONE_ENV)
     add_subdirectory(StandaloneEnv)
     add_subdirectory(Servers)
+    add_subdirectory(Data)
 #   add_subdirectory(Clients)
 # Add README, scripts, settings.cfg, and Starter Databases
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/README.md ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/README.md COPYONLY)
 endif()
 
-add_subdirectory(Data)
 
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/default_setup)
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/logs)

@@ -20,9 +20,9 @@ class MapXferList final : public GameCommandEvent
 {
 public:
         // [[ev_def:field]]
-        bool        m_has_location;
+        bool        m_has_location = false;
         // [[ev_def:field]]
-        glm::vec3   m_location;
+        glm::vec3   m_location = glm::vec3(0.0f);
         // [[ev_def:field]]
         String     m_name;
         explicit    MapXferList() : GameCommandEvent(evMapXferList) {}
@@ -44,11 +44,18 @@ public:
                             bs.StoreFloat(m_location.y);
                             bs.StoreFloat(m_location.z);
                         }
-                        bs.StoreString(m_name);
+                        bs.StoreString(m_name.c_str());
                     }
-        void        serializefrom(BitStream &/*src*/) override
+        void        serializefrom(BitStream &bs) override
                     {
-                        assert(false);
+                        m_has_location = bs.GetBits(1) != 0;
+                        if(m_has_location)
+                        {
+                            m_location.x = bs.GetFloat();
+                            m_location.y = bs.GetFloat();
+                            m_location.z = bs.GetFloat();
+                        }
+                        bs.GetString(m_name);
                     }
         EVENT_IMPL(MapXferList)
 };
@@ -66,7 +73,6 @@ public:
                 }
         void    serializefrom(BitStream &/*src*/) override
                 {
-                    assert(false);
                 }
         EVENT_IMPL(MapXferListClose)
 };

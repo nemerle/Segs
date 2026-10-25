@@ -6,6 +6,7 @@
  */
 
 #pragma once
+#include <atomic>
 #include "CommonNetStructures.h"
 
 class Entity;
@@ -82,7 +83,7 @@ public:
         bool 				isNamePending(const String &name);
 
 private:
-static  uint32_t    m_team_idx_counter;
+static  std::atomic<uint32_t> m_team_idx_counter; // teams are created from every map thread
 };
 
 

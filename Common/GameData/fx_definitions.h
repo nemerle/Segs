@@ -13,11 +13,15 @@ struct ColorFx
 {
     RGBA startcolor;
     int startTime;
+    float primaryTint = 0.0f;   
+    float secondaryTint = 0.0f;
 };
 enum SplatFlags {
     SPLAT_ADDITIVE = 1,
     SPLAT_SHADOWFADE = 0x2,
     SPLAT_ADDBASE  = 4,
+    SPLAT_ROUNDTEXTURE = 0x8,
+    SPLAT_SUBTRACTIVE  = 0x10,
 };
 enum SplatFalloffType : uint32_t;
 struct FxBehavior

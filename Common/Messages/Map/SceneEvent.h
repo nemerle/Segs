@@ -30,21 +30,21 @@ public:
     // [[ev_def:field]]
     String m_map_desc;
     // [[ev_def:field]]
-    uint32_t ref_count;
+    uint32_t ref_count = 0;
     // [[ev_def:field]]
-    int ref_crc;
+    int ref_crc = 0;
     // [[ev_def:field]]
-    int var_4;
+    int var_4 = 0;
     // [[ev_def:field]]
-    bool m_outdoor_mission_map;
+    bool m_outdoor_mission_map = false;
     // [[ev_def:field]]
-    bool current_map_flags;
+    bool current_map_flags = false;
     // [[ev_def:field]]
-    uint32_t num_base_elems;
+    uint32_t num_base_elems = 0;
     // [[ev_def:field]]
-    int undos_PP;
+    int undos_PP = 0;
     // [[ev_def:field]]
-    bool is_new_world;
+    bool is_new_world = false;
     // [[ev_def:field]]
     Vector<String> m_trays;
     // [[ev_def:field]]
@@ -52,11 +52,11 @@ public:
     // [[ev_def:field]]
     Vector<MapRef> m_refs;
     // [[ev_def:field]]
-    int unkn1;
+    int unkn1 = 0;
     // [[ev_def:field]]
-    int m_map_number;
+    int m_map_number = 0;
     // [[ev_def:field]]
-    bool unkn2;
+    bool unkn2 = false;
     EVENT_IMPL(Scene)
 protected:
     void getGrpElem(BitStream &src, uint32_t idx);

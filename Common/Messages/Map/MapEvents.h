@@ -31,8 +31,10 @@ public:
     InitiateMapXfer() : MapLinkEvent(MapEventTypes::evInitiateMapXfer)
     {
     }
-    void serializeto(BitStream &) const override
-    {}
+    void serializeto(BitStream &bs) const override
+    {
+        bs.StorePackedBits(1, 11);
+    }
 
     void serializefrom(BitStream &) override
     {}
@@ -46,8 +48,10 @@ public:
     MapXferComplete() : MapLinkEvent(MapEventTypes::evMapXferComplete)
     {}
 
-    void serializeto(BitStream &) const override
-    {}
+    void serializeto(BitStream &bs) const override
+    {
+        bs.StorePackedBits(1, 12);
+    }
 
     void serializefrom(BitStream &) override
     {}
@@ -157,6 +161,7 @@ public:
     void serializeto(BitStream &bs) const override
     {
         bs.StorePackedBits(1,0); // opcode - Warning -> exactly the same as Connect
+        bs.StoreString(contents.c_str());
     }
     void serializefrom(BitStream &bs) override
     {

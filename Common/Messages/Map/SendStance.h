@@ -38,6 +38,15 @@ explicit SendStance() : GameCommandEvent(evSendStance) {}
         bs.StorePackedBits(4, m_stance.pset_idx);
         bs.StorePackedBits(4, m_stance.pow_idx);
     }
+    void serializefrom(BitStream &bs) override
+    {
+        m_stance = PowerStance();
+        m_stance.has_stance = bs.GetBits(1) != 0;
+        if(!m_stance.has_stance)
+            return;
+        m_stance.pset_idx = bs.GetPackedBits(4);
+        m_stance.pow_idx  = bs.GetPackedBits(4);
+    }
     EVENT_IMPL(SendStance)
 };
 

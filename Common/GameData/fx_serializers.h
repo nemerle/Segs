@@ -16,11 +16,13 @@ using Fx_AllBehaviors = Vector<struct FxBehavior>;
 using Fx_AllInfos = Vector<struct FxInfo>;
 
 constexpr const static uint32_t fxbehaviors_i0_requiredCrc = 0x0DD5777C;
+constexpr const static uint32_t fxbehaviors_i24_requiredCrc = 0x1E2C2C56;
 bool loadFrom(BinStore *s,Fx_AllBehaviors &target) ;
 bool LoadFxBehaviorData(const String &fname, Fx_AllBehaviors &behaviors);
 void saveTo(const Fx_AllBehaviors &target,const String &baseName,bool text_format=false);
 
 constexpr const static uint32_t fxinfos_i0_requiredCrc = 0xB178A55D;
+constexpr const static uint32_t fxinfos_i24_requiredCrc = 0x4CB7D9CB;
 bool loadFrom(BinStore *s,Fx_AllInfos &target);
 bool LoadFxInfoData(const String &fname, Fx_AllInfos &infos);
 void saveTo(const Fx_AllInfos &target,const String &baseName,bool text_format=false);

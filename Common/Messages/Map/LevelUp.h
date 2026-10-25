@@ -27,6 +27,9 @@ public:
 
             // nothing to send
         }
+        void    serializefrom(BitStream &/*bs*/) override
+        {
+        }
         EVENT_IMPL(LevelUp)
 };
 

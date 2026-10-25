@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(AuthEventRegistry AuthEventRegistry.cpp)
-add_test(AuthEventRegistry AuthEventRegistry)
+add_test(NAME AuthEventRegistry COMMAND AuthEventRegistry)
 
 target_link_libraries(AuthEventRegistry
     Qt6::Test

@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(GameEventRegistry GameEventRegistry.cpp)
-add_test(GameEventRegistry GameEventRegistry)
+add_test(NAME GameEventRegistry COMMAND GameEventRegistry)
 
 target_link_libraries(GameEventRegistry
     Qt6::Test

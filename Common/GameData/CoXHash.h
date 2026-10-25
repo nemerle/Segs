@@ -96,6 +96,8 @@ public:
     CoxHashCommon() : in_use(0),m_flags(0)
     {}
     virtual ~CoxHashCommon() {}
+    //! Occupied entries; the wire sends indices into these tables, so server and client must agree.
+    size_t entry_count() const { return in_use; }
     virtual uint32_t find_index(const KEY &key, uint32_t &index_tgt, uint32_t &key_tgt, bool a5) const=0;
     virtual uint32_t next_size(uint32_t sz)=0;
 
@@ -153,6 +155,8 @@ public:
     {
         m_flags=flags;
         in_use=0;
+        // Clear, not just resize: stale slots with in_use==0 make find_index spin forever.
+        m_storage.clear();
         m_storage.resize(size_t(next_size(sz))); // reserve hash map entries
     }
 };
@@ -218,14 +222,9 @@ public:
     }
     void init(uint32_t sz)
     {
-        if(sz>0)
-        {
-            this->m_storage.resize(size_t(next_size(sz))); // reserve hash map entries
-        }
-        else
-        {
-            this->m_storage.resize(32);
-        }
+        this->m_storage.clear();
+        this->in_use = 0;
+        this->m_storage.resize(sz > 0 ? size_t(next_size(sz)) : size_t(32)); // reserve hash map entries
     }
     uint32_t find_index(const KEY &needle,uint32_t &entry_idx,uint32_t &prev_val_out,bool a5) const;
 };

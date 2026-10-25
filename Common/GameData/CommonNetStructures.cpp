@@ -81,7 +81,7 @@ void storeStringConditional( BitStream &bs,const String &str )
 {
     bs.StoreBits(1,str.size()>0);
     if(str.size()>0)
-        bs.StoreString(str);
+        bs.StoreString(str.c_str()); // the StringView overload drops the NUL
 }
 
 void storeTransformMatrix(BitStream &tgt, const glm::mat4x3 &src )

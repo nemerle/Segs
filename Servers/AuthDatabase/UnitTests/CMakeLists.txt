@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(AuthDBEventRegistry AuthDBEventRegistry.cpp)
-add_test(AuthDBEventRegistry AuthDBEventRegistry)
+add_test(NAME AuthDBEventRegistry COMMAND AuthDBEventRegistry)
 
 target_link_libraries(AuthDBEventRegistry
     Qt6::Test

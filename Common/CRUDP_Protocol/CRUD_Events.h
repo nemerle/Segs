@@ -119,6 +119,8 @@ public:
 class CRUD_EventFactory
 {
 public:
+    // Virtual: GameSession owns a concrete subclass through a std::unique_ptr<CRUD_EventFactory>.
+    virtual ~CRUD_EventFactory() = default;
     virtual SEGSEvents::CRUDLink_Event *EventFromStream(BitStream &bs);
 };
 

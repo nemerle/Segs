@@ -19,9 +19,9 @@ class CombineEnhanceResponse final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    uint32_t            m_was_success;
+    uint32_t            m_was_success = 0;
     // [[ev_def:field]]
-    uint32_t            m_destroyed_on_fail;
+    uint32_t            m_destroyed_on_fail = 0;
 
     explicit CombineEnhanceResponse() : GameCommandEvent(evCombineEnhanceResponse) {}
     CombineEnhanceResponse(uint32_t success, uint32_t destroy) : GameCommandEvent(evCombineEnhanceResponse),
@@ -36,6 +36,11 @@ public:
 
         bs.StorePackedBits(1, m_was_success);
         bs.StorePackedBits(1, m_destroyed_on_fail);
+    }
+    void serializefrom(BitStream &bs) override
+    {
+        m_was_success = bs.GetPackedBits(1);
+        m_destroyed_on_fail = bs.GetPackedBits(1);
     }
 
     EVENT_IMPL(CombineEnhanceResponse)

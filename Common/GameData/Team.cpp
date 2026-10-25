@@ -21,7 +21,7 @@
 /*
  * Team Methods
  */
-uint32_t Team::m_team_idx_counter = 0;
+std::atomic<uint32_t> Team::m_team_idx_counter {0};
 bool Team::isNamePending(const String &name)
 {
     for (const TeamMember &tm : m_data.m_team_members)

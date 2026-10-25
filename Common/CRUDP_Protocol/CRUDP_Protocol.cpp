@@ -46,6 +46,18 @@ using SteadyChronoData = std::chrono::steady_clock::time_point;
 */
 using namespace std::chrono;
 
+static CrudP_Protocol::ClockSource s_clock_source = nullptr;
+
+void CrudP_Protocol::setClockSource(ClockSource src)
+{
+    s_clock_source = src;
+}
+
+std::chrono::steady_clock::time_point CrudP_Protocol::clockNow()
+{
+    return s_clock_source ? s_clock_source() : steady_clock::now();
+}
+
 namespace  {
 
 void PacketDestroyer(CrudP_Packet *a)
@@ -92,6 +104,8 @@ bool CrudP_Protocol::PacketSibCompare(const CrudP_Packet *a,const CrudP_Packet *
 
 CrudP_Protocol::~CrudP_Protocol()
 {
+    // retransmit_queue only references reliable_packets entries, so clearQueues() does not delete through it.
+    clearQueues(true, true);
     delete m_codec;
     m_codec= nullptr;
 }
@@ -140,7 +154,7 @@ void CrudP_Protocol::ReceivedBlock(BitStream &src)
         sWarning() << "Checksum error.";
         return;
     }
-    m_last_activity = steady_clock::now();
+    m_last_activity = clockNow();
     CrudP_Packet *res = new CrudP_Packet; //PacketFactory::newDataPacket;
     bool requested_debug_mode_bitstream = src.uGetBits(1);
     assert(false == requested_debug_mode_bitstream);
@@ -152,21 +166,39 @@ void CrudP_Protocol::ReceivedBlock(BitStream &src)
         res->setSibPos(src.GetPackedBits(1));
         res->setSibId(src.uGetBits(32));
     }
-    parseAcks(src,res);
+    if(!parseAcks(src,res))
+    {
+        sWarning() << "Malformed CRUDP ack section - dropping packet.";
+        delete res;
+        return;
+    }
     res->SetIsCompressed(src.GetBits(1));
     src.ByteAlign(true,false);
     // how much data did we actually read
-    uint32_t bits_left=(bitlength-src.GetReadPos());
+    // A malformed packet can leave read_pos past bitlength; bitlength-read_pos would underflow.
+    uint32_t read_pos = src.GetReadPos();
+    if(read_pos > bitlength || (bitlength - read_pos) > src.GetReadableBits())
+    {
+        sWarning() << "Malformed CRUDP packet length - dropping packet.";
+        delete res;
+        return;
+    }
+    uint32_t bits_left=(bitlength-read_pos);
     res->StoreBitArray(src.read_ptr(),bits_left);
     PushRecvPacket(res);
 }
 
-void CrudP_Protocol::parseAcks(BitStream &src,CrudP_Packet *tgt)
+bool CrudP_Protocol::parseAcks(BitStream &src,CrudP_Packet *tgt)
 {
-    // FixMe: GetPackedBits() can return signed values which can cause the numUniqueAcks assignment to be extremely high.
-    uint32_t numUniqueAcks = src.GetPackedBits(1);
+    // GetPackedBits() returns -1 on a truncated stream, so it must not go straight into an unsigned count.
+    int32_t rawUniqueAcks = src.GetPackedBits(1);
+    if(rawUniqueAcks < 0 || uint32_t(rawUniqueAcks) > MAX_PKTACKS)
+        return false; // truncated/exhausted (-1) or implausibly large count => malformed
+    uint32_t numUniqueAcks = uint32_t(rawUniqueAcks);
     if(numUniqueAcks  == 0)
-        return;
+        return true;
+    if(src.GetReadableBits() < 32)
+        return false; // no room for the first full 32-bit ack id => truncated
     uint32_t firstAck = src.GetBits(32);
     tgt->addAck(firstAck);
     for(uint32_t i = 1; i < numUniqueAcks; i++)
@@ -177,9 +209,13 @@ void CrudP_Protocol::parseAcks(BitStream &src,CrudP_Packet *tgt)
         //  first ack in the sequence, all you need is the delta to the next one
         //  to calculate it, and the Packed Bits format achieves much higher
         //  compression ratios with smaller values
-        firstAck += src.GetPackedBits(1) + 1;
+        int32_t delta = src.GetPackedBits(1);
+        if(delta < 0)
+            return false; // truncated mid-delta => malformed
+        firstAck += uint32_t(delta) + 1;
         tgt->addAck(firstAck);
     }
+    return true;
 }
 
 void CrudP_Protocol::storeAcks(BitStream &bs)
@@ -194,7 +230,7 @@ void CrudP_Protocol::storeAcks(BitStream &bs)
     recv_acks.sort();
     recv_acks.unique();
     List<uint32_t>::iterator iter = recv_acks.begin();
-    uint32_t num_acks = std::min<uint32_t>((uint32_t)recv_acks.size(), 16); // store up to 16 acks
+    uint32_t num_acks = std::min<uint32_t>((uint32_t)recv_acks.size(), MAX_PKTACKS); // store up to MAX_PKTACKS acks
     bs.StorePackedBits(1,num_acks);
 
     uint32_t last_ack = *iter;
@@ -319,12 +355,16 @@ CrudP_Packet *CrudP_Protocol::RecvPacket()
         delete pkt;
         if(avail_packets.empty())
         return nullptr;
-        avail_packets.pop_front();
         pkt = avail_packets.front();
+        avail_packets.pop_front();
     }
     assert(pkt);
     if(pkt->GetSequenceNumber()!=recv_seq+1) // nope this packet is not a next one in the sequence
+    {
+        // Future packet (gap from reordering): put it back until the gap fills.
+        avail_packets.push_front(pkt);
         return nullptr;
+    }
     if(pkt->getNumSibs()>0)
         recv_seq+=pkt->getNumSibs();
     else
@@ -442,7 +482,7 @@ bool CrudP_Protocol::addToSendQueue(CrudP_Packet *pak)
         return false;
 
     pak->setSeqNo(++send_seq);
-    pak->setLastSend(SteadyChronoWrapper::now());
+    pak->setLastSend(fromSteadyChronoType<SteadyChronoData>(clockNow()));
     {
         std::lock_guard<std::mutex> grd(m_packets_mutex);
         send_queue.push_back(pak);
@@ -491,7 +531,7 @@ bool CrudP_Protocol::isUnresponsiveLink()
 
     if(m_last_activity == timepoint())
         return false; // we don't know if we're unresponsive yet.
-    auto time_now = steady_clock::now();
+    auto time_now = clockNow();
     //TODO: make the 15seconds a parameter ?
     auto seconds_since_last=duration_cast<seconds>(time_now-m_last_activity).count();
     if(seconds_since_last < 15)
@@ -549,7 +589,7 @@ void CrudP_Protocol::processRetransmits()
 {
     if(reliable_packets.empty())
         return;
-    auto now       = steady_clock::now();
+    auto now       = clockNow();
     const int ping_time = 50;
 
     uint32_t first_packet_id = reliable_packets.front()->GetSequenceNumber();
@@ -557,13 +597,14 @@ void CrudP_Protocol::processRetransmits()
     {
         if(retransmit_queue.isFull())
             break;
+        // reliable_packets is ascending by seq, so only the head packet (seq == first_packet_id) resends sooner.
         int resend_period =
-                getPacketResendDelay(pkt->retransmitCount(), ping_time, pkt->GetSequenceNumber() < first_packet_id);
+                getPacketResendDelay(pkt->retransmitCount(), ping_time, pkt->GetSequenceNumber() == first_packet_id);
         auto milliseconds_since_xfer = duration_cast<milliseconds>(now - toSteadyChronoType<SteadyChronoData>(pkt->lastSend())).count();
         if(milliseconds_since_xfer <= resend_period)
             continue;
         retransmit_queue.push_back(pkt);
-        pkt->setLastSend(SteadyChronoWrapper::now());
+        pkt->setLastSend(fromSteadyChronoType<SteadyChronoData>(clockNow()));
         // todo: record packet send time in protocol instance ?
         pkt->incRetransmits();
     }

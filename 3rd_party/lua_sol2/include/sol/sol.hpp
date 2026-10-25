@@ -6762,6 +6762,7 @@ namespace sol {
             static_assert(std::is_constructible<T, Args&&...>::value, "T must be constructible with Args");
 
             *this = nullopt;
+            // SEGS: sol2 3.3.0's fix -- optional<T&> has no construct(); GCC >= 14 rejects the body.
             new (static_cast<void*>(this)) optional(std::in_place, std::forward<Args>(args)...);
             return **this;
         }

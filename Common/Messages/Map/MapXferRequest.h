@@ -35,9 +35,16 @@ public:
             bs.StorePackedBits(1,unused4);
             bs.StorePackedBits(1,m_map_cookie);
         }
-        void serializefrom(BitStream &/*src*/) override
+        void serializefrom(BitStream &src) override
         {
-            assert(false);
+            unused1 = uint8_t(src.GetPackedBits(1));
+            unused2 = uint8_t(src.GetPackedBits(1));
+            uint32_t ipaddr = uint32_t(src.GetPackedBits(1));
+            unused3 = uint8_t(src.GetPackedBits(1));
+            uint16_t port = uint16_t(src.GetPackedBits(1));
+            unused4 = uint8_t(src.GetPackedBits(1));
+            m_map_cookie = uint32_t(src.GetPackedBits(1));
+            m_address.set(port, ntohl(ipaddr));
         }
 
         // [[ev_dev:field]]

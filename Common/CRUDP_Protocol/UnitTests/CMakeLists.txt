@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(CRUDPEventRegistry CRUDPEventRegistry.cpp)
-add_test(CRUDPEventRegistry CRUDPEventRegistry)
+add_test(NAME CRUDPEventRegistry COMMAND CRUDPEventRegistry)
 
 target_link_libraries(CRUDPEventRegistry
     Qt6::Test

@@ -1,6 +1,6 @@
 #pragma once
 
-#if _WIN32
+#ifdef _WIN32
 #   define EASTL_EXPORT_PREFIX __declspec(dllexport)
 #   define EASTL_IMPORT_PREFIX __declspec(dllimport)
 #else

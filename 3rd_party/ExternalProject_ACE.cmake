@@ -1,4 +1,5 @@
 libname(ace ACE)
+file(MAKE_DIRECTORY ${ThirdParty_Install_Dir}/include/ace)
 ExternalProject_Add(
    ACE_BUILD
    URL ${CMAKE_CURRENT_SOURCE_DIR}/naked_ace.tgz

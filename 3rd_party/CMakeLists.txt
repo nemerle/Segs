@@ -20,6 +20,16 @@ target_include_directories(glm INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
+# Recast/Detour (zlib licence, recastnavigation/VERSION): navigation mesh build and path queries.
+file(GLOB SEGS_RECAST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/recastnavigation/Recast/Source/*.cpp)
+add_library(segs_recast STATIC ${SEGS_RECAST_SOURCES})
+target_include_directories(segs_recast PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/recastnavigation/Recast/Include)
+file(GLOB SEGS_DETOUR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/recastnavigation/Detour/Source/*.cpp)
+add_library(segs_detour STATIC ${SEGS_DETOUR_SOURCES})
+target_include_directories(segs_detour PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/recastnavigation/Detour/Include)
+# 64-bit polygon references: a whole city zone has more tiles x polygons than 32-bit refs can address.
+target_compile_definitions(segs_detour PUBLIC DT_POLYREF64=1 DT_VIRTUAL_QUERYFILTER=1)
+
 ########################################################################################
 # Optional components
 ########################################################################################

@@ -36,8 +36,20 @@ namespace SEGSEvents
 
             for(const VisitLocation &location : m_locations)
             {
-               bs.StoreString(location.m_location_name);
+               bs.StoreString(location.m_location_name.c_str());
                sCDebug(logMapEvents) << "SendLocations Event serializeTo. m_location_name: " << location.m_location_name;
+            }
+        }
+
+        void serializefrom(BitStream &bs) override
+        {
+            m_locations.clear();
+            const uint32_t count = bs.GetPackedBits(1);
+            for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+            {
+                VisitLocation location;
+                bs.GetString(location.m_location_name);
+                m_locations.push_back(eastl::move(location));
             }
         }
 

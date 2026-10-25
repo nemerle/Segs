@@ -74,8 +74,8 @@ end
 
 revive_ok = function(id)
     printDebug("revive Ok. Entity: " .. tostring(id))
-    Character.respawn(client, 'Gurney'); -- Hospital
-    Player.Revive(0);
+    Player.Respawn('Gurney'); -- Hospital
+    Player.Revive(6); -- FULL: hp + endurance, as the original's gurney transfer
 
     return "ok"
 end

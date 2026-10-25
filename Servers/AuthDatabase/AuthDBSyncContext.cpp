@@ -234,12 +234,11 @@ bool AuthDbSyncContext::checkPassword(const String &login, const String &passwor
         return false;
     }
     PasswordHasher hasher;
-    String     required_pass = qr->value("passw").toByteArray().data();
+    QByteArray required_pass = qr->value("passw").toByteArray();
     String     salt          = qr->value("salt").toByteArray().data();
-    // TODO: remove
     auto hashed_password = hasher.hashPassword(password.data(), salt);
-    return required_pass.size() == hashed_password.size() &&
-           memcmp(hashed_password.data(), required_pass.data(), required_pass.size()) == 0;
+    return size_t(required_pass.size()) == hashed_password.size() &&
+           memcmp(hashed_password.data(), required_pass.constData(), hashed_password.size()) == 0;
 }
 
 bool AuthDbSyncContext::retrieveAccountAndCheckPassword(

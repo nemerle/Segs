@@ -95,7 +95,7 @@ namespace cereal
 		{
 		  throw Exception("Failed to read " + std::to_string(size) + " bytes from input vector!");
 		}
-		memcpy(data,itsStream.data(),size);
+		memcpy(data,itsStream.data()+currentOffset,size);
 		currentOffset+=size;
       }
 

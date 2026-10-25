@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(GameDBEventRegistry GameDBEventRegistry.cpp)
-add_test(GameDBEventRegistry GameDBEventRegistry)
+add_test(NAME GameDBEventRegistry COMMAND GameDBEventRegistry)
 
 target_link_libraries(GameDBEventRegistry
     Qt6::Test

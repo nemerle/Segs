@@ -17,6 +17,7 @@
 #include "GameData/map_definitions.h"
 #include "Messages/GameDatabase/GameDBSyncEvents.h"
 #include "Components/Logging.h"
+#include <utility>
 using namespace SEGSEvents;
 
 // SpecHash<std::string,val>
@@ -48,11 +49,11 @@ void UpdateServer::serializeto( BitStream &tgt ) const
     tgt.StorePackedBits(1, 2); //opcode
     tgt.StorePackedBits(1, m_build_date);
     tgt.StorePackedBits(1, 0); // flags
-    tgt.StoreString(currentVersion);
+    tgt.StoreString(currentVersion.c_str());
     tgt.StoreBitArray(clientInfo.data(),(uint32_t)(clientInfo.size()*8));
     tgt.StorePackedBits(1, authID);
     tgt.StoreBits(32, authCookie);
-    tgt.StoreString(accountName);
+    tgt.StoreString(accountName.c_str());
 }
 
 void UpdateServer::serializefrom( BitStream &src )

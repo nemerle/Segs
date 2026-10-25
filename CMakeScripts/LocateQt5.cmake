@@ -27,7 +27,7 @@ IF(MSVC)
     # fix any double slashes which seem to be common
     STRING(REPLACE "//" "/"  QT_VERSION "${QT_VERSION}")
 
-    # we only support 2022, 
+    # we only support 2022,
     SET(QT_MSVC "msvc2022_64")
 
     SET(QT_PATH "${QT_VERSION}/${QT_MSVC}")
@@ -58,7 +58,7 @@ IF(NOT QT_MISSING)
     SET(Qt6_DIR "${QT_PATH}/lib/cmake/Qt6/")
     SET(Qt6Test_DIR "${QT_PATH}/lib/cmake/Qt6Test")
 ENDIF()
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 COMPONENTS Core REQUIRED)
 get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(Qt6_BIN_DIR "${_qmake_executable}" DIRECTORY)
 TO_NATIVE_PATH("${Qt6_BIN_DIR}" Qt6_BIN_DIR)

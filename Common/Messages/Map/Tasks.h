@@ -45,12 +45,12 @@ namespace SEGSEvents
                     bs.StorePackedBits(1, loop_count_2); // task index in array
 
                     //TaskStatusReceive
-                    bs.StoreString(task.m_description);
-                    bs.StoreString(task.m_owner);
+                    bs.StoreString(task.m_description.c_str());
+                    bs.StoreString(task.m_owner.c_str());
                     bs.StorePackedBits(1,task.m_db_id);
                     bs.StorePackedBits(1, task.m_unknown_1);
                     bs.StorePackedBits(1, task.m_unknown_2);
-                    bs.StoreString(task.m_state);
+                    bs.StoreString(task.m_state.c_str());
                     bs.StorePackedBits(1, task.m_finish_time);
                     bs.StoreBits(1, task.m_is_complete);
                     bs.StoreBits(1, task.m_in_progress_maybe);
@@ -63,13 +63,54 @@ namespace SEGSEvents
                         bs.StoreFloat(task.m_location.location.x);
                         bs.StoreFloat(task.m_location.location.y);
                         bs.StoreFloat(task.m_location.location.z);
-                        bs.StoreString(task.m_location.m_location_map_name);
-                        bs.StoreString(task.m_location.m_location_name);
+                        bs.StoreString(task.m_location.m_location_map_name.c_str());
+                        bs.StoreString(task.m_location.m_location_name.c_str());
                     }
 
                      sCDebug(logTasks) << "taskEntry Task: " << loop_count_2 << " Entered ";
                     ++loop_count_2;
                 }
+            }
+        }
+
+        void serializefrom(BitStream &bs) override
+        {
+            m_task_entry_list.clear();
+            const uint32_t entry_count = bs.GetPackedBits(1);
+            for(uint32_t e = 0; e < entry_count && bs.GetReadableBits() > 0; ++e)
+            {
+                TaskEntry task_entry;
+                task_entry.m_db_id = bs.GetPackedBits(1);
+                task_entry.m_reset_selected_task = bs.GetBits(1) != 0;
+                const uint32_t task_count = bs.GetPackedBits(1);
+                (void)bs.GetPackedBits(1);
+                for(uint32_t t = 0; t < task_count && bs.GetReadableBits() > 0; ++t)
+                {
+                    Task task{};
+                    task.m_task_idx = bs.GetPackedBits(1);
+                    bs.GetString(task.m_description);
+                    bs.GetString(task.m_owner);
+                    task.m_db_id = bs.GetPackedBits(1);
+                    task.m_unknown_1 = bs.GetPackedBits(1);
+                    task.m_unknown_2 = bs.GetPackedBits(1);
+                    bs.GetString(task.m_state);
+                    task.m_finish_time = bs.GetPackedBits(1);
+                    task.m_is_complete = bs.GetBits(1) != 0;
+                    task.m_in_progress_maybe = bs.GetBits(1) != 0;
+                    task.m_is_abandoned = bs.GetBits(1) != 0;
+                    task.m_board_train = bs.GetBits(1) != 0;
+                    task.m_has_location = bs.GetBits(1) != 0;
+                    if(task.m_has_location)
+                    {
+                        task.m_location.location.x = bs.GetFloat();
+                        task.m_location.location.y = bs.GetFloat();
+                        task.m_location.location.z = bs.GetFloat();
+                        bs.GetString(task.m_location.m_location_map_name);
+                        bs.GetString(task.m_location.m_location_name);
+                    }
+                    task_entry.m_task_list.push_back(eastl::move(task));
+                }
+                m_task_entry_list.push_back(eastl::move(task_entry));
             }
         }
         EVENT_IMPL(TaskStatusList)
@@ -94,6 +135,11 @@ namespace SEGSEvents
             bs.StorePackedBits(1, m_selected_task.m_task_idx);
         }
 
+        void serializefrom(BitStream &bs) override
+        {
+            m_selected_task = Task{};
+            m_selected_task.m_task_idx = bs.GetPackedBits(1);
+        }
         EVENT_IMPL(TaskSelect)
     };
 
@@ -107,6 +153,9 @@ namespace SEGSEvents
         {
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 47
         }
+        void serializefrom(BitStream &/*bs*/) override
+        {
+        }
 
         EVENT_IMPL(TaskListRemoveTeammates)
     };
@@ -116,9 +165,9 @@ namespace SEGSEvents
     {
     public:
         // [[ev_def:field]
-        uint32_t m_db_id;
+        uint32_t m_db_id = 0;
         // [[ev_def:field]
-        uint32_t m_task_idx;
+        uint32_t m_task_idx = 0;
         // [[ev_def:field]
         String m_task_detail;
 
@@ -136,7 +185,14 @@ namespace SEGSEvents
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 75
             bs.StorePackedBits(1, m_db_id);
             bs.StorePackedBits(1, m_task_idx);
-            bs.StoreString(m_task_detail);
+            bs.StoreString(m_task_detail.c_str());
+        }
+
+        void serializefrom(BitStream &bs) override
+        {
+            m_db_id = bs.GetPackedBits(1);
+            m_task_idx = bs.GetPackedBits(1);
+            bs.GetString(m_task_detail);
         }
 
         EVENT_IMPL(TaskDetail)
@@ -186,13 +242,14 @@ namespace SEGSEvents
         void serializeto(BitStream &bs) const final // packet 73
         {
             bs.StorePackedBits(1, type()-evFirstServerToClient);
-            bs.StoreString(m_message);
+            bs.StoreString(m_message.c_str());
             bs.StoreFloat(m_mission_time);
         }
 
-        void serializefrom(BitStream &/*bs*/) final
+        void serializefrom(BitStream &bs) final
         {
-            assert(!"SendMissionObjectTimer serializefrom");
+            bs.GetString(m_message);
+            m_mission_time = bs.GetFloat();
         }
 
         EVENT_IMPL(MissionObjectiveTimer)
