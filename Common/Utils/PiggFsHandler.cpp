@@ -5,8 +5,7 @@
 
 #include "PiggFsHandler.h"
 #include "Common/Containers/Vector.h"
-#include "Utils/IServiceLocator.h"
-#include "Common/Containers/Vector.h"
+#include "Common/Utils/IServiceLocator.h"
 #include "Common/Containers/Map.h"
 
 #include "EASTL/memory.h"
@@ -40,7 +39,7 @@ struct PiggInternalHeader {
 
 struct PiggDataTable {
     int datapool_flag;
-    eastl::vector<eastl::string> data_parts;
+    eastl::vector<String> data_parts;
 };
 
 
@@ -60,8 +59,8 @@ public:
     bool exists(StringView path) override;
     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
     bool mkpath(StringView path) override;
-    eastl::string getFilesystemType() const override { return "PiggFilesystem"; }
-    eastl::string getSourcePath() const override { return sourcePath_; }
+    String getFilesystemType() const override { return "PiggFilesystem"; }
+    String getSourcePath() const override { return sourcePath_; }
 
 private:
     SEGS::FileHandle archive_file_;
@@ -69,7 +68,7 @@ private:
     eastl::vector<PiggInternalHeader> file_headers_;
     PiggDataTable strings_table_;
     PiggDataTable headers_table_;
-    eastl::map<eastl::string, size_t> file_index_;
+    eastl::map<String, size_t> file_index_;
     bool is_loaded_ = false;
 
     bool loadPiggArchive();
@@ -113,7 +112,7 @@ private:
 
 };
 
-// Helper function to read POD structures from QIODevice
+// Helper function to read POD structures from file
 template<class POD>
 bool readPOD(IFile *src, POD& tgt) {
     return sizeof(POD) == src->read((char*)&tgt, sizeof(POD));
@@ -130,7 +129,11 @@ PiggFile::PiggFile(IFile * archive_file, const PiggInternalHeader& header,
       , is_compressed_(is_compressed)
       , data_offset_(data_offset)
 {
-    extractFileData();
+    if (!extractFileData())
+    {
+        is_open_ = false;
+        return;
+    }
     is_open_ = archive_file->isOpen();
 }
 
@@ -295,7 +298,7 @@ bool PiggFilesystem::loadPiggArchive() {
     assert(root_fs);
     archive_file_ = root_fs->openFile(sourcePath_);
 
-    if (!archive_file_->isOpen()) {
+    if (!archive_file_ || !archive_file_->isOpen()) {
         return false;
     }
 
@@ -390,7 +393,7 @@ bool PiggFilesystem::loadPiggArchive() {
 
 bool PiggFilesystem::loadDataTable(SEGS::FileHandle& src, PiggDataTable& target) {
     int table_sizes;
-    int num_entries;
+    int remaining_bytes;
 
     if (!readPOD(src.get(), target.datapool_flag)) {
         return false;
@@ -400,23 +403,22 @@ bool PiggFilesystem::loadDataTable(SEGS::FileHandle& src, PiggDataTable& target)
         return false;
     }
 
-    if (!readPOD(src.get(), num_entries)) {
+    if (!readPOD(src.get(), remaining_bytes)) {
         return false;
     }
 
-           // Prevent excessive memory allocation
-    if (num_entries < 0 || num_entries > 10000000) {
+    if (remaining_bytes < 0 || remaining_bytes > 512 * 1024 * 1024) {
         return false;
     }
 
-    while (num_entries > 0) {
+    while (remaining_bytes > 0) {
         uint32_t entrysize;
         if (!readPOD(src.get(), entrysize)) {
             return false;
         }
 
-               // Prevent excessive memory allocation for individual entries
-        if (entrysize > 100000) {
+        // The entry (plus its already-consumed 4-byte size prefix) must fit in the remaining table bytes; the overrun/OOM guard.
+        if (entrysize + 4 > static_cast<uint32_t>(remaining_bytes)) {
             return false;
         }
 
@@ -424,13 +426,13 @@ bool PiggFilesystem::loadDataTable(SEGS::FileHandle& src, PiggDataTable& target)
             Vector<uint8_t> data;
             data.resize(entrysize);
             auto read_size= src->read(data.data(),entrysize);
-            if (read_size != static_cast<int>(entrysize)) {
+            if (read_size != static_cast<int64_t>(entrysize)) {
                 return false;
             }
             target.data_parts.emplace_back((char *)data.data());
         }
 
-        num_entries -= static_cast<int>(entrysize + 4);
+        remaining_bytes -= static_cast<int>(entrysize + 4);
     }
 
     return true;
@@ -564,28 +566,23 @@ void PiggFilesystem::visitEntries(StringView path, eastl::function<VisitResult(S
     eastl::set<String> subdirectories;
     eastl::set<String> files;
 
-    for (const auto& entry : file_index_) {
-        const String& filename = entry.first;
+    for (auto it = file_index_.lower_bound(normalized_path); it != file_index_.end(); ++it) {
+        const String& filename = it->first;
 
-        if (filename.find(normalized_path) == 0) {
-            // Extract the part after the path
+        if (!StringView(filename).starts_with(StringView(normalized_path)))
+            break;
             String relative = filename.substr(normalized_path.length());
 
-                   // Skip empty relative paths
             if (relative.empty()) {
                 continue;
             }
 
-                   // Check if this is a file or a subdirectory
             size_t slash_pos = relative.find('/');
             if (slash_pos != String::npos) {
-                // This is a subdirectory, extract just the directory name
                 String dir_name = relative.substr(0, slash_pos);
                 subdirectories.insert(dir_name);
             } else {
-                // This is a file
                 files.insert(relative);
-            }
         }
     }
 

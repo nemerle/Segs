@@ -1,14 +1,12 @@
 #pragma once
 
+#include "Common/Containers/String.h"
 #include "Common/Containers/StringView.h"
 #include "Common/Utils/IFile.h"
 #include <EASTL/functional.h>
 #include <EASTL/shared_ptr.h>
-#include <magic_enum/magic_enum.hpp>
 #include <stdint.h>
 
-// View of a string (to avoid unnecessary copying)
-using StringView  = eastl::string_view;
 
 
 namespace SEGS {
@@ -39,9 +37,9 @@ public:
     virtual void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool /*is_dir*/)> visitor) = 0;
     virtual bool mkpath(StringView path) = 0;
     // For debugging/introspection
-    virtual eastl::string getFilesystemType() const = 0;
+    virtual String getFilesystemType() const = 0;
     // Returns the source path of the filesystem, e.g. where the files are located (root directory)
-    virtual eastl::string getSourcePath() const = 0;
+    virtual String getSourcePath() const = 0;
 
     // Simple manual counting
     virtual bool hasOpenFiles() const = 0;

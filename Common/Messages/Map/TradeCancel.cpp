@@ -26,6 +26,9 @@ void TradeCancel::serializeto(BitStream& bs) const {
     bs.StoreString(m_msg);
 }
 
+void TradeCancel::serializefrom(BitStream& bs) {
+    bs.GetString(m_msg);
+}
 
 } // namespace SEGSEvents
 //! @}

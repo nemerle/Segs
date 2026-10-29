@@ -27,6 +27,9 @@ void TradeSuccess::serializeto(BitStream& bs) const {
     bs.StoreString(m_msg);
 }
 
+void TradeSuccess::serializefrom(BitStream& bs) {
+    bs.GetString(m_msg);
+}
 
 } // namespace SEGSEvents
 //! @}

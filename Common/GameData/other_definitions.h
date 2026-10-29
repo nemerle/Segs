@@ -29,9 +29,11 @@ struct Parse_PI_Schedule
 {
     Vector<uint32_t> m_FreeBoostSlotsOnPower;
     Vector<uint32_t> m_PoolPowerSet;
+    Vector<uint32_t> m_EpicPowerSet;
     Vector<uint32_t> m_Power;
     Vector<uint32_t> m_AssignableBoost;
     Vector<uint32_t> m_InspirationCol;
     Vector<uint32_t> m_InspirationRow;
     Vector<uint32_t> m_BoostSlot;
 };
+constexpr uint32_t kBaseEnhanceInventorySlots = 10;

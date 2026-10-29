@@ -28,6 +28,11 @@ Deque<EventProcessor *> HandlerLocator::m_map_servers;
 Deque<Deque<EventProcessor *>> HandlerLocator::m_map_instances;
 
 MessageBus * HandlerLocator::m_message_bus=nullptr;
+std::shared_mutex &HandlerLocator::registry_lock()
+{
+    static std::shared_mutex lock;
+    return lock;
+}
 void shutDownAllActiveHandlers()
 {
     for(EventProcessor *game_db_handler : HandlerLocator::allGameDBHandlers())

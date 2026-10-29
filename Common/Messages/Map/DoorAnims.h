@@ -17,9 +17,9 @@ namespace SEGSEvents
     {
     public:
         // [[ev_def:field]]
-        glm::vec3 m_entry_pos;
+        glm::vec3 m_entry_pos = glm::vec3(0.0f);
         // [[ev_def:field]]
-        glm::vec3 m_target_pos;
+        glm::vec3 m_target_pos = glm::vec3(0.0f);
         // [[ev_def:field]]
         bool m_has_anims;
         // [[ev_def:field]]

@@ -83,7 +83,7 @@ public:
         bool 				isNamePending(const String &name);
 
 private:
-static  std::atomic<uint32_t> m_team_idx_counter; // teams are created from every map thread
+static  std::atomic<uint32_t> m_team_idx_counter;
 };
 
 

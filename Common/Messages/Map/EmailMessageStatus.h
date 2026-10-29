@@ -30,9 +30,16 @@ public:
         if (!m_status)
             bs.StoreString(m_recipient);
     }
+    void serializefrom(BitStream &bs) override
+    {
+        m_status = bs.GetPackedBits(1);
+        m_recipient.clear();
+        if (!m_status)
+            bs.GetString(m_recipient);
+    }
 
     // [[ev_def:field]]
-    int m_status;
+    int m_status = 0;
     // [[ev_def:field]]
     String m_recipient;
 

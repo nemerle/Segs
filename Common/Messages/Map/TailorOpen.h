@@ -25,6 +25,9 @@ public:
     {
         bs.StorePackedBits(1,type()-evFirstServerToClient); // packet 88
     }
+    void    serializefrom(BitStream &) override
+    {
+    }
 
     EVENT_IMPL(TailorOpen)
 };

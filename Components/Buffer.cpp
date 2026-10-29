@@ -203,8 +203,8 @@ int GrowingBuffer::resize(uint32_t accommodate_size)
         if(nullptr==tmp)
             return -2;
         assert(m_write_off<=m_size); // just to be sure
-        if(m_write_off>1)
-            memcpy(tmp,m_buf,m_size); // copying old contents, up to actual m_write_off
+        if(m_buf && m_size)
+            memcpy(tmp,m_buf,m_size);
         memset(&tmp[m_size],0,new_size+m_safe_area-m_size);
         delete [] m_buf;
         m_buf = tmp;

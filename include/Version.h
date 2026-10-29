@@ -9,12 +9,9 @@
 
 #include <cstdint>
 
-// We now own both ends of the wire (only this UE5 client matters), so that gate becomes OUR version
-// field: the client uses this into UpdateServer::m_build_date and the GameServer
-// compares against the same constant.
 static constexpr uint32_t SEGS_CLIENT_VERSION = 20261012;
 #ifndef SEGS_VERSION
-#define SEGS_VERSION "0.7.0" // set in cmake, but defined here if not available
+#define SEGS_VERSION "0.7.0"
 #endif
 #ifndef SEGS_BRANCH
 #define SEGS_BRANCH "unknown"
@@ -32,7 +29,6 @@ static constexpr int s_config_version = 2;
 static constexpr int s_auth_db_version = 1;
 static constexpr int s_game_db_version = 10;
 
-// Contains version information for the various server modules
 class VersionInfo
 {
 public:

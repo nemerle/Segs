@@ -61,8 +61,24 @@ public:
         }
     }
 
+    void serializefrom(BitStream &bs) override
+    {
+        m_emails.clear();
+        m_fullupdate = bs.GetPackedBits(1) != 0;
+        const uint32_t count = bs.GetPackedBits(1);
+        for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+        {
+            EmailHeader hdr;
+            (void)bs.GetBits(1); // "valid" flag
+            hdr.id = uint32_t(bs.GetBits(32));
+            bs.GetString(hdr.sender);
+            bs.GetString(hdr.subject);
+            hdr.timestamp = uint32_t(bs.GetBits(32));
+            m_emails.push_back(eastl::move(hdr));
+        }
+    }
     // [[ev_def:field]]
-    bool    m_fullupdate; //Forces a refresh of the email window
+    bool    m_fullupdate = false; //Forces a refresh of the email window
     // [[ev_def:field]]
     Vector<EmailHeader> m_emails;
 

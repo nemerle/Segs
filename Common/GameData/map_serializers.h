@@ -15,5 +15,6 @@ class BinStore;
 typedef Vector<struct Map_Data> AllMaps_Data;
 
 static constexpr uint32_t zones_i0_requiredCrc=0x520EE128;
+static constexpr uint32_t zones_i24_requiredCrc=0x4837CAB2;
 bool loadFrom(BinStore *s,AllMaps_Data &target);
 void saveTo(const AllMaps_Data &target,const String &baseName,bool text_format=false);

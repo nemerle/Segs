@@ -28,6 +28,10 @@ void TradeOffer::serializeto(BitStream& bs) const {
     bs.StoreString(m_name);
 }
 
+void TradeOffer::serializefrom(BitStream& bs) {
+    m_db_id = uint32_t(bs.GetBits(32));
+    bs.GetString(m_name);
+}
 
 } // namespace SEGSEvents
 //! @}

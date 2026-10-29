@@ -16,6 +16,7 @@ struct GroupLoc_Data
     String name;
     glm::vec3 pos {0,0,0};
     glm::vec3 rot {0,0,0};
+    int flags = 0;
 };
 
 struct GroupProperty_Data
@@ -50,8 +51,8 @@ struct DefLod_Data
 {
     float Far;
     float FarFade;
-    float Near;
-    float NearFade;
+    float Near=0.0f;
+    float NearFade=0.0f;
     float Scale;
 };
 
@@ -88,6 +89,10 @@ struct SceneGraphNode_Data
     {
         Ungroupable = 1,
         FadeNode = 2,
+        FadeNode2   = 4,
+        NoFogClip   = 8,
+        NoColl      = 16,
+        NoOcclusion = 32,
     };
     String name;
     String p_Obj;

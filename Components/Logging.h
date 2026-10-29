@@ -191,8 +191,10 @@ struct LoggingCategory
         auto sp = Span<LoggingCategory *>(m_registered_categories);
         assert(sp.end()==eastl::find_if(sp,[&](const LoggingCategory *lc)->bool { return 0==strcmp(lc->name(),name);}));
         m_registered_categories.push_back(this);
+        applyStoredRules(*this);
     }
     static void setFilterRules(StringView rules);
+    static void applyStoredRules(LoggingCategory &cat);
 };
 
 class LogChannels {

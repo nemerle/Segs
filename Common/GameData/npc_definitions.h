@@ -20,6 +20,7 @@ struct Parse_CostumePart
     String m_Texture1;
     String m_Texture2;
     String m_CP_Geometry;
+    String m_Fx;
 };
 
 enum class BodyType : int

@@ -29,6 +29,10 @@ namespace SEGSEvents
             bs.StorePackedBits(1, type() - evFirstServerToClient); // pkt 18
             bs.StorePackedBits(1, static_cast<uint8_t>(m_new_state));
         }
+        void serializefrom(BitStream &bs) override
+        {
+            m_new_state = static_cast<ClientStates>(bs.GetPackedBits(1));
+        }
 
         EVENT_IMPL(SetClientState)
     };

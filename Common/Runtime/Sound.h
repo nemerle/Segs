@@ -25,7 +25,7 @@ struct SoundInfo
     float radius=0;
     float ramp_feet=0;
     uint16_t flags;
-    uint8_t vol=0; // sound source volume 0-255
+    uint8_t vol=0;
 };
 using HSound = SingularStoreHandleT<20,12,SoundInfo>;
 struct SoundStorage : public HandleBasedStorage<SoundInfo>

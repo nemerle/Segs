@@ -65,6 +65,12 @@ static void serializeInspiration(BitStream& bs, const CharacterInspiration& insp
     serializePowerInfo(bs, insp.m_insp_info);
 }
 
+static void deserializePowerInfo(BitStream& bs, PowerPool_Info& info)
+{
+    info.m_pcat_idx = bs.GetPackedBits(3);
+    info.m_pset_idx = bs.GetPackedBits(3);
+    info.m_pow_idx = bs.GetPackedBits(3);
+}
 } // anonymous namespace
 
 
@@ -106,6 +112,45 @@ void TradeUpdate::serializeto(BitStream& bs) const {
     for (const CharacterInspiration& insp : m_inspirations)
     {
        serializeInspiration(bs, insp);
+    }
+}
+
+void TradeUpdate::serializefrom(BitStream& bs)
+{
+    TradeInfo& info_self = m_trade_self.m_info;
+    TradeInfo& info_other = m_trade_other.m_info;
+
+    m_trade_other.m_db_id = bs.GetPackedBits(1);
+
+    info_self.m_accepted = bs.GetPackedBits(1) != 0;
+    info_other.m_accepted = bs.GetPackedBits(1) != 0;
+
+    info_self.m_influence = bs.GetPackedBits(1);
+    info_other.m_influence = bs.GetPackedBits(1);
+
+    const uint32_t enh_count = bs.GetPackedBits(1);
+    const uint32_t insp_count = bs.GetPackedBits(1);
+    info_other.m_enhancements.clear();
+    info_other.m_inspirations.clear();
+    m_enhancements.clear();
+    m_inspirations.clear();
+
+    for (uint32_t i = 0; i < enh_count && bs.GetReadableBits() > 0; ++i)
+    {
+        CharacterEnhancement enh;
+        deserializePowerInfo(bs, enh.m_enhance_info);
+        enh.m_level = bs.GetPackedBits(5);
+        enh.m_num_combines = bs.GetPackedBits(2);
+        m_enhancements.push_back(eastl::move(enh));
+        info_other.m_enhancements.push_back(i);
+    }
+
+    for (uint32_t i = 0; i < insp_count && bs.GetReadableBits() > 0; ++i)
+    {
+        CharacterInspiration insp;
+        deserializePowerInfo(bs, insp.m_insp_info);
+        m_inspirations.push_back(eastl::move(insp));
+        info_other.m_inspirations.push_back(TradeInspiration());
     }
 }
 

@@ -26,6 +26,9 @@ void TradeInit::serializeto(BitStream& bs) const {
     bs.StorePackedBits(1, m_db_id);
 }
 
+void TradeInit::serializefrom(BitStream& bs) {
+    m_db_id = bs.GetPackedBits(1);
+}
 
 } // namespace SEGSEvents
 //! @}

@@ -113,7 +113,7 @@ struct SequencerInstanceStorage : public HandleBasedStorage<SequencerInstance>
     HashSet<SequencerData *> m_active_instances;
     static SequencerInstanceStorage &   instance()
     {
-        static SequencerInstanceStorage s_instance;
+        static thread_local SequencerInstanceStorage s_instance;
         return s_instance;
     }
 };

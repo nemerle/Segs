@@ -21,6 +21,7 @@ public:
     TradeInit();
     explicit TradeInit(uint32_t db_id);
     void serializeto(BitStream& bs) const override;
+    void serializefrom(BitStream& bs) override;
 
     // [[ev_def:field]]
     uint32_t m_db_id = 0;

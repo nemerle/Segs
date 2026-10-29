@@ -38,6 +38,19 @@ namespace SEGSEvents
                 bs.StorePackedBits(8, store_item.m_item_count);
             }
         }
+        void serializefrom(BitStream &bs) override
+        {
+            m_store.m_store_Items.clear();
+            m_store.m_npc_idx = bs.GetPackedBits(12);
+            const uint32_t count = bs.GetPackedBits(2);
+            for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+            {
+                StoreItem item;
+                bs.GetString(item.m_store_name);
+                item.m_item_count = bs.GetPackedBits(8);
+                m_store.m_store_Items.push_back(eastl::move(item));
+            }
+        }
         EVENT_IMPL(StoreOpen)
     };
 

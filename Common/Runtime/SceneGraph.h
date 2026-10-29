@@ -28,16 +28,16 @@ struct LoadingContext;
 struct Model;
 struct SceneNodeChildTransform
 {
-    struct SceneNode *node;
-    glm::mat3x3       m_matrix2;
-    glm::vec3         m_pyr;
-    glm::vec3         m_translation;
+    struct SceneNode *node = nullptr;
+    glm::mat3x3 m_matrix2 = glm::mat3x3(1.0f);
+    glm::vec3 m_pyr = glm::vec3(0.0f);
+    glm::vec3 m_translation = glm::vec3(0.0f);
 };
 struct LightProperties
 {
-    glm::vec4 color;
-    float     range;
-    int       is_negative;
+    glm::vec4 color = glm::vec4(0.0f);
+    float range = 0.0f;
+    int is_negative = 0;
 };
 using HLightProperties = eastl::unique_ptr<LightProperties>;
 

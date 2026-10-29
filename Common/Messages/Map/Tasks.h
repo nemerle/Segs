@@ -45,12 +45,12 @@ namespace SEGSEvents
                     bs.StorePackedBits(1, loop_count_2); // task index in array
 
                     //TaskStatusReceive
-                    bs.StoreString(task.m_description.c_str());
-                    bs.StoreString(task.m_owner.c_str());
+                    bs.StoreString(task.m_description);
+                    bs.StoreString(task.m_owner);
                     bs.StorePackedBits(1,task.m_db_id);
                     bs.StorePackedBits(1, task.m_unknown_1);
                     bs.StorePackedBits(1, task.m_unknown_2);
-                    bs.StoreString(task.m_state.c_str());
+                    bs.StoreString(task.m_state);
                     bs.StorePackedBits(1, task.m_finish_time);
                     bs.StoreBits(1, task.m_is_complete);
                     bs.StoreBits(1, task.m_in_progress_maybe);
@@ -63,8 +63,8 @@ namespace SEGSEvents
                         bs.StoreFloat(task.m_location.location.x);
                         bs.StoreFloat(task.m_location.location.y);
                         bs.StoreFloat(task.m_location.location.z);
-                        bs.StoreString(task.m_location.m_location_map_name.c_str());
-                        bs.StoreString(task.m_location.m_location_name.c_str());
+                        bs.StoreString(task.m_location.m_location_map_name);
+                        bs.StoreString(task.m_location.m_location_name);
                     }
 
                      sCDebug(logTasks) << "taskEntry Task: " << loop_count_2 << " Entered ";
@@ -185,7 +185,7 @@ namespace SEGSEvents
             bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 75
             bs.StorePackedBits(1, m_db_id);
             bs.StorePackedBits(1, m_task_idx);
-            bs.StoreString(m_task_detail.c_str());
+            bs.StoreString(m_task_detail);
         }
 
         void serializefrom(BitStream &bs) override
@@ -242,7 +242,7 @@ namespace SEGSEvents
         void serializeto(BitStream &bs) const final // packet 73
         {
             bs.StorePackedBits(1, type()-evFirstServerToClient);
-            bs.StoreString(m_message.c_str());
+            bs.StoreString(m_message);
             bs.StoreFloat(m_mission_time);
         }
 

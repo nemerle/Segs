@@ -24,7 +24,7 @@ class DoorMessage final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    DoorMessageStatus m_delay_status;
+    DoorMessageStatus m_delay_status = WAIT;
     // [[ev_def:field]]
     String m_msg;
 
@@ -39,6 +39,10 @@ public:
 
         bs.StorePackedBits(1, uint32_t(m_delay_status));
         bs.StoreString(m_msg);
+    }
+    void    serializefrom(BitStream &bs) override {
+        m_delay_status = DoorMessageStatus(bs.GetPackedBits(1));
+        bs.GetString(m_msg);
     }
     EVENT_IMPL(DoorMessage)
 };

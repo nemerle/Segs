@@ -23,8 +23,12 @@ public:
     {}
 
     // SerializableEvent interface
-    void serializefrom(BitStream &/*src*/) override
-    {}
+    void serializefrom(BitStream &bs) override
+    {
+        m_loc.x = bs.GetFloat();
+        m_loc.y = bs.GetFloat();
+        m_loc.z = bs.GetFloat();
+    }
     void serializeto(BitStream &bs) const override
     {
         bs.StorePackedBits(1, type()-evFirstServerToClient); // pkt 55
@@ -34,9 +38,8 @@ public:
     }
     EVENT_IMPL(FaceLocation)
 
-protected:
     // [[ev_def:field]]
-    glm::vec3 m_loc;
+    glm::vec3 m_loc = glm::vec3(0.0f);
 };
 
 } //end of SEGSEvents namespace

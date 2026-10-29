@@ -28,7 +28,7 @@ namespace SEGSEvents
         void serializeto(BitStream &bs) const override
         {
             bs.StorePackedBits(1, type()-MapEventTypes::evFirstServerToClient); // 76
-            bs.StoreString(m_content.c_str());
+            bs.StoreString(m_content);
         }
         void serializefrom(BitStream &bs) override
         {

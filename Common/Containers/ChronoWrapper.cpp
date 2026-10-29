@@ -17,8 +17,8 @@ ChronoWrapper ChronoWrapper::now() {
     return res;
 }
 
-std::strong_ordering operator<=>(const ChronoWrapper &lhs, const ChronoWrapper &rhs) {
-    return (const ChronoData &)lhs.data <=> (const ChronoData &)rhs.data;
+bool operator<(const ChronoWrapper &lhs, const ChronoWrapper &rhs) {
+    return (const ChronoData &)lhs.data < (const ChronoData &)rhs.data;
 }
 
 
@@ -45,8 +45,8 @@ SteadyChronoWrapper SteadyChronoWrapper::now() {
     return res;
 }
 
-std::strong_ordering operator<=>(const SteadyChronoWrapper &lhs, const SteadyChronoWrapper &rhs) {
-    return (const SteadyChronoData &)lhs.data <=> (const SteadyChronoData &)rhs.data;
+bool operator<(const SteadyChronoWrapper &lhs, const SteadyChronoWrapper &rhs) {
+    return (const SteadyChronoData &)lhs.data < (const SteadyChronoData &)rhs.data;
 }
 
 

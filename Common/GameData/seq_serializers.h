@@ -13,6 +13,7 @@
 class BinStore;
 
 constexpr const static uint32_t seqencerlist_i0_requiredCrc = 0x117184DE;
+constexpr const static uint32_t seqencerlist_i24_requiredCrc = 0x9DFB79DF;
 bool loadFrom(BinStore *s, struct SequencerList &target);
 void saveTo(const SequencerList &target, const String &baseName, bool text_format=false);
 

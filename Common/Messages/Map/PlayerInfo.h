@@ -29,7 +29,7 @@ public:
     {
         sCDebug(logMapEvents) << "Info Response: " << m_info_text;
         bs.StorePackedBits(1, 69);
-        bs.StoreString(m_info_text.c_str());
+        bs.StoreString(m_info_text);
     }
     void serializefrom(BitStream &bs) override
     {

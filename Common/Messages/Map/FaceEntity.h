@@ -22,17 +22,18 @@ public:
     {}
 
     // SerializableEvent interface
-    void serializefrom(BitStream &/*src*/) override
-    {}
+    void serializefrom(BitStream &bs) override
+    {
+        m_target = bs.GetPackedBits(3);
+    }
     void serializeto(BitStream &bs) const override {
         bs.StorePackedBits(1,type()-evFirstServerToClient);
         bs.StorePackedBits(3, m_target);
     }
     EVENT_IMPL(FaceEntity)
 
-protected:
     //  [[ev_def:field]]
-    uint32_t m_target;
+    uint32_t m_target = 0;
 };
 
 } //end of SEGSEvents namespace

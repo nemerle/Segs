@@ -161,7 +161,7 @@ public:
     void serializeto(BitStream &bs) const override
     {
         bs.StorePackedBits(1,0); // opcode - Warning -> exactly the same as Connect
-        bs.StoreString(contents.c_str());
+        bs.StoreString(contents);
     }
     void serializefrom(BitStream &bs) override
     {

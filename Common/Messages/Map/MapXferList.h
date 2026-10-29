@@ -44,7 +44,7 @@ public:
                             bs.StoreFloat(m_location.y);
                             bs.StoreFloat(m_location.z);
                         }
-                        bs.StoreString(m_name.c_str());
+                        bs.StoreString(m_name);
                     }
         void        serializefrom(BitStream &bs) override
                     {

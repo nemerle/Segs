@@ -30,6 +30,10 @@ public:
         bs.StorePackedBits(1,type()-evFirstServerToClient); // pkt 48
         bs.StorePackedBits(32, m_time_since_jan_1_2000);
     }
+    void    serializefrom(BitStream &bs) override
+    {
+        m_time_since_jan_1_2000 = int32_t(bs.GetPackedBits(32));
+    }
 
     EVENT_IMPL(TimeUpdate)
 };

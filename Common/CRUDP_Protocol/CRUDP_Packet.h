@@ -38,7 +38,6 @@ public:
     void StoreBits(uint32_t nBits, uint32_t dataBits);
     void StoreBitArray(uint8_t *array, uint32_t nBits);
     void StorePackedBits(uint32_t nBits, uint32_t dataBits);
-    void StoreString(const char *str);
     void CompressAndStoreString(const char *str);
 
     //  Sets the packet to the "finalized" state.

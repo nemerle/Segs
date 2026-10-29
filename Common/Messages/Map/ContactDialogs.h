@@ -44,6 +44,19 @@ public:
                     }
                 }
 
+                void serializefrom(BitStream &bs) override
+                {
+                    bs.GetString(m_msgbody);
+                    m_active_contacts.clear();
+                    const uint32_t count = bs.GetPackedBits(1);
+                    for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+                    {
+                        ContactEntry contact;
+                        contact.m_link = bs.GetPackedBits(1);
+                        bs.GetString(contact.m_response_text);
+                        m_active_contacts.push_back(eastl::move(contact));
+                    }
+                }
     EVENT_IMPL(ContactDialog)
 };
 

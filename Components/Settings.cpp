@@ -309,8 +309,8 @@ void Settings::createSettingsFile(const String &new_file_path)
     String tpl_file(Settings::getSettingsTplPath());
     String new_file(new_file_path);
 
-    SEGS::IFilesystem *fs = SEGS::getServiceLocator()->getFS();
-    SEGS::FileHandle tpl_file_ptr = fs->openFile(tpl_file, SEGS::IFile::OpenMode::ReadOnly);
+    auto *fs = SEGS::getServiceLocator()->getFS();
+    auto tpl_file_ptr = fs->openFile(tpl_file, SEGS::IFile::OpenMode::ReadOnly);
 
     if(!tpl_file_ptr)
     {
@@ -319,7 +319,7 @@ void Settings::createSettingsFile(const String &new_file_path)
     }
     auto content=tpl_file_ptr->readAll();
 
-    SEGS::FileHandle new_file_ptr = fs->openFile(new_file, SEGS::IFile::OpenMode::WriteOnly);
+    auto new_file_ptr = fs->openFile(new_file, SEGS::IFile::OpenMode::WriteOnly);
     // QSettings setValue() methods delete all file comments, it's better to
     // simply copy the template over to our destination directory.
     // Unfortunately QFile::copy() has some sort of bug and doesn't work

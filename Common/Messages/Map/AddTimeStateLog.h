@@ -29,6 +29,10 @@ public:
         bs.StorePackedBits(1,type()-evFirstServerToClient); // pkt 60
         bs.StorePackedBits(1, m_time_log);
     }
+    void    serializefrom(BitStream &bs) override
+    {
+        m_time_log = bs.GetPackedBits(1);
+    }
 
     EVENT_IMPL(AddTimeStateLog)
 };

@@ -23,6 +23,7 @@ public:
     TradeUpdate();
     TradeUpdate(const TradeMember& trade_self, const TradeMember& trade_other, const Entity& entity_other);
     void serializeto(BitStream& bs) const override;
+    void serializefrom(BitStream& bs) override;
 
     // [[ev_def:field]]
     TradeMember m_trade_self;

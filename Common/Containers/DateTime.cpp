@@ -31,12 +31,12 @@ DateTime DateTime::fromMSecsSinceEpoch(int64_t ms_since_epoch)
 {
     // Convert milliseconds into a duration
     std::chrono::milliseconds duration(ms_since_epoch);
-    return DateTime(fromChronoType(std::chrono::system_clock::time_point(duration)));
+    return {fromChronoType(std::chrono::system_clock::time_point(duration))};
 }
 
 DateTime DateTime::now()
 {
-    return DateTime(fromChronoType(std::chrono::system_clock::now()));
+    return {fromChronoType(std::chrono::system_clock::now())};
 }
 
 int64_t DateTime::toMSecsSinceEpoch() const

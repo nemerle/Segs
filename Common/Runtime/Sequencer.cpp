@@ -11,6 +11,8 @@
 #include "Common/GameData/seq_definitions.h"
 #include "Common/GameData/seq_serializers.h"
 #include "Common/Containers/Set.h"
+#include <EASTL/sort.h>
+#include <EASTL/algorithm.h>
 
 #include "Utils/string_utils.h"
 #include "magic_enum/magic_enum.hpp"

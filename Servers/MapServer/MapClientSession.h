@@ -37,6 +37,7 @@ struct MapClientSession : public ClientSession
         uint32_t                m_client_id    = 0;
         uint8_t                 m_access_level = 0;
         uint16_t                m_requested_slot_idx=0;
+        uint8_t                 m_create_location = 0;
         uint16_t                m_max_slots;
         mNetCommands            m_shortcuts;
         vStoredCommands         m_contents;

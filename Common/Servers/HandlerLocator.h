@@ -9,6 +9,8 @@
 #include "Containers/Deque.h"
 #include "Containers/HashMap.h"
 #include <stdint.h>
+#include <mutex>
+#include <shared_mutex>
 
 class EventProcessor;
 class MessageBus;
@@ -18,6 +20,10 @@ class MessageBus;
 ///
 class HandlerLocator
 {
+    // Reads share the lock, registrations take it alone.
+    static std::shared_mutex &registry_lock();
+    using Read  = std::shared_lock<std::shared_mutex>;
+    using Write = std::unique_lock<std::shared_mutex>;
     static MessageBus *m_message_bus;
     static EventProcessor *m_db_sync_handler;
     static EventProcessor *m_auth_handler;
@@ -92,6 +98,7 @@ public:
 
     static EventProcessor *getMapInstance_Handler(uint8_t id,uint8_t subserver_id)
     {
+        Read lock(registry_lock());
         if(id>=m_map_instances.size())
             return nullptr;
         if(subserver_id>=m_map_instances[id].size())
@@ -100,6 +107,7 @@ public:
     }
     static void setMapInstance_Handler(uint8_t id,uint8_t subserver_id,EventProcessor *h)
     {
+        Write lock(registry_lock());
         if(id>=m_map_instances.size())
             m_map_instances.resize(id+1);
         if(subserver_id>=m_map_instances[id].size())

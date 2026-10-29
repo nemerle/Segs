@@ -17,9 +17,9 @@ class TrayAdd final : public GameCommandEvent
 {
 public:
                         // [[ev_def:field]]
-    uint32_t            m_pset_idx;
+    uint32_t            m_pset_idx = 0;
                         // [[ev_def:field]]
-    uint32_t            m_pow_idx;
+    uint32_t            m_pow_idx = 0;
     explicit            TrayAdd() : GameCommandEvent(evTrayAdd) {}
                         TrayAdd(uint32_t pset_idx, uint32_t pow_idx) : GameCommandEvent(evTrayAdd),
                             m_pset_idx(pset_idx),
@@ -32,6 +32,10 @@ public:
 
                             bs.StorePackedBits(1, m_pset_idx);
                             bs.StorePackedBits(1, m_pow_idx);
+                        }
+    void                serializefrom(BitStream &bs) override {
+                            m_pset_idx = bs.GetPackedBits(1);
+                            m_pow_idx = bs.GetPackedBits(1);
                         }
                         EVENT_IMPL(TrayAdd)
 };

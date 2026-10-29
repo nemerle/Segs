@@ -3,12 +3,12 @@ set(SegsUtils_SRC
     string_utils.h
     ServiceLocator.cpp
     IServiceLocator.h
-    IFilesystem.h
-    FilesystemHandler.cpp
-    FilesystemHandler.h
-    PiggFsHandler.cpp
-    PiggFsHandler.h
     IFile.h
+    IFilesystem.h
+    FilesystemHandler.h
+    FilesystemHandler.cpp
+    PiggFsHandler.h
+    PiggFsHandler.cpp
 )
 
 add_library(SegsUtils STATIC ${SegsUtils_SRC})

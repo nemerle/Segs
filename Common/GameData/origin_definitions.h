@@ -15,10 +15,11 @@ struct Parse_Origin
     String DisplayName;
     String DisplayHelp;
     String DisplayShortHelp;
-    int NumBonusPowerSets;
-    int NumBonusPowers;
-    int NumBonusBoostSlots;
-    int NumContacts;
-    float ContactBonusLength;
+    String Icon;
+    int NumBonusPowerSets    = 0;
+    int NumBonusPowers       = 0;
+    int NumBonusBoostSlots   = 0;
+    int NumContacts          = 0;
+    float ContactBonusLength = 0.0f;
 };
 using Parse_AllOrigins = Vector<Parse_Origin>;

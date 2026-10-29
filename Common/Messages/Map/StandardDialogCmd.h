@@ -31,6 +31,10 @@ public:
         bs.StorePackedBits(1, type()-evFirstServerToClient); // packet 14
         bs.StoreString(m_msg);
     }
+    void serializefrom(BitStream &bs) override
+    {
+        bs.GetString(m_msg);
+    }
     EVENT_IMPL(StandardDialogCmd)
 };
 

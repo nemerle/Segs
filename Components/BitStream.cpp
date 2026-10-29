@@ -56,6 +56,8 @@ BitStream::BitStream(const BitStream &bs) : GrowingBuffer(bs)
     m_read_bit_off  = bs.m_read_bit_off;
     m_write_bit_off = bs.m_write_bit_off;
     m_safe_area = 7;
+    if(m_write_bit_off != 0 && m_buf && bs.m_buf)
+        m_buf[m_write_off] = bs.m_buf[m_write_off];
 }
 /************************************************************************
 Function:     BitStream
@@ -86,6 +88,8 @@ BitStream &BitStream::operator =(const BitStream &bs)
     m_byteAligned    = bs.m_byteAligned;
     m_read_bit_off   = bs.m_read_bit_off;
     m_write_bit_off  = bs.m_write_bit_off;
+    if(m_write_bit_off != 0 && m_buf && bs.m_buf)
+        m_buf[m_write_off] = bs.m_buf[m_write_off];
     return *this;
 }
 /************************************************************************
@@ -210,49 +214,40 @@ void BitStream::StoreBitArray(const uint8_t *src, uint32_t nBits)
 
 /************************************************************************
 Function:    StoreString/StoreStringWithDebugInfo
-Description: Stores a NULL terminated C-style string in the bit stream
-             buffer.  It includes the NULL terminator.
+Description: Stores the string followed by a NULL terminator.
 ************************************************************************/
 
-void BitStream::StoreString(const char *str,int len)
+void BitStream::StoreString(StringView str)
 {
-    if(!str) // nothing to do ?
-        return;
-
-    if(len==-1)
-        len = int(strlen(str)+1);
-    //strlen(str) + 1, because we want to include
-    //the NULL byte.
+    const int len = int(str.size()) + 1;
     if(IsByteAligned())
     {
-        PutString(str);
+        PutBytes(reinterpret_cast<const uint8_t *>(str.data()), uint32_t(str.size()));
+        const uint8_t nul = 0;
+        PutBytes(&nul, 1);
         return;
     }
     uint32_t idx;
     uint8_t rshift = 8-m_write_bit_off;
-    if(len>GetAvailSize())
+    if(len+1>int(GetAvailSize()))
     {
-        if(resize(m_write_off+len)==-1) // space exhausted
+        if(resize(m_write_off+len+1)==-1)
         {
             setLastError(1);
             return;
         }
     }
-    for(idx = 0; idx < len; idx++)
+    for(idx = 0; idx < uint32_t(len); idx++)
     {
-        uint8_t upperbits   = ((uint16_t)((uint8_t *)str)[idx]) << m_write_bit_off;
-        uint8_t lowerbits   = ((uint8_t *)str)[idx] >> rshift;
+        uint8_t chr         = idx < str.size() ? uint8_t(str[idx]) : 0;
+        uint8_t upperbits   = uint8_t(chr << m_write_bit_off);
+        uint8_t lowerbits   = chr >> rshift;
         uint8_t mask = (0xFF>> rshift);
         m_buf[m_write_off + idx] = (m_buf[m_write_off + idx] & mask) | upperbits;
         m_buf[m_write_off + idx + 1] = lowerbits;
     }
 
     m_write_off  += idx;
-}
-
-void BitStream::StoreString(StringView str)
-{
-    StoreString(str.data(),(int)str.size());
 }
 
 /************************************************************************

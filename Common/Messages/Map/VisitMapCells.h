@@ -23,8 +23,16 @@ public:
         m_visible_map_cells(visible_map_cells)
     {}
 
-    void serializefrom(BitStream &) override
-    {}
+    void serializefrom(BitStream &bs) override
+    {
+        (void)bs.GetPackedBits(1);
+        m_is_opaque = bs.GetBits(1) != 0;
+        const uint32_t num_cells = bs.GetPackedBits(1);
+        m_visible_map_cells.clear();
+        bs.ByteAlign(true, false);
+        for(uint32_t i = 0; i < num_cells && bs.GetReadableBits() > 0; ++i)
+            m_visible_map_cells.push_back(bs.GetBits(1) != 0);
+    }
 
     void serializeto(BitStream &bs) const override
     {
@@ -42,7 +50,7 @@ public:
             int32_t byte_sum = 0;
             for (uint16_t j = 0; j < 8; j++)
             {
-                if (m_visible_map_cells[i * 8 + j])
+                if (i * 8u + j < num_cells && m_visible_map_cells[i * 8 + j])
                     byte_sum |= 1<<j;
             }
             cells_arr[i] =  byte_sum;
@@ -52,7 +60,6 @@ public:
     }
 
     EVENT_IMPL(VisitMapCells)
-protected:
     // [[ev_def:field]]
     bool                m_is_opaque = false;
     // [[ev_def:field]]

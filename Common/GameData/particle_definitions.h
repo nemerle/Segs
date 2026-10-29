@@ -38,6 +38,8 @@ struct ParticleSystemInfo
     Vector<glm::vec3>      m_EmissionStartJitter;
     float                  m_EmissionRadius;
     float                  m_EmissionHeight;
+    float                  m_EmissionLifeSpan = 0.0f;
+    float                  m_EmissionLifeJitter = 0.0f;
     int                    m_Spin;
     uint32_t               m_SpinJitter;
     uint32_t               m_OrientationJitter;
@@ -52,6 +54,8 @@ struct ParticleSystemInfo
     float                  m_SortBias;
     float                  m_Drag;
     float                  m_Stickiness;
+    glm::vec3              m_ColorOffset;
+    glm::vec3              m_ColorOffsetJitter;
     Vector<uint32_t>  m_Alpha;
     uint32_t               m_ColorChangeType;
     eastl::array<ColorFx, 5> m_StartColor; // colornavpoint

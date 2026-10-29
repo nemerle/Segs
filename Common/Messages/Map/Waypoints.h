@@ -19,9 +19,9 @@ class SendWaypoint final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    int m_point_idx; // maybe?
+    int m_point_idx = 0; // maybe?
     // [[ev_def:field]]
-    glm::vec3 m_location;
+    glm::vec3 m_location = glm::vec3(0.0f);
 
     explicit SendWaypoint() : GameCommandEvent(evSendWaypoint) {}
     SendWaypoint(int point_idx, glm::vec3 location) : GameCommandEvent(evSendWaypoint),
@@ -36,6 +36,13 @@ public:
         bs.StoreFloat(m_location.x);
         bs.StoreFloat(m_location.y);
         bs.StoreFloat(m_location.z);
+    }
+    void    serializefrom(BitStream &bs) override
+    {
+        m_point_idx = bs.GetPackedBits(1);
+        m_location.x = bs.GetFloat();
+        m_location.y = bs.GetFloat();
+        m_location.z = bs.GetFloat();
     }
 
     EVENT_IMPL(SendWaypoint)

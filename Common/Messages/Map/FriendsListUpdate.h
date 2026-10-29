@@ -55,6 +55,30 @@ public:
             bs.StoreString(m_list.m_friends[i].m_mapname);
         }
     }
+    void    serializefrom(BitStream &bs) override
+    {
+        m_list.m_friends.clear();
+        m_list.m_has_friends = false;
+        (void)bs.GetPackedBits(1);
+        const uint32_t count = bs.GetPackedBits(1);
+        for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+        {
+            Friend f{};
+            m_list.m_has_friends = bs.GetBits(1) != 0;
+            f.m_db_id = bs.GetPackedBits(1);
+            f.m_online_status = bs.GetBits(1) != 0;
+            bs.GetString(f.m_name);
+            f.m_class_idx = uint8_t(bs.GetPackedBits(1));
+            f.m_origin_idx = uint8_t(bs.GetPackedBits(1));
+            if(f.m_online_status)
+            {
+                f.m_map_idx = bs.GetPackedBits(1);
+                bs.GetString(f.m_mapname);
+            }
+            m_list.m_friends.push_back(eastl::move(f));
+        }
+        m_list.m_friends_count = uint32_t(m_list.m_friends.size());
+    }
     EVENT_IMPL(FriendsListUpdate)
 };
 

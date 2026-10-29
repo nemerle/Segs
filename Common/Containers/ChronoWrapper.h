@@ -12,7 +12,7 @@ struct ChronoWrapper
     // chrono object will be inplace constructed here
     uint8_t data[16];
 };
-std::strong_ordering operator<=>(const ChronoWrapper &lhs, const ChronoWrapper &rhs);
+bool operator<(const ChronoWrapper &lhs, const ChronoWrapper &rhs);
 
 template<typename T>
 T toChronoType(ChronoWrapper val);
@@ -29,7 +29,7 @@ struct SteadyChronoWrapper
            // chrono object will be inplace constructed here
     uint8_t data[16];
 };
-std::strong_ordering operator<=>(const SteadyChronoWrapper &lhs, const SteadyChronoWrapper &rhs);
+bool operator<(const SteadyChronoWrapper &lhs, const SteadyChronoWrapper &rhs);
 
 template<typename T>
 T toSteadyChronoType(SteadyChronoWrapper val);

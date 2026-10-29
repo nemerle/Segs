@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include <QMap>
+#include "Containers/Map.h"
+#include "Containers/String.h"
 
 enum FloatingInfoMsgKey : uint32_t
 {

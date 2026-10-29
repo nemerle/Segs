@@ -22,6 +22,7 @@ public:
     TradeOffer();
     TradeOffer(uint32_t db_id, const String& name);
     void serializeto(BitStream& bs) const override;
+    void serializefrom(BitStream& bs) override;
 
     // [[ev_def:field]]
     uint32_t m_db_id = 0;

@@ -6,11 +6,12 @@
  */
 
 #pragma once
+#include "Common/Containers/String.h"
+#include "Common/Containers/Vector.h"
 #include "Common/Runtime/AxisAlignedBox.h"
 #include "Common/Runtime/Handle.h"
 #include "Common/Runtime/HandleBasedStorage.h"
-#include "Common/Containers/Vector.h"
-#include "Common/Containers/String.h"
+#include "Common/Runtime/Texture.h"
 
 #include <EASTL/vector.h>
 #include <EASTL/string.h>
@@ -91,29 +92,29 @@ struct PackBlock
 
 struct BoneInfo
 {
-    int numbones;
-    int bone_ID[15];
+    int numbones = 0;
+    int bone_ID[15] = {};
 };
 
 struct Model
 {
-    AxisAlignedBoundingBox   box;
+    AxisAlignedBoundingBox   box{};
     String                   name;
-    uint32_t                 flags;
-    float                    visibility_radius;
-    uint32_t                 num_textures;
+    uint32_t                 flags = 0;
+    float                    visibility_radius = 0.0f;
+    uint32_t                 num_textures = 0;
     PackBlock                packed_data;
     Vector<TextureBind>      texture_bind_info;
     ptrdiff_t                boneinfo_offset = 0;
     BoneInfo *               bone_info_data = nullptr;
-    GeoSet *                 geoset;
+    GeoSet *                 geoset = nullptr;
     ModelModifiers *         trck_node = nullptr;
-    glm::vec3                scale;
-    uint32_t                 vertex_count;
-    uint32_t                 model_tri_count;
-    CoHBlendMode             blend_mode;
+    glm::vec3                scale{};
+    uint32_t                 vertex_count = 0;
+    uint32_t                 model_tri_count = 0;
+    CoHBlendMode             blend_mode = CoHBlendMode::MULTIPLY_REG;
     eastl::unique_ptr<VBOPointers> vbo;
-    int                      m_id;
+    int                      m_id = 0;
     bool                     hasBoneWeights() const { return flags & OBJ_DRAW_AS_ENT; }
     bool initialized=false;
     Model();

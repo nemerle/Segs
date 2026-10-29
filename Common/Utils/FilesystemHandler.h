@@ -3,9 +3,6 @@
 
 #include "EASTL/map.h"
 #include <mutex>
-// View of a string (to avoid unnecessary copying)
-using StringView  = eastl::string_view;
-using String = eastl::string;
 
 namespace SEGS {
 // Enum for unmount result
@@ -53,31 +50,31 @@ struct MountPoint {
 class FilesystemRepository {
 public:
     // Get an existing filesystem or create a new one
-    eastl::shared_ptr<IFilesystem> getOrCreate(const eastl::string& path, const eastl::string& extension);
+    eastl::shared_ptr<IFilesystem> getOrCreate(const String& path, const String& extension);
 
            // Register a factory for a specific file extension
-    void registerFactory(const eastl::string& extension, FilesystemFactory factory);
+    void registerFactory(const String& extension, FilesystemFactory factory);
 
            // Get the number of active filesystem instances
     size_t getActiveInstanceCount() const;
 
 private:
     mutable std::mutex mutex_;
-    eastl::map<eastl::string, eastl::weak_ptr<IFilesystem>> filesystems_;
-    eastl::map<eastl::string, FilesystemFactory> factories_;
+    eastl::map<String, eastl::weak_ptr<IFilesystem>> filesystems_;
+    eastl::map<String, FilesystemFactory> factories_;
 
            // Create a new filesystem instance based on extension
-    eastl::shared_ptr<IFilesystem> createFilesystem(const eastl::string& path, const eastl::string& extension);
+    eastl::shared_ptr<IFilesystem> createFilesystem(const String& path, const String& extension);
 
            // Get file extension from path
-    eastl::string getFileExtension(const eastl::string& path);
+    String getFileExtension(const String& path);
 };
 
 // Root filesystem implementation that manages mounting
 class RootFilesystem final : public IFilesystem {
 public:
     RootFilesystem();
-    ~RootFilesystem() override;;
+    ~RootFilesystem() override;
 
            // Register a factory for a specific file extension
     void registerFactory(const String& extension, FilesystemFactory factory);
@@ -97,6 +94,9 @@ public:
     FileStats stat(StringView path) override;
     bool exists(StringView path) override;
     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
+private:
+    bool visitEntriesImpl(StringView path, eastl::function<VisitResult(StringView, bool)> &visitor);
+public:
     bool mkpath(StringView path) override;
     bool hasOpenFiles() const override;
 
@@ -150,21 +150,4 @@ protected:
     }
 };
 
-// Native filesystem implementation for directories
-// class NativeFilesystem : public BaseFilesystem {
-// public:
-//     explicit NativeFilesystem(const String& basePath);
-//     ~NativeFilesystem() override = default;
-
-//            // IFilesystem interface implementation
-//     FileHandle openFile(StringView path, IFile::OpenMode mode) override;
-//     FileStats stat(StringView path) override;
-//     bool exists(StringView path) override;
-//     void visitEntries(StringView path, eastl::function<VisitResult(StringView, bool)> visitor) override;
-//     bool mkpath(StringView path) override;
-//     String getFilesystemType() const override { return "NativeFilesystem"; }
-
-// private:
-//     String combinePath(const String& relPath);
-// };
 }

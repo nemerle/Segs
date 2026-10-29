@@ -18,7 +18,7 @@ class SidekickOffer final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    uint32_t    m_db_id;
+    uint32_t    m_db_id = 0;
                 SidekickOffer(uint32_t db_id) : GameCommandEvent(MapEventTypes::evSidekickOffer),
                 m_db_id(db_id)
                 {
@@ -29,6 +29,10 @@ explicit        SidekickOffer() : GameCommandEvent(MapEventTypes::evSidekickOffe
                     bs.StorePackedBits(1,type()-MapEventTypes::evFirstServerToClient); // 28
                     bs.StoreBits(32,m_db_id);
                     sCDebug(logTeams) << "Sidekick Offer db_id:" << m_db_id;
+                }
+    void        serializefrom(BitStream &bs) override
+                {
+                    m_db_id = uint32_t(bs.GetBits(32));
                 }
     EVENT_IMPL(SidekickOffer)
 };

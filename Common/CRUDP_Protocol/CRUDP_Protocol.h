@@ -49,7 +49,6 @@ public:
         CrudP_Packet *      RecvPacket();
         bool                batchSend(lCrudP_Packet &tgt);
         bool                isUnresponsiveLink();
-        // Tests can replace the clock; nullptr restores steady_clock.
         using ClockSource = std::chrono::steady_clock::time_point (*)();
         static void                                  setClockSource(ClockSource src);
         static std::chrono::steady_clock::time_point clockNow();
@@ -57,7 +56,6 @@ protected:
         void                sendRaw(CrudP_Packet *pak,lCrudP_Packet &tgt);
         void                processRetransmits();
         CrudP_Packet *      wrapPacket(CrudP_Packet *p);
-        // Returns false when the inbound ack section is malformed/truncated; the packet is then dropped.
         bool                parseAcks(BitStream &src,CrudP_Packet *tgt);
         void                storeAcks(BitStream &bs);
         void                PushRecvPacket(CrudP_Packet *a); // this will try to join packet 'a' with it's siblings
@@ -71,7 +69,6 @@ private:
 
         friend void                PacketSibDestroyer(const eastl::pair<int, pPacketStorage> &a);
         static constexpr const int max_packet_data_size = 1272;
-        // Max selective acks per packet; storeAcks() never writes more, parseAcks() rejects more.
         static constexpr const uint32_t MAX_PKTACKS = 16;
 
         uint32_t send_seq   = 0;

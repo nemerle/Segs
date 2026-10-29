@@ -25,11 +25,11 @@ class TeamOffer final : public GameCommandEvent
 {
 public:
     // [[ev_def:field]]
-    uint32_t m_db_id;
+    uint32_t m_db_id = 0;
     // [[ev_def:field]]
     String m_name;
     // [[ev_def:field]]
-    TeamOfferType m_offer_type;
+    TeamOfferType m_offer_type = TeamOfferType::NoMission;
 
 explicit    TeamOffer() : GameCommandEvent(MapEventTypes::evTeamOffer) {}
             TeamOffer(uint32_t &db_id, const String &name, TeamOfferType &type) : GameCommandEvent(MapEventTypes::evTeamOffer),
@@ -44,6 +44,12 @@ explicit    TeamOffer() : GameCommandEvent(MapEventTypes::evTeamOffer) {}
                 bs.StoreBits(32, m_db_id);   // team offeree db_id
                 bs.StoreString(m_name);     // team offerer name
                 bs.StoreBits(2, uint8_t(m_offer_type));     // team with mission?
+            }
+    void    serializefrom(BitStream &bs) override
+            {
+                m_db_id = uint32_t(bs.GetBits(32));
+                bs.GetString(m_name);
+                m_offer_type = TeamOfferType(bs.GetBits(2));
             }
             EVENT_IMPL(TeamOffer)
 };

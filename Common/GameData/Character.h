@@ -97,6 +97,7 @@ const   String &        getName() const { return m_name; }
         void            GetCharBuildInfo(BitStream &src); // serialize from char creation
         void            SendCharBuildInfo(BitStream &bs) const;
         void            recv_initial_costume(BitStream &src, const ColorAndPartPacker *packer);
+        bool            fillPowersetCostumeDefaults();
         const Costume   *getCurrentCostume() const;
         const vCostumes *getAllCostumes() const;
         void            addCostumeSlot();

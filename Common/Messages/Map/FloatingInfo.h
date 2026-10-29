@@ -18,13 +18,13 @@ class FloatingInfo final : public GameCommandEvent
 {
 public:
                         // [[ev_def:field]]
-    uint32_t            m_tgt_idx;
+    uint32_t            m_tgt_idx = 0;
                         // [[ev_def:field]]
     String              m_msg;
                         // [[ev_def:field]]
-    FloatingInfoStyle   m_style;
+    FloatingInfoStyle   m_style = FloatingInfo_Damage;
                         // [[ev_def:field]]
-    float               m_delay;
+    float               m_delay = 0.0f;
     explicit            FloatingInfo() : GameCommandEvent(evFloatingInfo) {}
                         FloatingInfo(uint32_t tgt_idx, const String &msg, FloatingInfoStyle style, float delay) : GameCommandEvent(evFloatingInfo),
                             m_tgt_idx(tgt_idx),
@@ -42,6 +42,13 @@ public:
                             bs.StoreString(m_msg);
                             bs.StorePackedBits(2, m_style);
                             bs.StoreFloat(m_delay);
+                        }
+        void            serializefrom(BitStream &bs) override
+                        {
+                            m_tgt_idx = bs.GetPackedBits(1);
+                            bs.GetString(m_msg);
+                            m_style = FloatingInfoStyle(bs.GetPackedBits(2));
+                            m_delay = bs.GetFloat();
                         }
                         EVENT_IMPL(FloatingInfo)
 };

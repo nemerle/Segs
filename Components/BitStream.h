@@ -57,7 +57,6 @@ explicit        BitStream(uint32_t size);
         void     StorePackedBits(uint32_t nBits, uint32_t dataBits);
         void     appendBitStream(BitStream &src);
         void     StoreBitArray(const uint8_t *array, uint32_t nBits);
-        void     StoreString(const char *str,int len=-1);
         void     StoreString(StringView str);
         int32_t  GetBits(uint32_t nBits);
         int32_t  uGetBits(uint32_t nBits);

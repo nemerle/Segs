@@ -14,9 +14,16 @@
 
 using namespace SEGSEvents;
 
-void NewEntity::serializeto( BitStream & ) const
+void NewEntity::serializeto( BitStream &bs ) const
 {
-    assert(!"TODO");
+    bs.StorePackedBits(1, 9);
+    bs.StorePackedBits(1, m_cookie);
+    bs.StoreBits(1, m_new_character);
+    if(m_new_character)
+    {
+        BitStream char_data_copy(m_character_data);
+        bs.appendBitStream(char_data_copy);
+    }
 }
 
 void NewEntity::serializefrom( BitStream &bs )

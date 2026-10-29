@@ -43,6 +43,20 @@ public:
         if(logLFG().isDebugEnabled())
             dumpLFGList();
     }
+    void    serializefrom(BitStream &bs) override {
+        m_list.clear();
+        m_num = uint32_t(bs.GetBits(32));
+        for(uint32_t i = 0; i < m_num && bs.GetReadableBits() > 0; ++i)
+        {
+            LFGMember m;
+            m.m_db_id = 0;
+            bs.GetString(m.m_name);
+            bs.GetString(m.m_classname);
+            bs.GetString(m.m_origin);
+            m.m_level = uint32_t(bs.GetBits(32));
+            m_list.push_back(eastl::move(m));
+        }
+    }
     EVENT_IMPL(TeamLooking)
 };
 } // end of SEGSEvents namespace

@@ -22,6 +22,7 @@ public:
     TradeCancel();
     explicit TradeCancel(const String& msg);
     void serializeto(BitStream& bs) const override;
+    void serializefrom(BitStream& bs) override;
 
     // [[ev_def:field]]
     String m_msg;

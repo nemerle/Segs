@@ -99,7 +99,15 @@ SEGS_LOGGING_CATEGORY(logAFK,          "log.afk")
 SEGS_LOGGING_CATEGORY(logConnection,   "log.connection")
 SEGS_LOGGING_CATEGORY(logMigration,    "log.migration")
 
-void LoggingCategory::setFilterRules(StringView rules)
+namespace
+{
+String &storedFilterRules()
+{
+    static String rules;
+    return rules;
+}
+
+void applyRulesTo(LoggingCategory &cat, StringView rules)
 {
     Vector<StringView> rule_vector;
     String::split_ref(rule_vector,rules,'\n');
@@ -118,25 +126,32 @@ void LoggingCategory::setFilterRules(StringView rules)
         bool is_critical = matcher.ends_with(".critical");
         if(is_debug || is_info || is_warning || is_critical)
             matcher = matcher.substr(0,matcher.find_last_of('.'));
-        // find matching categories that this rule applies to.
-        for(LoggingCategory *cat : m_registered_categories)
-        {
-            if(StringUtils::match(matcher,cat->name()))
-            {
+        if(!StringUtils::match(matcher,cat.name()))
+            continue;
                 if(is_debug)
-                    cat->switches.m_debug = value;
+            cat.switches.m_debug = value;
                 else if(is_info)
-                    cat->switches.m_info = value;
+            cat.switches.m_info = value;
                 else if(is_warning)
-                    cat->switches.m_warning = value;
+            cat.switches.m_warning = value;
                 else if(is_critical)
-                    cat->switches.m_critical = value;
+            cat.switches.m_critical = value;
                 else
-                    cat->m_enabled = value;
+            cat.m_enabled = value;
             }
+}
+} // namespace
 
+void LoggingCategory::setFilterRules(StringView rules)
+{
+    storedFilterRules() = String(rules);
+    for(LoggingCategory *cat : m_registered_categories)
+        applyRulesTo(*cat, rules);
         }
-    }
+void LoggingCategory::applyStoredRules(LoggingCategory &cat)
+{
+    if(!storedFilterRules().empty())
+        applyRulesTo(cat, storedFilterRules());
 }
 
 

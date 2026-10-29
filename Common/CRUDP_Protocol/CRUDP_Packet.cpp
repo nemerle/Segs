@@ -97,11 +97,6 @@ void CrudP_Packet::StorePackedBits(uint32_t nBits, uint32_t dataBits)
     m_stream->StorePackedBits(nBits, dataBits);
 }
 
-void CrudP_Packet::StoreString(const char *str)
-{
-    m_stream->StoreString(str);
-}
-
 uint8_t *CrudP_Packet::GetBuffer()
 {
     return m_stream->GetBuffer();

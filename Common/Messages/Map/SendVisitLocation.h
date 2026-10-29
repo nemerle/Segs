@@ -36,7 +36,7 @@ namespace SEGSEvents
 
             for(const VisitLocation &location : m_locations)
             {
-               bs.StoreString(location.m_location_name.c_str());
+               bs.StoreString(location.m_location_name);
                sCDebug(logMapEvents) << "SendLocations Event serializeTo. m_location_name: " << location.m_location_name;
             }
         }

@@ -22,8 +22,9 @@
 #include <cereal/cereal.hpp>
 #include <EASTL/functional.h>
 #include <EASTL/unique_ptr.h>
+#include <magic_enum/magic_enum.hpp>
 
-#include <cstdio>
+
 namespace SEGS {
 
 inline Vector<char> IFile_read(IFile *self,int64_t len) {

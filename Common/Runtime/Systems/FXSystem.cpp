@@ -13,7 +13,7 @@ class FXStorage : public HandleBasedStorage<Data>
 public:
     static FXStorage &instance()
     {
-        static FXStorage instance;
+        static thread_local FXStorage instance;
         return instance;
     }
 };

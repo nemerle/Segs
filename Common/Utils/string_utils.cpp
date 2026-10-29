@@ -1,7 +1,6 @@
 //#include <charconv>
 #include "string_utils.h"
 
-#include "Components/Logging.h"
 #include <cassert>
 #include <charconv>
 #include <chrono>
@@ -1089,6 +1088,7 @@ bool StringUtils::ends_with(StringView s, StringView p_string, Compare mode) {
             }
         }
 
+        return true;
     }
     return s.ends_with(p_string);
 }
@@ -1428,6 +1428,26 @@ bool PathUtils::is_network_share_path(StringView path) {
 
 String PathUtils::simplify_path(StringView str) {
 
+    String drive;
+     if (is_network_share_path(str)) {
+        drive = str.substr(0, 2);
+        str = str.substr(2);
+    } else if (str.starts_with("/") || str.starts_with("\\")) {
+
+        drive = str.substr(0, 1);
+        str = str.substr(1);
+    } else {
+
+        size_t p = str.find(":/");
+        if (p == String::npos) {
+            p = str.find(":\\");
+        }
+        if (p != String::npos && p < str.find("/")) {
+
+            drive = str.substr(0, p + 2);
+            str = str.substr(p + 2);
+        }
+    }
     String s(str);
 
     s.replace('\\', '/');
@@ -1456,7 +1476,7 @@ String PathUtils::simplify_path(StringView str) {
         }
     }
 
-    return String::joined(filtered, "/");
+    return drive + String::joined(filtered, "/");
 }
 
 static int _humanize_digits(int p_num) {
@@ -2026,12 +2046,11 @@ String PathUtils::path_to(StringView str, StringView p_path) {
 
     String src = from_native_path(str);
     String dst = from_native_path(p_path);
-    // Remove trailing separators except for root
-    if (src.length() > 1 && src.ends_with("/")) {
-        src = src.substr(0, src.length() - 1);
+    if (!src.ends_with("/")) {
+        src += "/";
     }
-    if (dst.length() > 1 && dst.ends_with("/")) {
-        dst = dst.substr(0, dst.length() - 1);
+    if (!dst.ends_with("/")) {
+        dst += "/";
     }
 
     String base;
@@ -2049,13 +2068,13 @@ String PathUtils::path_to(StringView str, StringView p_path) {
         }
 
         base = src_begin;
-        src = src.substr(src_begin.length());
-        dst = dst.substr(dst_begin.length());
+        src = src.substr(src_begin.length(), src.length());
+        dst = dst.substr(dst_begin.length(), dst.length());
     }
 
     //remove leading and trailing slash and split
-    auto src_dirs = StringUtils::split(src.starts_with('/') ? StringView(src).substr(1):StringView(src), "/");
-    auto dst_dirs = StringUtils::split(dst.starts_with('/') ? StringView(dst).substr(1):StringView(dst), "/");
+    auto src_dirs = StringUtils::split(StringView(src).substr(1, src.length() - 2), "/");
+    auto dst_dirs = StringUtils::split(StringView(dst).substr(1, dst.length() - 2), "/");
 
     //find common parent
     size_t common_parent = 0;
@@ -2082,9 +2101,10 @@ String PathUtils::path_to(StringView str, StringView p_path) {
         dir += "../";
     }
 
-    Span<StringView> from_common(dst_dirs.begin()+common_parent+1,dst_dirs.end());
-    if(!from_common.empty())
-        dir += String::joined(from_common,"/");
+    for (size_t i = common_parent + 1; i < dst_dirs.size(); i++) {
+
+        dir += String(dst_dirs[i]) + "/";
+    }
 
     if (dir.length() == 0) {
         dir = "./";
@@ -2398,6 +2418,12 @@ int StringUtils::compare(StringView lhs, StringView rhs, Compare case_sensitive)
                 return l - r;
             }
         }
+        if (lhs.length() < rhs.length()) {
+            return -1;
+        }
+        if (lhs.length() > rhs.length()) {
+            return 1;
+        }
         return 0;
     }
     return 0;
@@ -2511,13 +2537,13 @@ DateTime StringUtils::parseDate(const char *value, StringView fmt) {
     std::istringstream ss(value);
     ss >> std::get_time(&tm, fmt.data());
     if (ss.fail()) {
-        return DateTime(fromChronoType(std::chrono::system_clock::time_point::max()));
+        return {fromChronoType(std::chrono::system_clock::time_point::max())};
     }
 
     // Convert std::tm to time_t (assumes tm is in local time)
     std::time_t time_t_val = std::mktime(&tm);
     if (time_t_val == -1) {
-        return DateTime(fromChronoType(std::chrono::system_clock::time_point::max()));
+        return {fromChronoType(std::chrono::system_clock::time_point::max())};
     }
 
     // Convert time_t to time_point
@@ -2536,37 +2562,6 @@ namespace PathUtils {
 
     String join_path(StringView p1, StringView p2) {
         return join_path({p1, p2});
-    }
-
-    String internalizePath(StringView path) {
-        // First normalize backslashes to forward slashes
-        String normalized = from_native_path(path);
-
-        // Convert Windows drive letter to internal format: C:/path -> /C/path
-        if (normalized.length() >= 2 &&
-            CharUtils::is_ascii_char(normalized[0]) &&
-            normalized[1] == ':')
-        {
-            char drive = normalized[0];
-            // Remove the colon, prepend with /
-            normalized = String("/") + drive + normalized.substr(2);
-        }
-        return normalized;
-    }
-
-    String externalizePath(StringView path) {
-        String result(path.data(), path.size());
-
-        // Convert internal drive letter format back to Windows: /C/path -> C:/path
-        if (result.length() >= 3 &&
-            result[0] == '/' &&
-            CharUtils::is_ascii_char(result[1]) &&
-            result[2] == '/')
-        {
-            char drive = result[1];
-            result = String(1, drive) + ":" + result.substr(2);
-        }
-        return result;
     }
 }
 
@@ -2626,4 +2621,28 @@ String StringUtils::simplified(StringView from) {
         prev_space=false;
     }
     return res;
+}
+String PathUtils::internalizePath(StringView path) {
+    String normalized = from_native_path(path);
+    if (normalized.length() >= 2 &&
+        CharUtils::is_ascii_char(normalized[0]) &&
+        normalized[1] == ':')
+    {
+        char drive = normalized[0];
+        normalized = String("/") + drive + normalized.substr(2);
+    }
+    return normalized;
+}
+
+String PathUtils::externalizePath(StringView path) {
+    String result(path.data(), path.size());
+    if (result.length() >= 3 &&
+        result[0] == '/' &&
+        CharUtils::is_ascii_char(result[1]) &&
+        result[2] == '/')
+    {
+        char drive = result[1];
+        result = String(1, drive) + ":" + result.substr(2);
+    }
+    return result;
 }

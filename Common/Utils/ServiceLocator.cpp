@@ -1,6 +1,6 @@
 #include "FilesystemHandler.h"
 #include "IServiceLocator.h"
-#include "Utils/PiggFsHandler.h"
+#include "Common/Utils/PiggFsHandler.h"
 
 namespace SEGS
 {
@@ -18,7 +18,7 @@ namespace SEGS
     {
         m_fs = eastl::make_unique<RootFilesystem>();
         m_fs->registerFactory("",native_fs);
-        m_fs->registerFactory("pigg", createPiggFilesystemFactory());;
+        m_fs->registerFactory("pigg", createPiggFilesystemFactory());
         m_fs->mount("/","/",-99);
         if (!app_dir.empty()) {
             m_fs->mount(app_dir, "app:", -50);

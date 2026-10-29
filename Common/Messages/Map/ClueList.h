@@ -42,6 +42,20 @@ class ClueList final : public GameCommandEvent
         }
     }
 
+    void serializefrom(BitStream &bs) override
+    {
+        m_clue_list.clear();
+        const uint32_t count = bs.GetPackedBits(1);
+        for(uint32_t i = 0; i < count && bs.GetReadableBits() > 0; ++i)
+        {
+            Clue clue;
+            bs.GetString(clue.m_name);
+            bs.GetString(clue.m_display_name);
+            bs.GetString(clue.m_detail_text);
+            bs.GetString(clue.m_icon_file);
+            m_clue_list.push_back(eastl::move(clue));
+        }
+    }
     EVENT_IMPL(ClueList)
 };
 

@@ -104,7 +104,6 @@ bool CrudP_Protocol::PacketSibCompare(const CrudP_Packet *a,const CrudP_Packet *
 
 CrudP_Protocol::~CrudP_Protocol()
 {
-    // retransmit_queue only references reliable_packets entries, so clearQueues() does not delete through it.
     clearQueues(true, true);
     delete m_codec;
     m_codec= nullptr;
@@ -175,7 +174,6 @@ void CrudP_Protocol::ReceivedBlock(BitStream &src)
     res->SetIsCompressed(src.GetBits(1));
     src.ByteAlign(true,false);
     // how much data did we actually read
-    // A malformed packet can leave read_pos past bitlength; bitlength-read_pos would underflow.
     uint32_t read_pos = src.GetReadPos();
     if(read_pos > bitlength || (bitlength - read_pos) > src.GetReadableBits())
     {
@@ -190,15 +188,15 @@ void CrudP_Protocol::ReceivedBlock(BitStream &src)
 
 bool CrudP_Protocol::parseAcks(BitStream &src,CrudP_Packet *tgt)
 {
-    // GetPackedBits() returns -1 on a truncated stream, so it must not go straight into an unsigned count.
+    // GetPackedBits() returns -1 on a truncated stream; don't feed it into an unsigned count.
     int32_t rawUniqueAcks = src.GetPackedBits(1);
     if(rawUniqueAcks < 0 || uint32_t(rawUniqueAcks) > MAX_PKTACKS)
-        return false; // truncated/exhausted (-1) or implausibly large count => malformed
+        return false;
     uint32_t numUniqueAcks = uint32_t(rawUniqueAcks);
     if(numUniqueAcks  == 0)
         return true;
     if(src.GetReadableBits() < 32)
-        return false; // no room for the first full 32-bit ack id => truncated
+        return false;
     uint32_t firstAck = src.GetBits(32);
     tgt->addAck(firstAck);
     for(uint32_t i = 1; i < numUniqueAcks; i++)
@@ -211,7 +209,7 @@ bool CrudP_Protocol::parseAcks(BitStream &src,CrudP_Packet *tgt)
         //  compression ratios with smaller values
         int32_t delta = src.GetPackedBits(1);
         if(delta < 0)
-            return false; // truncated mid-delta => malformed
+            return false;
         firstAck += uint32_t(delta) + 1;
         tgt->addAck(firstAck);
     }
@@ -230,7 +228,7 @@ void CrudP_Protocol::storeAcks(BitStream &bs)
     recv_acks.sort();
     recv_acks.unique();
     List<uint32_t>::iterator iter = recv_acks.begin();
-    uint32_t num_acks = std::min<uint32_t>((uint32_t)recv_acks.size(), MAX_PKTACKS); // store up to MAX_PKTACKS acks
+    uint32_t num_acks = std::min<uint32_t>((uint32_t)recv_acks.size(), MAX_PKTACKS);
     bs.StorePackedBits(1,num_acks);
 
     uint32_t last_ack = *iter;
@@ -597,7 +595,6 @@ void CrudP_Protocol::processRetransmits()
     {
         if(retransmit_queue.isFull())
             break;
-        // reliable_packets is ascending by seq, so only the head packet (seq == first_packet_id) resends sooner.
         int resend_period =
                 getPacketResendDelay(pkt->retransmitCount(), ping_time, pkt->GetSequenceNumber() == first_packet_id);
         auto milliseconds_since_xfer = duration_cast<milliseconds>(now - toSteadyChronoType<SteadyChronoData>(pkt->lastSend())).count();

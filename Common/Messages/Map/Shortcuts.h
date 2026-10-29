@@ -29,24 +29,42 @@ public:
             bs.StorePackedBits(1,i+1);
             bs.StoreString(m_commands[i]);
         }
-        bs.StorePackedBits(1,~0u); // end of command list
+        bs.StorePackedBits(1,~0u);
+        bs.StorePackedBits(1,uint32_t(m_server_commands.size()));
+        for(const String &cmd : m_server_commands)
+            bs.StoreString(cmd);
     }
     void serializefrom(BitStream &bs) override
     {
-        int idx;
-        // while more commands available and the size is sane
-        while(-1!=(idx=bs.GetPackedBits(1)) && m_commands.size()<200)
+        m_commands.clear();
+        for(;;)
         {
-            int cmd_idx = bs.GetPackedBits(1);
-            assert(cmd_idx>0 && cmd_idx<200);
-            m_commands.resize(std::max<int>((int)m_commands.size(),cmd_idx));
-            bs.GetString(m_commands[cmd_idx-1]);
+            int idx = bs.GetPackedBits(1);
+            if(idx<0 || bs.getLastError())
+                break;
+            String name;
+            bs.GetString(name);
+            if(idx>0 && idx<=2000)
+            {
+                m_commands.resize(std::max<size_t>(m_commands.size(),size_t(idx)));
+                m_commands[idx-1] = name;
+            }
+        }
+        int num = bs.GetPackedBits(1);
+        m_server_commands.clear();
+        for(int i=0; i<num && !bs.getLastError(); i++)
+        {
+            String name;
+            bs.GetString(name);
+            m_server_commands.push_back(name);
         }
     }
     // [[ev_def:field]]
     SessionReference m_session;
     // [[ev_def:field]]
     Vector<String> m_commands;
+    // [[ev_def:field]]
+    Vector<String> m_server_commands;
     EVENT_IMPL(Shortcuts)
 };
 } // end of SEGSEvents namespace

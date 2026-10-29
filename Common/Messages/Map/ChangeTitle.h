@@ -31,6 +31,10 @@ public:
             bs.StorePackedBits(1, type()-evFirstServerToClient); // 56
             bs.StoreBits(1, m_select_origin);
         }
+        void serializefrom(BitStream &bs) override
+        {
+            m_select_origin = bs.GetBits(1) != 0;
+        }
         EVENT_IMPL(ChangeTitle)
 };
 

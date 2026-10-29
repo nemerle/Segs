@@ -31,9 +31,16 @@ public:
         bs.StorePackedBits(1, m_count);
         bs.StoreString(m_sender_name);
     }
+    void serializefrom(BitStream &bs) override
+    {
+        m_id = int(bs.GetBits(32));
+        bs.GetString(m_message);
+        m_count = bs.GetPackedBits(1);
+        bs.GetString(m_sender_name);
+    }
 
     // [[ev_def:field]]
-    int m_id;
+    int m_id = 0;
     // [[ev_def:field]]
     String m_message;
     // [[ev_def:field]]

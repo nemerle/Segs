@@ -85,12 +85,12 @@ struct QueuedPowers
     float           m_activate_period       = 0.0f;
     float           m_recharge_time         = 0.0f;
     float           m_time_to_activate      = 0.0f;
-    float           m_interrupt_time        = 0.0f; //!< activation: the power applies once this much has elapsed
+    float           m_interrupt_time        = 0.0f;
     float           m_activation_elapsed    = 0.0f;
-    bool            m_applied               = false; //!< activation: the power has applied (attack anim/FX/hit)
+    bool            m_applied               = false;
     bool            m_active_state_change   = false;
     bool            m_activation_state      = false;
-    bool            m_queued                = false; //!< waiting to wind up (I24 ppowQueued / ppowTried)
+    bool            m_queued                = false;
     bool            m_timer_updated         = false;
     uint32_t        m_tgt_idx               = 0;
     uint32_t activeStatus() const

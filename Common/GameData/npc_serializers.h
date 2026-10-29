@@ -15,5 +15,6 @@ class BinStore;
 using AllNpcs_Data = Vector<struct Parse_NPC>;
 
 static constexpr uint32_t npccostumesets_i0_requiredCrc=0x944EC021;
+static constexpr uint32_t npccostumesets_i24_requiredCrc=0xD1A68118;
 bool loadFrom(BinStore * s, AllNpcs_Data & target);
 void saveTo(const AllNpcs_Data &target,const String &baseName,bool text_format=false);

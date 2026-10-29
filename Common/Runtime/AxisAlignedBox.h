@@ -30,7 +30,7 @@ struct AxisAlignedBoundingBox
         m_min = m_max = {0,0,0};
     }
     glm::vec3 size() const { return m_max - m_min; }
-    glm::vec3 center()const { return (m_max+m_min)/0.5f;}
+    glm::vec3 center()const { return (m_max+m_min)*0.5f;}
     glm::vec3 m_min;
     glm::vec3 m_max;
 };
